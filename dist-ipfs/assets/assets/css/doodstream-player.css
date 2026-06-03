@@ -1,0 +1,91 @@
+.doodstream-shell,
+.doodstream-background-shell {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(45, 212, 160, 0.16), transparent 30%),
+    linear-gradient(180deg, #131210 0%, #090908 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.doodstream-shell {
+  border-radius: 24px;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.34);
+}
+
+.doodstream-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 320px;
+}
+
+.doodstream-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 12px/1.2 "Space Mono", ui-monospace, monospace;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(240, 235, 226, 0.62);
+}
+
+.doodstream-shell video,
+.doodstream-background-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.doodstream-background-shell {
+  min-height: 100%;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.doodstream-background-video {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.04) brightness(0.8);
+}
+
+.doodstream-background-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 8, 7, 0.18) 0%, rgba(8, 8, 7, 0.48) 100%),
+    radial-gradient(circle at center, transparent 0%, rgba(8, 8, 7, 0.22) 100%);
+  pointer-events: none;
+}
+
+.plyr {
+  --plyr-color-main: #2dd4a0;
+  --plyr-video-control-color: #f0ebe2;
+  --plyr-control-icon-size: 16px;
+  --plyr-range-track-height: 4px;
+  --plyr-font-family: "Barlow", -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100%;
+}
+
+.plyr--video {
+  background: transparent;
+  border-radius: 24px;
+}
+
+.plyr__control--overlaid {
+  background: rgba(45, 212, 160, 0.92);
+  box-shadow: 0 18px 40px rgba(45, 212, 160, 0.24);
+}
+
+.plyr--full-ui input[type=range] {
+  color: #2dd4a0;
+}
+
+.plyr__controls {
+  background: linear-gradient(180deg, rgba(6, 6, 6, 0) 0%, rgba(6, 6, 6, 0.84) 100%);
+}

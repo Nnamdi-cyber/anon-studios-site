@@ -218,7 +218,7 @@ function normalizeItem(item) {
 
 const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? ''
-  : 'https://anon-studios-backend.onrender.com'; // Adjust this to your real Render backend URL
+  : 'https://anon-studios-site.onrender.com'; // Adjust this to your real Render backend URL
 
 async function api(url, options) {
   const response = await fetch(BACKEND_URL + url, {

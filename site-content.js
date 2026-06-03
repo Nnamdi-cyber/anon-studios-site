@@ -2,7 +2,7 @@
   const STORAGE_KEY = 'anon-studios-content-v3';
   const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? ''
-    : 'https://anon-studios-backend.onrender.com'; // Adjust this to your real Render backend URL
+    : 'https://anon-studios-site.onrender.com'; // Adjust this to your real Render backend URL
   const API_BASE = BACKEND_URL + '/api/content';
   const UPDATE_EVENT = 'anon-content-updated';
 
