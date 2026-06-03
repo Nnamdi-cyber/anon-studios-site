@@ -23,6 +23,10 @@ const {
   isDoodstreamConfigured,
   streamPassthroughHeaders,
 } = require('./services/doodstream');
+const {
+  isPinataConfigured,
+  uploadBufferToPinata,
+} = require('./services/pinata');
 require('dotenv').config();
 
 const app = express();
@@ -669,6 +673,32 @@ app.post('/api/upload-image', requireAdmin, upload.single('file'), async (req, r
   } catch (error) {
     res.status(500).json({
       error: 'Cloudinary upload failed',
+      detail: error && error.message ? error.message : 'Unknown upload error',
+    });
+  }
+});
+
+app.post('/api/pinata/upload', requireAdmin, upload.single('file'), async (req, res) => {
+  if (!isPinataConfigured()) {
+    return res.status(500).json({ error: 'Pinata credentials are not configured on the server' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+
+  try {
+    const filename = String(req.body.title || '').trim() || req.file.originalname;
+    const mimetype = req.file.mimetype;
+    const result = await uploadBufferToPinata(req.file.buffer, filename, mimetype);
+
+    res.json({
+      ok: true,
+      ipfsHash: result.ipfsHash,
+      src: result.gatewayUrl,
+      gatewayUrl: result.gatewayUrl,
+      size: result.size
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Pinata IPFS upload failed',
       detail: error && error.message ? error.message : 'Unknown upload error',
     });
   }

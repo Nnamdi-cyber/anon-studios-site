@@ -253,6 +253,16 @@ async function uploadDoodstreamVideoFile(file, title) {
   return uploaded;
 }
 
+async function uploadPinataFile(file, title) {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('title', title);
+  const response = await fetch(BACKEND_URL + '/api/pinata/upload', { method: 'POST', body, credentials: 'include' });
+  const uploaded = await response.json();
+  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'IPFS upload failed');
+  return uploaded;
+}
+
 function showToast(message, type) {
   const el = document.getElementById('toast');
   el.textContent = message;
@@ -369,12 +379,12 @@ function previewMarkup(item) {
 
 function buildPhotoCard(item) {
   const preset = getPhotoPreset(item.category);
-  return '<div class="media-card" data-item-id="' + item.id + '" data-type="image"><div class="mc-label">Photo Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('image', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Project Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Photo Category</label><select class="mc-select" data-field="category">' + selectMarkup(PHOTO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="mc-input" data-field="seriesName" value="' + escapeHtml(item.seriesName || preset.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="mc-input mc-textarea" data-field="seriesDescription">' + escapeHtml(item.seriesDescription || preset.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="mc-input" data-field="seriesYear" value="' + escapeHtml(item.seriesYear || preset.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Replace Photo</label><input class="form-input" data-upload-field="imageFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">This project stays linked to the matching front-end series.</div></div>';
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="image"><div class="mc-label">Photo Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('image', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Project Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Photo Category</label><select class="mc-select" data-field="category">' + selectMarkup(PHOTO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="mc-input" data-field="seriesName" value="' + escapeHtml(item.seriesName || preset.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="mc-input mc-textarea" data-field="seriesDescription">' + escapeHtml(item.seriesDescription || preset.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="mc-input" data-field="seriesYear" value="' + escapeHtml(item.seriesYear || preset.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Upload Storage Provider</label><select class="mc-select" data-upload-provider="imageFile"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Replace Photo</label><input class="form-input" data-upload-field="imageFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">This project stays linked to the matching front-end series.</div></div>';
 }
 
 function buildVideoCard(item) {
-  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : 'direct';
-  return '<div class="media-card" data-item-id="' + item.id + '" data-type="video"><div class="mc-label">Video Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('video', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Video Category</label><select class="mc-select" data-field="category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="mc-select" data-field="videoProvider"><option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option><option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="mc-input" data-field="sourceUrl" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="mc-input" data-field="fileCode" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Use existing DoodStream file code if needed"></div><div class="form-group"><label class="form-label">Replace / Upload Video To DoodStream</label><input class="form-input" data-upload-field="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="mc-input" data-field="thumb" value="' + escapeHtml(item.thumb || '') + '"></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" data-upload-field="thumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Duration</label><input class="mc-input" data-field="duration" value="' + escapeHtml(item.duration || '') + '"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">DoodStream uploads happen through your backend. For DoodStream-branded content, use a file upload or paste the existing file code. Direct URL entries still support YouTube, Vimeo, and raw video links.</div></div>';
+  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : (item.videoProvider === 'pinata' ? 'pinata' : 'direct');
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="video"><div class="mc-label">Video Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('video', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Video Category</label><select class="mc-select" data-field="category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="mc-select" data-field="videoProvider"><option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option><option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option><option value="pinata"' + (sourceType === 'pinata' ? ' selected' : '') + '>Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="mc-input" data-field="sourceUrl" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="mc-input" data-field="fileCode" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Use existing DoodStream file code if needed"></div><div class="form-group"><label class="form-label">Replace / Upload Video (DoodStream/Pinata)</label><input class="form-input" data-upload-field="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="mc-input" data-field="thumb" value="' + escapeHtml(item.thumb || '') + '"></div><div class="form-group"><label class="form-label">Thumbnail Upload Provider</label><select class="mc-select" data-upload-provider="thumbFile"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" data-upload-field="thumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Duration</label><input class="mc-input" data-field="duration" value="' + escapeHtml(item.duration || '') + '"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options. Direct URL supports YouTube.</div></div>';
 }
 
 function syncPhotoPreset(form) {
@@ -399,7 +409,7 @@ function renderPhotos() {
   });
   const groupMarkup = Object.values(groups).map(group => '<div style="margin-bottom:18px"><div class="toolbar" style="margin-bottom:12px"><div><div class="mc-label">Series</div><div class="mc-name" style="margin-bottom:0">' + escapeHtml(group.title) + '</div></div><div class="note">' + escapeHtml(categoryLabel('image', group.category)) + '</div></div><div class="media-grid">' + group.items.map(buildPhotoCard).join('') + '</div></div>').join('');
   target.className = '';
-  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Photo</div><div class="mc-name">Create New Photo Project</div><form id="photoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Project Title</label><input class="form-input" name="photoTitle" required></div><div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" name="photoCategory">' + selectMarkup(PHOTO_CATEGORIES, 'portrait', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="form-input" name="photoSeriesName" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" name="photoSeriesDescription">' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="form-input" name="photoSeriesYear" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="form-input" name="photoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="photoClient"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="photoDescription"></textarea></div><div class="form-group"><label class="form-label">Project Images</label><input class="form-input" name="photoFile" type="file" accept="image/*" multiple required></div><button class="btn btn-primary" type="submit">Upload Project Images</button></form><div class="note" style="margin-top:12px">Upload one image or many at once. The front-end series will now adapt to however many images the project has.</div></div>' + (groupMarkup || '<div class="empty-state">No photo projects yet.</div>');
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Photo</div><div class="mc-name">Create New Photo Project</div><form id="photoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Project Title</label><input class="form-input" name="photoTitle" required></div><div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" name="photoCategory">' + selectMarkup(PHOTO_CATEGORIES, 'portrait', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="form-input" name="photoSeriesName" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" name="photoSeriesDescription">' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="form-input" name="photoSeriesYear" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="form-input" name="photoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="photoClient"></div><div class="form-group"><label class="form-label">Storage Provider</label><select class="form-input" name="photoProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="photoDescription"></textarea></div><div class="form-group"><label class="form-label">Project Images</label><input class="form-input" name="photoFile" type="file" accept="image/*" multiple required></div><button class="btn btn-primary" type="submit">Upload Project Images</button></form><div class="note" style="margin-top:12px">Upload one image or many at once. The front-end series will now adapt to however many images the project has.</div></div>' + (groupMarkup || '<div class="empty-state">No photo projects yet.</div>');
   const form = document.getElementById('photoForm');
   form.addEventListener('submit', submitPhoto);
   form.querySelector('[name="photoCategory"]').addEventListener('change', () => {
@@ -415,7 +425,7 @@ function renderVideos() {
   const target = document.getElementById('grid-videos');
   const items = itemsByType('video').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   target.className = '';
-  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="doodstream">DoodStream</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream"></div><div class="form-group"><label class="form-label">Upload Video To DoodStream</label><input class="form-input" name="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" name="videoThumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use DoodStream when you want the video uploaded through your backend. Use direct mode for YouTube, Vimeo, or raw hosted video links. Any DoodStream ad/logo behavior must follow your DoodStream account entitlements and API terms.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="doodstream">DoodStream</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream"></div><div class="form-group"><label class="form-label">Upload Video (DoodStream/Pinata)</label><input class="form-input" name="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Thumbnail Storage Provider</label><select class="form-input" name="videoThumbProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" name="videoThumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options. Direct URL supports YouTube.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
   document.getElementById('videoForm').addEventListener('submit', submitVideo);
   target.querySelector('.media-grid').addEventListener('click', handleCardAction);
 }
@@ -452,6 +462,7 @@ async function submitPhoto(event) {
   if (!files.length) { showToast('Choose at least one image file', 'error'); return; }
   const category = normalizeTag(form.querySelector('[name="photoCategory"]').value || 'portrait');
   const preset = getPhotoPreset(category);
+  const storageProvider = form.querySelector('[name="photoProvider"]').value || 'cloudinary';
   try {
     const baseTitle = form.querySelector('[name="photoTitle"]').value.trim();
     const seriesName = form.querySelector('[name="photoSeriesName"]').value.trim() || preset.name;
@@ -465,14 +476,24 @@ async function submitPhoto(event) {
     for (let i = 0; i < files.length; i += 1) {
       const file = files[i];
       const imageTitle = files.length === 1 ? baseTitle : `${baseTitle} ${i + 1}`;
-      const uploaded = await uploadImageFile(file, imageTitle, category);
+      let src = '';
+      let thumb = '';
+      if (storageProvider === 'pinata') {
+        const uploaded = await uploadPinataFile(file, imageTitle);
+        src = uploaded.src;
+        thumb = uploaded.src;
+      } else {
+        const uploaded = await uploadImageFile(file, imageTitle, category);
+        src = uploaded.src;
+        thumb = uploaded.thumb;
+      }
       latestStore = await api('/api/content', {
         method: 'POST',
         body: JSON.stringify({
           type: 'image',
           title: imageTitle,
-          src: uploaded.src,
-          thumb: uploaded.thumb,
+          src: src,
+          thumb: thumb,
           category,
           tags: [category],
           seriesKey,
@@ -507,10 +528,16 @@ async function submitVideo(event) {
   const videoUrlInput = form.querySelector('[name="videoUrl"]').value.trim();
   let thumbUrl = form.querySelector('[name="videoThumb"]').value.trim();
   const thumbFile = form.querySelector('[name="videoThumbFile"]').files[0];
+  const videoThumbProvider = form.querySelector('[name="videoThumbProvider"]').value || 'cloudinary';
   try {
     if (thumbFile) {
-      const uploadedThumb = await uploadImageFile(thumbFile, title + '-thumb', category + ',video-thumb');
-      thumbUrl = uploadedThumb.src;
+      if (videoThumbProvider === 'pinata') {
+        const uploadedThumb = await uploadPinataFile(thumbFile, title + '-thumb');
+        thumbUrl = uploadedThumb.src;
+      } else {
+        const uploadedThumb = await uploadImageFile(thumbFile, title + '-thumb', category + ',video-thumb');
+        thumbUrl = uploadedThumb.src;
+      }
     }
     let src = videoUrlInput;
     let sourceUrl = videoUrlInput;
@@ -530,6 +557,14 @@ async function submitVideo(event) {
         src = '/api/doodstream/stream/' + encodeURIComponent(fileCode);
         sourceUrl = 'https://doodstream.com/e/' + fileCode;
       }
+    } else if (videoProvider === 'pinata') {
+      if (videoFile) {
+        const uploadedVideo = await uploadPinataFile(videoFile, title);
+        src = uploadedVideo.src;
+        sourceUrl = uploadedVideo.src;
+      } else if (!videoUrlInput) {
+        throw new Error('Upload a video file or enter an IPFS gateway link');
+      }
     } else if (!videoUrlInput) {
       throw new Error('Add a video URL for direct, YouTube, or Vimeo sources');
     }
@@ -543,7 +578,7 @@ async function submitVideo(event) {
         src,
         sourceUrl,
         thumb: thumbUrl,
-        videoProvider: videoProvider === 'doodstream' ? 'doodstream' : '',
+        videoProvider: videoProvider,
         fileCode,
         useHls: false,
         year: form.querySelector('[name="videoYear"]').value.trim(),
@@ -583,10 +618,17 @@ async function handleCardAction(event) {
   if (item.type === 'image') {
     payload.seriesKey = normalizeTag((payload.seriesName || item.seriesName || getPhotoPreset(payload.category).name).replace(/\s+/g, '-'));
     const replacement = card.querySelector('[data-upload-field="imageFile"]').files[0];
+    const imageProvider = card.querySelector('[data-upload-provider="imageFile"]')?.value || 'cloudinary';
     if (replacement) {
-      const uploaded = await uploadImageFile(replacement, payload.title || item.title, payload.category);
-      payload.src = uploaded.src;
-      payload.thumb = uploaded.thumb;
+      if (imageProvider === 'pinata') {
+        const uploaded = await uploadPinataFile(replacement, payload.title || item.title);
+        payload.src = uploaded.src;
+        payload.thumb = uploaded.src;
+      } else {
+        const uploaded = await uploadImageFile(replacement, payload.title || item.title, payload.category);
+        payload.src = uploaded.src;
+        payload.thumb = uploaded.thumb;
+      }
     }
   } else {
     payload.videoProvider = normalizeTag(payload.videoProvider || item.videoProvider || 'direct');
@@ -606,15 +648,31 @@ async function handleCardAction(event) {
         payload.src = '/api/doodstream/stream/' + encodeURIComponent(nextFileCode);
         payload.sourceUrl = 'https://doodstream.com/e/' + nextFileCode;
       }
+    } else if (payload.videoProvider === 'pinata') {
+      if (replacementVideo) {
+        const uploadedVideo = await uploadPinataFile(replacementVideo, payload.title || item.title);
+        payload.src = uploadedVideo.src;
+        payload.sourceUrl = uploadedVideo.src;
+        payload.fileCode = '';
+      } else {
+        payload.fileCode = '';
+        payload.src = payload.sourceUrl || item.sourceUrl || item.src;
+      }
     } else {
       payload.videoProvider = '';
       payload.fileCode = '';
       payload.src = payload.sourceUrl || item.sourceUrl || item.src;
     }
     const replacement = card.querySelector('[data-upload-field="thumbFile"]').files[0];
+    const thumbProvider = card.querySelector('[data-upload-provider="thumbFile"]')?.value || 'cloudinary';
     if (replacement) {
-      const uploaded = await uploadImageFile(replacement, (payload.title || item.title) + '-thumb', payload.category + ',video-thumb');
-      payload.thumb = uploaded.src;
+      if (thumbProvider === 'pinata') {
+        const uploaded = await uploadPinataFile(replacement, (payload.title || item.title) + '-thumb');
+        payload.thumb = uploaded.src;
+      } else {
+        const uploaded = await uploadImageFile(replacement, (payload.title || item.title) + '-thumb', payload.category + ',video-thumb');
+        payload.thumb = uploaded.src;
+      }
     }
   }
 

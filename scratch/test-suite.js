@@ -338,6 +338,30 @@ async function runTests() {
       console.log(`✔ Real SMTP mail delivery check passed (Message-ID: ${sendBody.messageId})`);
     });
 
+    // 7. Pinata IPFS Upload
+    await testGroup('7. Pinata IPFS Upload', async () => {
+      console.log('Testing POST /api/pinata/upload...');
+      const textBuffer = Buffer.from('Hello IPFS decentralized peer-to-peer storage! - Anon Studios Test');
+      const blob = new Blob([textBuffer], { type: 'text/plain' });
+      const formData = new FormData();
+      formData.append('file', blob, 'test-ipfs.txt');
+      formData.append('title', 'IPFS Test File');
+
+      const resUpload = await fetch(`${BASE_URL}/api/pinata/upload`, {
+        method: 'POST',
+        headers: { Cookie: sessionCookie },
+        body: formData,
+      });
+
+      assert.strictEqual(resUpload.status, 200, 'Upload should return 200 OK');
+      const bodyUpload = await resUpload.json();
+      assert.ok(bodyUpload.ok, 'Upload response should be ok');
+      assert.ok(bodyUpload.ipfsHash, 'Should return IPFS CID (ipfsHash)');
+      assert.ok(bodyUpload.src, 'Should return gateway URL (src)');
+      assert.ok(bodyUpload.src.includes('amber-acceptable-asp-485.mypinata.cloud'), 'Gateway URL should use the amber acceptable asp gateway');
+      console.log(`✔ Pinata IPFS Upload passed (CID: ${bodyUpload.ipfsHash}, URL: ${bodyUpload.src})`);
+    });
+
     console.log('\n==================================================');
     console.log('  🎉 SUCCESS: ALL INTEGRATION TESTS PASSED! 🎉   ');
     console.log('==================================================');
