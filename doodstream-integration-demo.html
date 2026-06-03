@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoodStream Integration Demo</title>
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+<link rel="stylesheet" href="/assets/css/doodstream-player.css">
+<style>
+  :root {
+    --bg: #080807;
+    --panel: #11100f;
+    --line: rgba(255,255,255,.08);
+    --ink: #f0ebe2;
+    --muted: rgba(240,235,226,.64);
+    --accent: #2dd4a0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Barlow, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(180deg, #11100f 0%, #080807 100%);
+    color: var(--ink);
+  }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+  .eyebrow {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font: 700 11px/1.2 "Space Mono", ui-monospace, monospace;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0 0 14px;
+    font-family: "Bebas Neue", Impact, sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: .92;
+    letter-spacing: .03em;
+  }
+  .lead {
+    max-width: 760px;
+    margin: 0 0 36px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 28px;
+  }
+  .panel {
+    position: relative;
+    padding: 24px;
+    background: rgba(17,16,15,.88);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .panel h2 {
+    margin: 0 0 10px;
+    font-family: "Bebas Neue", Impact, sans-serif;
+    letter-spacing: .04em;
+    font-size: 34px;
+  }
+  .panel p {
+    margin: 0 0 18px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .hero-bg-wrap {
+    position: relative;
+    min-height: 520px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.06);
+    background: #080807;
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 420px;
+    padding: 36px;
+  }
+  .hero-bg-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(8,8,7,.68) 0%, rgba(8,8,7,.12) 52%, rgba(8,8,7,.55) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 7px 10px;
+    border: 1px solid rgba(45,212,160,.24);
+    color: var(--accent);
+    font: 700 10px/1.2 "Space Mono", ui-monospace, monospace;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: 1fr; }
+    .hero-bg-wrap { min-height: 420px; }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">DoodStream Integration</p>
+    <h1>Player + Background Mode</h1>
+    <p class="lead">This demo uses a secure Node route to fetch and cache a DoodStream direct link server-side, then plays it through a minimalist Plyr interface or as a cinematic background video with muted looping cover mode.</p>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Primary Player</h2>
+        <p>Replace the demo file code below with your real DoodStream file code. The frontend caches the resolved playback payload in <code>sessionStorage</code>, and the backend refreshes the DoodStream direct link only every hour.</p>
+        <div id="doodPlayer" data-file-code="replace_with_file_code"></div>
+      </article>
+
+      <article class="panel">
+        <div class="hero-bg-wrap">
+          <div id="doodHeroBg" data-file-code="replace_with_file_code"></div>
+          <div class="hero-copy">
+            <p class="eyebrow">Background Mode</p>
+            <h2 style="font-size:42px;margin-bottom:12px;">Muted. Looping. Cinematic.</h2>
+            <p style="margin-bottom:0;">This mode injects the DoodStream source into a cover-style video layer, ideal for hero sections and section headers where motion should stay elegant and understated.</p>
+            <span class="badge">Object-Fit Cover</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <script src="/assets/js/doodstream-player.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await window.AnonDoodstream.initDoodstreamPlayer('#doodPlayer', {
+          fileCode: document.getElementById('doodPlayer').dataset.fileCode,
+          quality: 'n'
+        });
+      } catch (error) {
+        console.error('Dood player init failed', error);
+      }
+
+      try {
+        await window.AnonDoodstream.initDoodstreamBackground('#doodHeroBg', {
+          fileCode: document.getElementById('doodHeroBg').dataset.fileCode,
+          quality: 'n'
+        });
+      } catch (error) {
+        console.error('Dood background init failed', error);
+      }
+    });
+  </script>
+</body>
+</html>

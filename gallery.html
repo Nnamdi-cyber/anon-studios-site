@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Gallery — Anon Studios</title>
+<script>(function(){try{if(window.matchMedia('(pointer:fine)').matches&&window.innerWidth>900){document.documentElement.classList.add('pacman-prehide')}}catch(e){}})();</script>
+<style>html.pacman-prehide,html.pacman-prehide body,html.pacman-prehide body *{cursor:none!important}</style>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+:root{
+  --bg:#080807;--bg2:#0f0e0d;--line:rgba(255,255,255,.07);
+  --w:#f0ebe2;--w60:rgba(240,235,226,.55);--w30:rgba(240,235,226,.25);
+  --gold:#2dd4a0;--golddim:rgba(45,212,160,.08);
+  --sans:'Barlow',-apple-system,sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --display:'Bebas Neue',Impact,sans-serif;
+}
+body{background:var(--bg);color:var(--w);font-family:var(--sans);overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+#cur-dot,#cur-ring{display:none}
+nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:22px 52px;background:rgba(8,8,7,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-size:16px;letter-spacing:6px;text-transform:uppercase;color:var(--w)}
+.logo em{color:var(--gold);font-style:normal}
+.nav-left,.nav-right{display:flex;align-items:center;gap:18px}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);transition:color .25s}
+.nav-back:hover,.nav-link:hover{color:var(--w)}
+.nav-link{font-family:var(--display);font-size:15px;letter-spacing:1px;color:var(--w60);transition:color .25s}
+.nav-link.active{color:var(--gold)}
+.pg-header{position:relative;min-height:100vh;display:flex;align-items:flex-end;justify-content:center;padding:120px 52px 64px;border-bottom:1px solid var(--line);overflow:hidden}
+.pg-header-bg{position:absolute;inset:0;background:radial-gradient(circle at 62% 28%,rgba(45,212,160,.09),transparent 28%),radial-gradient(circle at 24% 72%,rgba(45,212,160,.05),transparent 24%),linear-gradient(180deg,#141210 0%,#090807 58%,#080807 100%)}
+.pg-header-grain{position:absolute;inset:0;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.pg-header-ruler{position:absolute;top:0;left:48%;right:0;height:22px;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.15) 0 1px,transparent 1px 14px)}
+.pg-center{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px;max-width:min(100%,680px);margin-bottom:84px}
+.pg-title{font-family:var(--display);font-size:clamp(62px,9vw,132px);letter-spacing:1px;line-height:.92}
+.pg-tagline{font-family:var(--mono);font-size:11px;letter-spacing:6px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.pg-tags{position:absolute;left:52px;bottom:36px;z-index:2;display:flex;flex-direction:column;gap:3px}
+.pg-tag{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);line-height:1.6}
+.pg-year{position:absolute;right:52px;bottom:36px;z-index:2;font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.pg-scroll{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pg-scroll-line{width:1px;height:36px;background:linear-gradient(to bottom,rgba(45,212,160,.7),transparent);animation:pgpulse 2s ease-in-out infinite}
+.pg-scroll-label{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+@keyframes pgpulse{0%,100%{opacity:.3}50%{opacity:1}}
+.sec-divider{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:52px 52px 36px;border-bottom:1px solid var(--line)}
+.sec-label{font-family:var(--mono);font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold)}
+.sec-title{font-family:var(--display);font-size:clamp(36px,5vw,68px);letter-spacing:2px}
+.sec-count{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30);border:1px solid rgba(45,212,160,.22);padding:4px 10px}
+.sec-cta{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
+.photo-preview{padding:60px 52px 80px;background:var(--bg)}
+.photo-strip{display:flex;gap:16px;align-items:flex-end;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.photo-strip::-webkit-scrollbar{display:none}
+.pcard{position:relative;flex-shrink:0;border-radius:4px;overflow:hidden;cursor:pointer;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .45s}
+.pcard:nth-child(1){width:220px;height:300px;transform:rotate(-4deg) translateY(20px)}
+.pcard:nth-child(2){width:260px;height:360px;transform:rotate(-1.5deg) translateY(8px)}
+.pcard:nth-child(3){width:280px;height:390px;transform:rotate(0)}
+.pcard:nth-child(4){width:260px;height:340px;transform:rotate(2deg) translateY(12px)}
+.pcard:nth-child(5){width:220px;height:295px;transform:rotate(4.5deg) translateY(22px)}
+.pcard:hover{transform:rotate(0) translateY(-12px) scale(1.03)!important;box-shadow:0 40px 80px rgba(0,0,0,.7);z-index:10}
+.pcard-bg{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;overflow:hidden}
+.pcard:nth-child(1) .pcard-bg{background:linear-gradient(160deg,#1a1208,#0d0908)}
+.pcard:nth-child(2) .pcard-bg{background:linear-gradient(160deg,#0d1a14,#070e0a)}
+.pcard:nth-child(3) .pcard-bg{background:linear-gradient(160deg,#14100d,#0a0807)}
+.pcard:nth-child(4) .pcard-bg{background:linear-gradient(160deg,#0d0d1a,#07070e)}
+.pcard:nth-child(5) .pcard-bg{background:linear-gradient(160deg,#1a0d0d,#0e0707)}
+.pcard-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9),transparent 55%)}
+.pcard-info{position:absolute;left:0;right:0;bottom:0;padding:18px 20px}
+.pcard-cat{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.pcard-name{font-family:var(--display);font-size:17px;letter-spacing:1px}
+.pcard-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.pcard-art svg{opacity:.05;width:60px}
+.photo-meta,.video-meta{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:40px;padding-top:28px;border-top:1px solid var(--line)}
+.photo-stat{display:flex;align-items:baseline;gap:8px}
+.photo-stat-n{font-family:var(--sans);font-weight:900;font-size:42px;color:var(--gold);letter-spacing:-2px}
+.photo-stat-l{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--w30)}
+.video-preview{padding:60px 52px 80px;background:var(--bg2);border-top:1px solid var(--line)}
+.vpanels{display:flex;gap:3px;height:460px}
+.vpanel{position:relative;overflow:hidden;border-radius:3px;cursor:pointer;flex:1;transition:flex .6s cubic-bezier(.22,1,.36,1)}
+.vpanel:hover{flex:3.5}
+.vpanel-bg{position:absolute;inset:0;overflow:hidden;transition:transform .6s cubic-bezier(.22,1,.36,1)}
+.vpanel:hover .vpanel-bg{transform:scale(1.06)}
+.vpanel:nth-child(1) .vpanel-bg{background:linear-gradient(170deg,#1a1208,#0a0806)}
+.vpanel:nth-child(2) .vpanel-bg{background:linear-gradient(170deg,#0a1510,#050c08)}
+.vpanel:nth-child(3) .vpanel-bg{background:linear-gradient(170deg,#100a14,#08060a)}
+.vpanel:nth-child(4) .vpanel-bg{background:linear-gradient(170deg,#14100a,#0c0806)}
+.vpanel:nth-child(5) .vpanel-bg{background:linear-gradient(170deg,#0a0a14,#060608)}
+.vpanel-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.2) 60%,transparent)}
+.vpanel-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border:1px solid rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s}
+.vpanel:hover .vpanel-play{opacity:1}.vpanel-play::after{content:'';width:0;height:0;border-left:14px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+.vpanel-info{position:absolute;left:0;right:0;bottom:0;padding:20px 18px;white-space:nowrap;overflow:hidden}
+.vpanel-cat{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;opacity:0;transform:translateY(6px);transition:opacity .4s .1s,transform .4s .1s}
+.vpanel:hover .vpanel-cat{opacity:1;transform:translateY(0)}
+.vpanel-name{font-family:var(--display);font-size:clamp(15px,1.6vw,22px);letter-spacing:1px;opacity:0;transform:translateY(8px);transition:opacity .4s .18s,transform .4s .18s}
+.vpanel:hover .vpanel-name{opacity:1;transform:translateY(0)}
+.vpanel-year{font-family:var(--mono);font-size:9px;color:var(--w30);position:absolute;top:16px;right:14px;letter-spacing:1px}
+.vpanel-type{position:absolute;top:14px;left:14px;font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.12);padding:3px 7px}
+.vmeta-tags{display:flex;gap:8px;flex-wrap:wrap}
+.vmeta-tag{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);border:1px solid var(--line);padding:6px 12px}
+@media(max-width:960px){
+  nav{padding:16px 24px}.nav-right{display:none}
+  .pg-header{min-height:480px;padding:110px 24px 44px}
+  .pg-title{font-size:clamp(48px,11vw,88px)}
+  .pg-center{margin-bottom:56px}
+  .pg-tags{left:24px;bottom:24px}.pg-year{right:24px;bottom:24px}.pg-scroll{display:none}
+  .sec-divider{padding:36px 24px 24px;flex-wrap:wrap}.sec-title{font-size:clamp(28px,5vw,44px)}
+  .photo-preview,.video-preview{padding:40px 24px 56px}
+  .pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:none}
+  .pcard:nth-child(3){width:100%;max-width:280px;transform:none}
+  .vpanels{height:300px}.vpanel:nth-child(4),.vpanel:nth-child(5){display:none}
+  .photo-meta,.video-meta{flex-direction:column;align-items:flex-start;gap:14px}
+}
+@media(max-width:600px){
+  nav{padding:14px 20px}.logo{font-size:11px;letter-spacing:4px}.nav-back{font-size:8px;letter-spacing:2px}
+  .pg-header{min-height:100svh;padding:104px 20px 28px}
+  .pg-center{align-items:flex-start;text-align:left;max-width:320px;gap:12px}
+  .pg-center{margin-bottom:72px}
+  .pg-title{font-size:clamp(42px,14vw,68px);letter-spacing:.5px}.pg-tagline{font-size:8px;letter-spacing:4px}
+  .pg-tags{left:20px;right:88px;bottom:18px;flex-direction:row;flex-wrap:wrap;gap:6px 10px}.pg-tag{font-size:8px;letter-spacing:1px;line-height:1.4}.pg-year{right:20px;bottom:20px;font-size:8px;letter-spacing:2px}
+  .pg-header-ruler{display:none}.pg-scroll{display:none}
+  .sec-divider{flex-direction:column;align-items:flex-start;gap:10px;padding:24px 20px 14px}.sec-title{font-size:clamp(24px,8vw,38px);letter-spacing:1px}.sec-label{font-size:7px;letter-spacing:3px}.sec-count,.sec-cta{font-size:8px}
+  .video-preview{padding:24px 20px 44px}.vpanels{height:240px;gap:2px}.vpanel:nth-child(3),.vpanel:nth-child(4),.vpanel:nth-child(5){display:none}.vpanel:hover{flex:2.5}.vpanel-name{font-size:13px}.vpanel-cat{font-size:7px}
+  .photo-preview{padding:24px 20px 44px}.photo-strip{gap:8px}.pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:flex}.pcard:nth-child(1){width:120px;height:170px;transform:rotate(-4deg) translateY(12px)}.pcard:nth-child(2){width:140px;height:200px;transform:rotate(-1.5deg) translateY(5px)}.pcard:nth-child(3){width:155px;height:220px;transform:none;max-width:none}.pcard:nth-child(4){width:140px;height:195px;transform:rotate(2deg) translateY(7px)}.pcard:nth-child(5){width:120px;height:168px;transform:rotate(4.5deg) translateY(12px)}.pcard-name{font-size:11px}.pcard-cat{font-size:7px;letter-spacing:1px}
+  .photo-meta,.video-meta{flex-direction:column;gap:12px;align-items:flex-start;margin-top:24px;padding-top:16px}.photo-stat-n{font-size:28px}.photo-stat-l{font-size:7px}.vmeta-tags{gap:5px}.vmeta-tag{font-size:7px;padding:5px 9px;letter-spacing:1px}
+}
+.media-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:rgba(255,255,255,.03)}
+.media-wrap img,.media-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity .55s ease}
+.media-wrap img.m-loaded,.media-wrap video.m-loaded{opacity:1}
+.media-wrap::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.035) 50%,transparent 100%);background-size:200% 100%;animation:m-shimmer 1.8s ease-in-out infinite;transition:opacity .4s}
+.media-wrap.m-ready::after{opacity:0;animation:none}
+@keyframes m-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.media-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none}
+.media-fallback svg{width:36px;opacity:.07}
+</style>
+</head>
+<body>
+
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-left">
+    <a href="portfolio (5).html" class="logo">ANON<em>.</em></a>
+    <a href="portfolio (5).html" class="nav-back">← Back</a>
+  </div>
+  <div class="nav-right">
+    <a href="gallery.html" class="nav-link active">Gallery</a>
+    <a href="photo-gallery.html" class="nav-link">Photos</a>
+    <a href="video-gallery.html" class="nav-link">Videos</a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER — full bleed cinematic, Blackwell Motors style -->
+<div class="pg-header">
+  <div class="pg-header-bg"></div>
+  <div class="pg-header-grain"></div>
+  <div class="pg-header-ruler"></div>
+
+  <!-- Centered title -->
+  <div class="pg-center">
+    <h1 class="pg-title">Anon Studios Gallery</h1>
+    <p class="pg-tagline">Photography &nbsp;&amp;&nbsp; Film Archive</p>
+  </div>
+
+  <!-- Bottom-left: category tags like reference -->
+  <div class="pg-tags">
+    <span class="pg-tag">Photography</span>
+    <span class="pg-tag">Videography</span>
+    <span class="pg-tag">Documentary</span>
+    <span class="pg-tag">Wedding Films</span>
+    <span class="pg-tag">Brand Campaigns</span>
+  </div>
+
+  <!-- Scroll hint center bottom -->
+  <div class="pg-scroll">
+    <div class="pg-scroll-line"></div>
+    <span class="pg-scroll-label">Scroll</span>
+  </div>
+
+  <!-- Bottom-right year -->
+  <div class="pg-year">YR / 2025</div>
+</div>
+
+<!-- VIDEO SECTION -->
+<div class="sec-divider">
+  <div>
+    <div class="sec-label">Videography</div>
+    <h2 class="sec-title">Film Archive</h2>
+  </div>
+  <div style="display:flex;align-items:center;gap:24px">
+    <span class="sec-count">(32 films)</span>
+    <a href="video-gallery.html" class="sec-cta">View All Films <span>→</span></a>
+  </div>
+</div>
+
+<div class="video-preview" style="background:var(--bg)">
+  <!-- Zeroframe-style expanding vertical panels -->
+  <div class="vpanels">
+
+    <div class="vpanel" onclick="location.href='video-gallery.html'">
+      <div class="vpanel-bg"><div class="media-wrap" id="mw-g_vpanel_1"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+      <div class="vpanel-overlay"></div>
+      <div class="vpanel-play"></div>
+      <div class="vpanel-type">Documentary</div>
+      <span class="vpanel-year">2024</span>
+      <div class="vpanel-info">
+        <div class="vpanel-cat">Documentary</div>
+        <div class="vpanel-name">Quiet Hours</div>
+      </div>
+    </div>
+
+    <div class="vpanel" onclick="location.href='video-gallery.html'">
+      <div class="vpanel-bg"></div>
+      <div class="vpanel-overlay"></div>
+      <div class="vpanel-play"></div>
+      <div class="vpanel-type">Music Video</div>
+      <span class="vpanel-year">2024</span>
+      <div class="vpanel-info">
+        <div class="vpanel-cat">Music Video</div>
+        <div class="vpanel-name">Neon Reverie</div>
+      </div>
+    </div>
+
+    <div class="vpanel" onclick="location.href='video-gallery.html'">
+      <div class="vpanel-bg"><div class="media-wrap" id="mw-g_vpanel_2"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+      <div class="vpanel-overlay"></div>
+      <div class="vpanel-play"></div>
+      <div class="vpanel-type">Wedding</div>
+      <span class="vpanel-year">2023</span>
+      <div class="vpanel-info">
+        <div class="vpanel-cat">Wedding</div>
+        <div class="vpanel-name">Adaeze & Chidi</div>
+      </div>
+    </div>
+
+    <div class="vpanel" onclick="location.href='video-gallery.html'">
+      <div class="vpanel-bg"></div>
+      <div class="vpanel-overlay"></div>
+      <div class="vpanel-play"></div>
+      <div class="vpanel-type">Brand</div>
+      <span class="vpanel-year">2023</span>
+      <div class="vpanel-info">
+        <div class="vpanel-cat">Brand Advert</div>
+        <div class="vpanel-name">Brand Pulse</div>
+      </div>
+    </div>
+
+    <div class="vpanel" onclick="location.href='video-gallery.html'">
+      <div class="vpanel-bg"><div class="media-wrap" id="mw-g_vpanel_3"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+      <div class="vpanel-overlay"></div>
+      <div class="vpanel-play"></div>
+      <div class="vpanel-type">Church</div>
+      <span class="vpanel-year">2023</span>
+      <div class="vpanel-info">
+        <div class="vpanel-cat">Church Highlight</div>
+        <div class="vpanel-name">Sunday Echoes</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="video-meta">
+    <div style="display:flex;gap:48px">
+      <div class="photo-stat"><span class="photo-stat-n">32</span><span class="photo-stat-l">Film Projects</span></div>
+      <div class="photo-stat"><span class="photo-stat-n">5</span><span class="photo-stat-l">Categories</span></div>
+    </div>
+    <div class="vmeta-tags">
+      <span class="vmeta-tag">Documentary</span>
+      <span class="vmeta-tag">Wedding</span>
+      <span class="vmeta-tag">Music Video</span>
+      <span class="vmeta-tag">Advert</span>
+      <span class="vmeta-tag">Church</span>
+    </div>
+  </div>
+</div>
+<!-- PHOTO SECTION -->
+<div class="sec-divider" style="background:var(--bg2)">
+  <div>
+    <div class="sec-label">Photography</div>
+    <h2 class="sec-title">Photo Archive</h2>
+  </div>
+  <div style="display:flex;align-items:center;gap:24px">
+    <span class="sec-count">(48 works)</span>
+    <a href="photo-gallery.html" class="sec-cta">View All Photos <span>→</span></a>
+  </div>
+</div>
+
+<div class="photo-preview" style="background:var(--bg2)">
+  <!-- 5 fanned portrait cards — Image 1 reference style -->
+  <div class="photo-strip">
+
+    <div class="pcard" onclick="location.href='photo-gallery.html'">
+      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_1"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      </div>
+      <div class="pcard-overlay"></div>
+      <div class="pcard-info"><div class="pcard-cat">Portrait</div><div class="pcard-name">Faces of Lagos</div></div>
+    </div>
+
+    <div class="pcard" onclick="location.href='photo-gallery.html'">
+      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_2"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      </div>
+      <div class="pcard-overlay"></div>
+      <div class="pcard-info"><div class="pcard-cat">Editorial</div><div class="pcard-name">Harmattan Gold</div></div>
+    </div>
+
+    <div class="pcard" onclick="location.href='photo-gallery.html'">
+      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_3"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      </div>
+      <div class="pcard-overlay"></div>
+      <div class="pcard-info"><div class="pcard-cat">Commercial</div><div class="pcard-name">Brand Pulse</div></div>
+    </div>
+
+    <div class="pcard" onclick="location.href='photo-gallery.html'">
+      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_4"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      </div>
+      <div class="pcard-overlay"></div>
+      <div class="pcard-info"><div class="pcard-cat">Street</div><div class="pcard-name">The City Breathes</div></div>
+    </div>
+
+    <div class="pcard" onclick="location.href='photo-gallery.html'">
+      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_5"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      </div>
+      <div class="pcard-overlay"></div>
+      <div class="pcard-info"><div class="pcard-cat">Fashion</div><div class="pcard-name">Quiet Luxury</div></div>
+    </div>
+
+  </div>
+
+  <div class="photo-meta">
+    <div style="display:flex;gap:48px">
+      <div class="photo-stat"><span class="photo-stat-n">48</span><span class="photo-stat-l">Photo Projects</span></div>
+      <div class="photo-stat"><span class="photo-stat-n">12</span><span class="photo-stat-l">Series</span></div>
+    </div>
+    <a href="photo-gallery.html" class="sec-cta" style="font-size:11px">Enter Photo Archive →</a>
+  </div>
+</div>
+
+<script src="site-content.js"></script>
+<script>
+if (window.AnonContent) {
+  window.addEventListener(window.AnonContent.events.updated, () => {
+    if (window.__anonContentReloaded) return;
+    window.__anonContentReloaded = true;
+    window.location.reload();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED MEDIA ENGINE
+   ─ Add/update URLs in the MEDIA_CONFIG object below.
+   ─ Set src:"" to keep the dark gradient placeholder.
+   ─ type: "image" | "video"
+   ─ Everything else (lazy loading, fade-in, fallback) is automatic.
+═══════════════════════════════════════════════════════════ */
+const MEDIA_CONFIG = {
+  /* ── gallery.html ──────────────────────────── */
+  /* Video preview panels (expanding) */
+  g_vpanel_1: { src:'', type:'video', alt:'Documentary — Quiet Hours' },
+  g_vpanel_2: { src:'', type:'video', alt:'Music Video — Neon Reverie' },
+  g_vpanel_3: { src:'', type:'video', alt:'Wedding — Adaeze & Chidi' },
+  g_vpanel_4: { src:'', type:'video', alt:'Brand Advert — Brand Pulse' },
+  g_vpanel_5: { src:'', type:'video', alt:'Church — Sunday Echoes' },
+  /* Photo preview cards (fanned) */
+  g_pcard_1:  { src:'', type:'image', alt:'Faces of Lagos' },
+  g_pcard_2:  { src:'', type:'image', alt:'Harmattan Gold' },
+  g_pcard_3:  { src:'', type:'image', alt:'Brand Pulse' },
+  g_pcard_4:  { src:'', type:'image', alt:'The City Breathes' },
+  g_pcard_5:  { src:'', type:'image', alt:'Quiet Luxury' },
+
+  /* ── photo-gallery.html ─────────────────────── */
+  /* Series 01 — Faces of Lagos */
+  pg_s1_p1: { src:'', type:'image', alt:'Faces of Lagos 01' },
+  pg_s1_p2: { src:'', type:'image', alt:'Faces of Lagos 02' },
+  pg_s1_p3: { src:'', type:'image', alt:'Faces of Lagos 03' },
+  pg_s1_p4: { src:'', type:'image', alt:'Faces of Lagos 04' },
+  pg_s1_p5: { src:'', type:'image', alt:'Faces of Lagos 05' },
+  /* Series 02 — Harmattan Gold */
+  pg_s2_p1: { src:'', type:'image', alt:'Harmattan Gold 01' },
+  pg_s2_p2: { src:'', type:'image', alt:'Harmattan Gold 02' },
+  pg_s2_p3: { src:'', type:'image', alt:'Harmattan Gold 03' },
+  pg_s2_p4: { src:'', type:'image', alt:'Harmattan Gold 04' },
+  pg_s2_p5: { src:'', type:'image', alt:'Harmattan Gold 05' },
+  /* Series 03 — Brand Pulse */
+  pg_s3_p1: { src:'', type:'image', alt:'Brand Pulse — Hero Shot' },
+  pg_s3_p2: { src:'', type:'image', alt:'Brand Pulse — Product' },
+  pg_s3_p3: { src:'', type:'image', alt:'Brand Pulse — Lifestyle' },
+  pg_s3_p4: { src:'', type:'image', alt:'Brand Pulse — Lookbook' },
+  pg_s3_p5: { src:'', type:'image', alt:'Brand Pulse — More' },
+  /* Series 04 — The City Breathes */
+  pg_s4_p1: { src:'', type:'image', alt:'City Breathes 01' },
+  pg_s4_p2: { src:'', type:'image', alt:'City Breathes 02' },
+  pg_s4_p3: { src:'', type:'image', alt:'City Breathes 03' },
+  pg_s4_p4: { src:'', type:'image', alt:'City Breathes 04' },
+  pg_s4_p5: { src:'', type:'image', alt:'City Breathes 05' },
+  /* Lightbox thumbnails — shown inside opened series */
+  pg_lb_thumb: [], /* populated dynamically from series src */
+
+  /* ── video-gallery.html ─────────────────────── */
+  /* Documentary */
+  vg_doc_1: { src:'', type:'video', alt:'Quiet Hours',     thumb:'' },
+  vg_doc_2: { src:'', type:'video', alt:'Tide & Trade',    thumb:'' },
+  vg_doc_3: { src:'', type:'video', alt:'The Makers',      thumb:'' },
+  vg_doc_4: { src:'', type:'video', alt:'City of Sound',   thumb:'' },
+  vg_doc_5: { src:'', type:'video', alt:'Harvest',         thumb:'' },
+  vg_doc_6: { src:'', type:'video', alt:'Beyond the Frame',thumb:'' },
+  /* Music Video */
+  vg_mv_1:  { src:'', type:'video', alt:'Neon Reverie',    thumb:'' },
+  vg_mv_2:  { src:'', type:'video', alt:'Ọjọ Ìbí',        thumb:'' },
+  vg_mv_3:  { src:'', type:'video', alt:'Midnight Lagos',  thumb:'' },
+  vg_mv_4:  { src:'', type:'video', alt:'Gold Rush',       thumb:'' },
+  vg_mv_5:  { src:'', type:'video', alt:'Still Waters',    thumb:'' },
+  vg_mv_6:  { src:'', type:'video', alt:'Move',            thumb:'' },
+  /* Wedding */
+  vg_wed_1: { src:'', type:'video', alt:'Adaeze & Chidi',  thumb:'' },
+  vg_wed_2: { src:'', type:'video', alt:'Folake & Seun',   thumb:'' },
+  vg_wed_3: { src:'', type:'video', alt:'Amaka & Daniel',  thumb:'' },
+  vg_wed_4: { src:'', type:'video', alt:'Kemi & Tobi',     thumb:'' },
+  vg_wed_5: { src:'', type:'video', alt:'Blessing & Emeka',thumb:'' },
+  /* Brand Advert */
+  vg_ad_1:  { src:'', type:'video', alt:'Brand Pulse Hero',thumb:'' },
+  vg_ad_2:  { src:'', type:'video', alt:'Glow Campaign',   thumb:'' },
+  vg_ad_3:  { src:'', type:'video', alt:'Moves',           thumb:'' },
+  /* Church */
+  vg_ch_1:  { src:'', type:'video', alt:'Sunday Echoes',   thumb:'' },
+  vg_ch_2:  { src:'', type:'video', alt:'Encounter Conf',  thumb:'' },
+  vg_ch_3:  { src:'', type:'video', alt:'Easter Sunday',   thumb:'' },
+};
+if (window.AnonContent) window.AnonContent.mergeIntoConfig(MEDIA_CONFIG);
+
+/* ── Core renderer ─────────────────────────────────────── */
+function _createMediaEl(src, type, alt) {
+  if (!src) return null;
+  let el;
+  if (type === 'video') {
+    el = document.createElement('video');
+    el.src = src; el.muted = true; el.loop = true;
+    el.playsInline = true; el.preload = 'none';
+    el.setAttribute('aria-label', alt);
+  } else {
+    el = document.createElement('img');
+    el.src = src; el.alt = alt;
+    el.loading = 'lazy'; el.decoding = 'async';
+  }
+  return el;
+}
+
+function _mountInWrap(wrap, src, type, alt) {
+  if (!src) return;
+  const el = _createMediaEl(src, type, alt);
+  if (!el) return;
+  const event = type === 'video' ? 'canplay' : 'load';
+  el.addEventListener(event, () => {
+    el.classList.add('m-loaded');
+    wrap.classList.add('m-ready');
+  });
+  el.addEventListener('error', () => {
+    el.remove();
+    const fb = wrap.querySelector('.media-fallback');
+    if (fb) fb.style.opacity = '1';
+  });
+  const fb = wrap.querySelector('.media-fallback');
+  wrap.insertBefore(el, fb || null);
+}
+
+/* Thumbnail src — use thumb if set, else poster frame from video, else image src */
+function _thumbSrc(cfg) {
+  return cfg.thumb || cfg.src || '';
+}
+
+/* ── Intersection Observer — lazy load on enter viewport ── */
+const _mObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const w = e.target;
+    if (w.dataset.mLoaded) return;
+    w.dataset.mLoaded = '1';
+    _mountInWrap(w, w.dataset.mSrc||'', w.dataset.mType||'image', w.dataset.mAlt||'');
+    _mObs.unobserve(w);
+  });
+}, { rootMargin:'250px 0px', threshold:0 });
+
+/* ── Register a .media-wrap div with config key ─────────── */
+function registerMedia(selector, cfgKey, scope) {
+  const root = scope || document;
+  const wraps = root.querySelectorAll(selector);
+  wraps.forEach(w => {
+    const cfg = MEDIA_CONFIG[cfgKey];
+    if (!cfg || !cfg.src) return;
+    w.dataset.mSrc  = cfg.src;
+    w.dataset.mType = cfg.type;
+    w.dataset.mAlt  = cfg.alt || '';
+    _mObs.observe(w);
+  });
+}
+
+/* ── Register a background-style .X-bg div ──────────────── */
+function registerBgMedia(el, cfgKey) {
+  if (!el) return;
+  const cfg = MEDIA_CONFIG[cfgKey];
+  if (!cfg || !cfg.src) return;
+  // Wrap content in a media-wrap if not already
+  if (!el.querySelector('.media-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'media-wrap';
+    wrap.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+    const fb = document.createElement('div');
+    fb.className = 'media-fallback';
+    wrap.appendChild(fb);
+    el.style.position = 'relative';
+    el.prepend(wrap);
+    wrap.dataset.mSrc  = cfg.src;
+    wrap.dataset.mType = cfg.type;
+    wrap.dataset.mAlt  = cfg.alt || '';
+    _mObs.observe(wrap);
+  }
+}
+
+/* ── Video modal: attach src when opened ────────────────── */
+function _attachModalVideo(cfgKey) {
+  const cfg = MEDIA_CONFIG[cfgKey];
+  const player = document.getElementById('vm-player-wrap');
+  if (!player) return;
+  player.innerHTML = '';
+  if (cfg && cfg.src) {
+    const v = document.createElement('video');
+    v.src = cfg.src; v.controls = true; v.autoplay = true;
+    v.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    player.appendChild(v);
+  } else {
+    player.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px"><div style=\"font-size:40px;opacity:.1\">▶</div><div style=\"font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3)\">Add video URL to MEDIA_CONFIG</div></div>';
+  }
+}
+
+/* ── Lightbox thumbnails: render from config keys ───────── */
+function _renderLbThumbs(seriesKeys, activeIdx) {
+  const c = document.getElementById('lb-thumbs');
+  if (!c) return;
+  c.innerHTML = '';
+  seriesKeys.forEach((key, i) => {
+    const cfg = MEDIA_CONFIG[key];
+    const src = cfg ? _thumbSrc(cfg) : '';
+    const t = document.createElement('div');
+    t.className = 'lb-thumb' + (i === activeIdx ? ' active' : '');
+    t.innerHTML = src
+      ? `<img src="${src}" alt="${cfg.alt||''}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;min-height:72px;opacity:0;transition:opacity .4s" onload="this.style.opacity=1">`
+      : `<div class="lb-thumb-inner" style="min-height:72px"></div>`;
+    t.onclick = () => {
+      document.querySelectorAll('.lb-thumb').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      _lbShowMain(key, i, seriesKeys.length);
+    };
+    c.appendChild(t);
+  });
+}
+
+function _lbShowMain(key, idx, total) {
+  const cfg = MEDIA_CONFIG[key];
+  const bg = document.getElementById('lb-bg');
+  const icon = document.getElementById('lb-main-icon');
+  if (!bg) return;
+  bg.innerHTML = '';
+  if (cfg && cfg.src) {
+    const el = _createMediaEl(cfg.src, cfg.type, cfg.alt||'');
+    if (el) {
+      el.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s';
+      const ev = cfg.type==='video'?'canplay':'load';
+      el.addEventListener(ev, () => el.style.opacity='1');
+      bg.appendChild(el);
+    }
+  } else {
+    if (icon) icon.style.display = 'flex';
+  }
+  const ctr = document.getElementById('lb-counter');
+  if (ctr) ctr.textContent = `${idx+1} / ${total}`;
+}
+
+/* Pacman cursor is loaded from assets/js/pacman-cursor.js */
+/* Apply media config */
+[...Array(5)].forEach((_,i)=>{const k=['g_vpanel_1','g_vpanel_2','g_vpanel_3','g_vpanel_4','g_vpanel_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
+[...Array(5)].forEach((_,i)=>{const k=['g_pcard_1','g_pcard_2','g_pcard_3','g_pcard_4','g_pcard_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
+if (window.AnonContent) window.AnonContent.hydrateGalleryPage();
+</script>
+<script src="assets/js/pacman-cursor.js?v=20260404d" defer></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Film Archive — Anon Studios</title>
+<script>(function(){try{if(window.matchMedia('(pointer:fine)').matches&&window.innerWidth>900){document.documentElement.classList.add('pacman-prehide')}}catch(e){}})();</script>
+<style>html.pacman-prehide,html.pacman-prehide body,html.pacman-prehide body *{cursor:none!important}</style>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+:root{
+  --bg:#080807;--bg2:#0f0e0d;--line:rgba(255,255,255,.07);
+  --w:#f0ebe2;--w60:rgba(240,235,226,.55);--w30:rgba(240,235,226,.25);
+  --gold:#2dd4a0;--golddim:rgba(45,212,160,.07);
+  --sans:'Barlow',-apple-system,sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --display:'Bebas Neue',Impact,sans-serif;
+}
+body{background:var(--bg);color:var(--w);font-family:var(--sans);overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+#cur-dot,#cur-ring{display:none}
+nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:22px 52px;background:rgba(8,8,7,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-size:16px;letter-spacing:6px;text-transform:uppercase}.logo em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:32px}.nav-link{font-family:var(--display);font-size:15px;letter-spacing:1px;color:var(--w60);transition:color .25s}.nav-link:hover{color:var(--w)}.nav-link.active{color:var(--gold)}
+.nav-back{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);display:flex;align-items:center;gap:6px}
+.vg-header{position:relative;display:grid;grid-template-columns:1.2fr .8fr;gap:48px;padding:140px 52px 52px;border-bottom:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 65% 24%,rgba(45,212,160,.08),transparent 24%),linear-gradient(180deg,#141210 0%,#090807 70%,#080807 100%)}
+.vg-header::before{content:'FILM';position:absolute;right:-20px;bottom:-20px;font-family:var(--sans);font-weight:900;font-size:260px;letter-spacing:-16px;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.04);pointer-events:none}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+.vg-header h1{font-family:var(--display);font-size:clamp(60px,9vw,120px);font-weight:400;line-height:.85;letter-spacing:4px;margin-bottom:24px}
+.vg-header p{font-family:var(--sans);font-size:15px;font-weight:300;color:var(--w60);line-height:1.75;max-width:400px}
+.vg-stats{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-content:end}
+.vg-stat-n{font-family:var(--sans);font-weight:900;font-size:38px;color:var(--gold);letter-spacing:-2px;line-height:1}
+.vg-stat-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);margin-top:4px}
+.cat-tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:24px 40px;border-right:1px solid var(--line);cursor:pointer;background:none;border-top:none;border-left:none;border-bottom:none;transition:background .3s;min-width:140px}
+.cat-tab:hover{background:rgba(255,255,255,.02)}.cat-tab.active{background:var(--golddim)}
+.cat-tab-label{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--w60)}.cat-tab.active .cat-tab-label{color:var(--gold)}
+.cat-tab-count{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--w30)}
+.cat-section{display:none;padding:60px 52px}.cat-section.active{display:block}
+.cat-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.cat-title{font-family:var(--display);font-size:clamp(32px,4vw,58px);letter-spacing:2px}.cat-sub{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--w60);max-width:400px;line-height:1.65;margin-top:10px}
+.vgrid{display:grid;gap:3px}.vgrid-3{grid-template-columns:repeat(3,1fr)}.vgrid-2{grid-template-columns:1fr 1.5fr}.vgrid-2r{grid-template-columns:1.5fr 1fr}.vgrid-feat{grid-template-columns:1.8fr 1fr;margin-bottom:3px}
+.vcard{position:relative;overflow:hidden;cursor:pointer;background:var(--bg2);opacity:0;transform:translateY(16px);transition:opacity .5s,transform .6s cubic-bezier(.22,1,.36,1)}.vcard.visible{opacity:1;transform:translateY(0)}
+.vcard-bg{position:absolute;inset:0;overflow:hidden;transition:transform .7s cubic-bezier(.22,1,.36,1)}.vcard:hover .vcard-bg{transform:scale(1.05)}
+.vcard-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.1) 60%,transparent)}
+.vcard-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border:1px solid rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s,transform .35s;backdrop-filter:blur(4px)}
+.vcard-play::after{content:'';width:0;height:0;border-left:18px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}.vcard:hover .vcard-play{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+.vcard-type{position:absolute;top:16px;left:16px;z-index:2;font-family:var(--mono);font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.15);padding:4px 9px;backdrop-filter:blur(4px)}
+.vcard-dur{position:absolute;top:16px;right:16px;z-index:2;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.35)}
+.vcard-info{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:20px 20px 18px}.vcard-year{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:5px}.vcard-title{font-family:var(--display);font-size:clamp(18px,2vw,26px);letter-spacing:1px;margin-bottom:6px}.vcard-client{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--w30)}
+.vcard.vh-tall,.vcard.vh-tall .vcard-bg{min-height:480px}.vcard.vh-mid,.vcard.vh-mid .vcard-bg{min-height:340px}.vcard.vh-short,.vcard.vh-short .vcard-bg{min-height:240px}
+.vbg-1{background:linear-gradient(160deg,#1c1208,#0e0a05)}.vbg-2{background:linear-gradient(160deg,#081610,#050e08)}.vbg-3{background:linear-gradient(160deg,#14080e,#0a060c)}.vbg-4{background:linear-gradient(160deg,#0e1418,#060c10)}.vbg-5{background:linear-gradient(160deg,#180e08,#0e0a06)}.vbg-6{background:linear-gradient(160deg,#101808,#0a0e06)}.vbg-7{background:linear-gradient(160deg,#080c18,#040810)}.vbg-8{background:linear-gradient(160deg,#141008,#0c0a06)}.vbg-9{background:linear-gradient(160deg,#0c1410,#06100a)}.vbg-10{background:linear-gradient(160deg,#18080c,#0e0508)}
+.vmodal{position:fixed;inset:0;z-index:9000;background:rgba(4,4,3,.98);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s;padding:40px}.vmodal.open{opacity:1;pointer-events:all}
+.vm-close{position:absolute;top:24px;right:28px;font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);background:none;border:1px solid var(--line);padding:8px 14px;cursor:pointer}.vm-close:hover{color:var(--w)}
+.vm-player{width:100%;max-width:900px;aspect-ratio:16/9;background:var(--bg2);display:flex;align-items:center;justify-content:center;position:relative;border:1px solid var(--line)}
+.vm-info{width:100%;max-width:900px;margin-top:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:32px}.vm-title{font-family:var(--display);font-size:34px;letter-spacing:2px;margin-bottom:6px}.vm-meta{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}.vm-desc{font-family:var(--sans);font-size:14px;font-weight:300;color:var(--w60);line-height:1.7;max-width:480px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:960px){nav{padding:16px 24px}.vg-header{grid-template-columns:1fr;padding:120px 24px 40px}.vg-stats{display:none}.cat-tab{min-width:110px;padding:18px 20px}.cat-section{padding:40px 24px}.cat-section-head{flex-direction:column;gap:8px;margin-bottom:28px}.vgrid-3,.vgrid-2,.vgrid-2r,.vgrid-feat{grid-template-columns:1fr}.vcard.vh-tall{min-height:300px}.vcard.vh-mid{min-height:240px}.vcard.vh-short{min-height:180px}.vmodal{padding:20px}}
+@media(max-width:600px){nav{padding:14px 20px}.logo{font-size:11px;letter-spacing:4px}.nav-back{font-size:8px}.nav-links{gap:14px;overflow-x:auto;scrollbar-width:none}.nav-links::-webkit-scrollbar{display:none}.nav-link{font-size:12px;white-space:nowrap}.vg-header{padding:96px 20px 32px}.vg-header h1{font-size:clamp(36px,12vw,58px);letter-spacing:2px;margin-bottom:14px;line-height:.9}.vg-header p{font-size:13px;line-height:1.65}.vg-header::before{font-size:120px;right:-8px;bottom:-8px;letter-spacing:-6px}.eyebrow{font-size:8px;letter-spacing:3px;margin-bottom:12px}.cat-tabs{scroll-padding-left:20px}.cat-tab{min-width:96px;padding:14px 16px}.cat-tab-label{font-size:11px}.cat-tab-count{font-size:7.5px;letter-spacing:.5px}.cat-section{padding:24px 20px 44px}.cat-section-head{flex-direction:column;gap:6px;margin-bottom:24px}.cat-title{font-size:clamp(22px,7vw,34px);letter-spacing:1px}.cat-sub{font-size:13px;max-width:100%}.vgrid-3,.vgrid-2,.vgrid-2r,.vgrid-feat{grid-template-columns:1fr;gap:2px}.vcard.vh-tall,.vcard.vh-mid,.vcard.vh-short{min-height:200px}.vcard-title{font-size:15px;letter-spacing:.5px}.vcard-client{font-size:7px;letter-spacing:1px}.vcard-info{padding:12px 14px 10px}.vcard-year{font-size:7.5px;margin-bottom:3px}.vcard-type{font-size:7px;padding:3px 7px;letter-spacing:1px}.vcard-dur{font-size:8px}.vcard-play{width:40px;height:40px}.vmodal{padding:14px;justify-content:flex-start;padding-top:52px}.vm-close{top:14px;right:14px;padding:6px 11px;font-size:7.5px;letter-spacing:2px}.vm-player{aspect-ratio:16/9;width:100%;max-width:100%}.vm-info{flex-direction:column;gap:10px;margin-top:14px}.vm-title{font-size:18px;letter-spacing:1px}.vm-meta{font-size:7.5px;letter-spacing:2px}.vm-desc{font-size:13px;max-width:100%;line-height:1.6}}
+.media-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:rgba(255,255,255,.03)}
+.media-wrap img,.media-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity .55s ease}
+.media-wrap img.m-loaded,.media-wrap video.m-loaded{opacity:1}
+.media-wrap::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.035) 50%,transparent 100%);background-size:200% 100%;animation:m-shimmer 1.8s ease-in-out infinite;transition:opacity .4s}
+.media-wrap.m-ready::after{opacity:0;animation:none}
+@keyframes m-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.media-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none}.media-fallback svg{width:36px;opacity:.07}
+</style>
+</head>
+<body>
+
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+<!-- VIDEO MODAL -->
+<div class="vmodal" id="vmodal">
+  <button class="vm-close" onclick="closeModal()">✕ &nbsp;Close</button>
+  <div class="vm-player"><div id="vm-player-wrap" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+    </div>
+  </div>
+  <div class="vm-info">
+    <div>
+      <div class="vm-meta" id="vm-cat">Category</div>
+      <div class="vm-title" id="vm-title">Film Title</div>
+    </div>
+    <div class="vm-desc" id="vm-desc">Description</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div style="display:flex;align-items:center;gap:20px">
+    <a href="portfolio (5).html" class="logo">ANON<em>.</em></a>
+    <a href="gallery.html" class="nav-back">← Gallery</a>
+  </div>
+  <div class="nav-links">
+    <a href="photo-gallery.html" class="nav-link">Photos</a>
+    <a href="video-gallery.html" class="nav-link active">Videos</a>
+    <a href="portfolio (5).html" class="nav-link">Home</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<div class="vg-header">
+  <div>
+    <div class="eyebrow">Film Archive</div>
+    <h1>Film<br>Archive</h1>
+    <p>Documentaries, music videos, brand adverts, wedding films, and church highlights — every project crafted with intention and cinematic precision.</p>
+  </div>
+  <div class="vg-stats">
+    <div><div class="vg-stat-n">0</div><div class="vg-stat-l">Films</div></div>
+    <div><div class="vg-stat-n">5</div><div class="vg-stat-l">Categories</div></div>
+    <div><div class="vg-stat-n">4K</div><div class="vg-stat-l">Resolution</div></div>
+    <div><div class="vg-stat-n">3+</div><div class="vg-stat-l">Years</div></div>
+  </div>
+</div>
+
+<!-- CATEGORY TABS -->
+<div class="cat-tabs">
+  <button class="cat-tab active" onclick="switchCat(this,'doc')">
+    <span class="cat-tab-label">Documentary</span>
+    <span class="cat-tab-count">08 films</span>
+  </button>
+  <button class="cat-tab" onclick="switchCat(this,'music')">
+    <span class="cat-tab-label">Music Video</span>
+    <span class="cat-tab-count">07 films</span>
+  </button>
+  <button class="cat-tab" onclick="switchCat(this,'wedding')">
+    <span class="cat-tab-label">Wedding</span>
+    <span class="cat-tab-count">09 films</span>
+  </button>
+  <button class="cat-tab" onclick="switchCat(this,'advert')">
+    <span class="cat-tab-label">Brand Advert</span>
+    <span class="cat-tab-count">05 films</span>
+  </button>
+  <button class="cat-tab" onclick="switchCat(this,'church')">
+    <span class="cat-tab-label">Church</span>
+    <span class="cat-tab-count">03 films</span>
+  </button>
+</div>
+
+<!-- ═══════════════ DOCUMENTARY ═══════════════ -->
+<div class="cat-section active" id="cat-doc">
+  <div class="cat-section-head">
+    <div>
+      <h2 class="cat-title">Documentary Films</h2>
+      <p class="cat-sub">Long-form and short documentary work exploring real stories — from Lagos waterfront traders to portraits of creativity in West Africa.</p>
+    </div>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30)">08 FILMS</span>
+  </div>
+
+  <!-- Featured doc: 1 wide + 1 -->
+  <div class="vgrid vgrid-feat">
+    <div class="vcard vh-tall" onclick="openVideo('Documentary','Quiet Hours','A day-in-the-life documentary following three Lagosians across a single Sunday — intimate, unhurried, and deeply honest.','vg_doc_1')">
+      <div class="vcard-bg vbg-1"><div class="media-wrap" id="mw-vg_doc_1" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+      <div class="vcard-overlay"></div>
+      <div class="vcard-play"></div>
+      <div class="vcard-type">Documentary</div>
+      <div class="vcard-dur">18:42</div>
+      <div class="vcard-info">
+        <div class="vcard-year">2024</div>
+        <div class="vcard-title">Quiet Hours</div>
+        <div class="vcard-client">Independent Commission</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-rows:1fr 1fr;gap:3px">
+      <div class="vcard vh-mid" onclick="openVideo('Documentary','Tide & Trade','Following traders and fishermen along the Lagos waterfront.','vg_doc_2')">
+        <div class="vcard-bg vbg-2"><div class="media-wrap" id="mw-vg_doc_2" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+        <div class="vcard-overlay"></div>
+        <div class="vcard-play"></div>
+        <div class="vcard-type">Documentary</div>
+        <div class="vcard-dur">24:10</div>
+        <div class="vcard-info">
+          <div class="vcard-year">2022</div>
+          <div class="vcard-title">Tide & Trade</div>
+          <div class="vcard-client">Lagos Waterfront Project</div>
+        </div>
+      </div>
+      <div class="vcard vh-mid" onclick="openVideo('Documentary','The Makers','Profiles of five craftspeople keeping traditional Nigerian crafts alive.','vg_doc_3')">
+        <div class="vcard-bg vbg-3"><div class="media-wrap" id="mw-vg_doc_3" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>
+        <div class="vcard-overlay"></div>
+        <div class="vcard-play"></div>
+        <div class="vcard-type">Documentary</div>
+        <div class="vcard-dur">31:05</div>
+        <div class="vcard-info">
+          <div class="vcard-year">2023</div>
+          <div class="vcard-title">The Makers</div>
+          <div class="vcard-client">Arts Foundation Nigeria</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 3-col row -->
+  <div class="vgrid vgrid-3" style="margin-top:3px">
+    <div class="vcard vh-mid" onclick="openVideo('Documentary','City of Sound','Inside Lagos nightlife and the afrobeats scene.','vg_doc_4')">
+      <div class="vcard-bg vbg-4"><div class="media-wrap" id="mw-vg_doc_4" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Documentary</div><div class="vcard-dur">15:30</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">City of Sound</div><div class="vcard-client">Rolling Stone Africa</div></div>
+    </div>
+    <div class="vcard vh-mid" onclick="openVideo('Documentary','Harvest','A farming community in Ogun State through the seasons.','vg_doc_5')">
+      <div class="vcard-bg vbg-5"><div class="media-wrap" id="mw-vg_doc_5" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Documentary</div><div class="vcard-dur">22:00</div>
+      <div class="vcard-info"><div class="vcard-year">2022</div><div class="vcard-title">Harvest</div><div class="vcard-client">Personal Project</div></div>
+    </div>
+    <div class="vcard vh-mid" onclick="openVideo('Documentary','Beyond the Frame','Behind-the-scenes of a Lagos fashion week.','vg_doc_6')">
+      <div class="vcard-bg vbg-6"><div class="media-wrap" id="mw-vg_doc_6" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Documentary</div><div class="vcard-dur">12:15</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Beyond the Frame</div><div class="vcard-client">Lagos Fashion Week</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MUSIC VIDEO ═══════════════ -->
+<div class="cat-section" id="cat-music">
+  <div class="cat-section-head">
+    <div>
+      <h2 class="cat-title">Music Videos</h2>
+      <p class="cat-sub">Cinematic visuals for artists across afrobeats, afropop, and alternative genres — narrative-driven or pure aesthetic energy.</p>
+    </div>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30)">07 FILMS</span>
+  </div>
+  <div class="vgrid vgrid-2">
+    <div class="vcard vh-tall" onclick="openVideo('Music Video','Neon Reverie','Neon-drenched overnight shoot in Lagos — slow-motion and light painting.','vg_mv_1')">
+      <div class="vcard-bg vbg-7"><div class="media-wrap" id="mw-vg_mv_1" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Music Video</div><div class="vcard-dur">4:22</div>
+      <div class="vcard-info"><div class="vcard-year">2022</div><div class="vcard-title">Neon Reverie</div><div class="vcard-client">Simi / Afrobeats</div></div>
+    </div>
+    <div style="display:grid;gap:3px">
+      <div class="vcard vh-mid" onclick="openVideo('Music Video','Ọjọ Ìbí','Birthday celebration narrative music video.','vg_mv_2')">
+        <div class="vcard-bg vbg-8"><div class="media-wrap" id="mw-vg_mv_2" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+        <div class="vcard-type">Music Video</div><div class="vcard-dur">3:58</div>
+        <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Ọjọ Ìbí</div><div class="vcard-client">Afropop Artist</div></div>
+      </div>
+      <div class="vcard vh-mid" onclick="openVideo('Music Video','Midnight Lagos','Narrative short following a musician through one night in Lagos.','vg_mv_3')">
+        <div class="vcard-bg vbg-9"><div class="media-wrap" id="mw-vg_mv_3" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+        <div class="vcard-type">Music Video</div><div class="vcard-dur">5:11</div>
+        <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Midnight Lagos</div><div class="vcard-client">Alternative R&B</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="vgrid vgrid-3" style="margin-top:3px">
+    <div class="vcard vh-short" onclick="openVideo('Music Video','Gold Rush','Afrobeats energy — fast cuts, Lagos streets at golden hour.','vg_mv_4')">
+      <div class="vcard-bg vbg-10"><div class="media-wrap" id="mw-vg_mv_4" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Music Video</div><div class="vcard-dur">3:40</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Gold Rush</div><div class="vcard-client">Emerging Artist</div></div>
+    </div>
+    <div class="vcard vh-short" onclick="openVideo('Music Video','Still Waters','Slow, melancholic piece shot on a Lagos creek.','vg_mv_5')">
+      <div class="vcard-bg vbg-1"><div class="media-wrap" id="mw-vg_mv_5" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Music Video</div><div class="vcard-dur">4:05</div>
+      <div class="vcard-info"><div class="vcard-year">2022</div><div class="vcard-title">Still Waters</div><div class="vcard-client">Soul/R&B</div></div>
+    </div>
+    <div class="vcard vh-short" onclick="openVideo('Music Video','Move','Dance-forward afrobeats video with colorful sets.','vg_mv_6')">
+      <div class="vcard-bg vbg-2"><div class="media-wrap" id="mw-vg_mv_6" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Music Video</div><div class="vcard-dur">3:22</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Move</div><div class="vcard-client">Pop / Dance</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WEDDING ═══════════════ -->
+<div class="cat-section" id="cat-wedding">
+  <div class="cat-section-head">
+    <div>
+      <h2 class="cat-title">Wedding Films</h2>
+      <p class="cat-sub">Cinematic wedding films told like short features — capturing the emotion, the light, and the stories that unfold on the most important day.</p>
+    </div>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30)">09 FILMS</span>
+  </div>
+  <div class="vgrid vgrid-3">
+    <div class="vcard vh-tall" onclick="openVideo('Wedding','Adaeze & Chidi','A traditional Igbo wedding ceremony — from sunrise preparations to midnight reception.','vg_wed_1')">
+      <div class="vcard-bg vbg-3"><div class="media-wrap" id="mw-vg_wed_1" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Wedding Film</div><div class="vcard-dur">12:40</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Adaeze & Chidi</div><div class="vcard-client">Lagos / Enugu</div></div>
+    </div>
+    <div class="vcard vh-tall" onclick="openVideo('Wedding','Folake & Seun','A Yoruba traditional and white wedding — two ceremonies, one love story.','vg_wed_2')">
+      <div class="vcard-bg vbg-4"><div class="media-wrap" id="mw-vg_wed_2" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Wedding Film</div><div class="vcard-dur">14:05</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Folake & Seun</div><div class="vcard-client">Lagos</div></div>
+    </div>
+    <div class="vcard vh-tall" onclick="openVideo('Wedding','Amaka & Daniel','Destination wedding at a Lagos beachfront estate.','vg_wed_3')">
+      <div class="vcard-bg vbg-5"><div class="media-wrap" id="mw-vg_wed_3" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Wedding Film</div><div class="vcard-dur">11:22</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Amaka & Daniel</div><div class="vcard-client">Victoria Island</div></div>
+    </div>
+  </div>
+  <div class="vgrid vgrid-2r" style="margin-top:3px">
+    <div class="vcard vh-mid" onclick="openVideo('Wedding','Kemi & Tobi','Intimate court ceremony and garden reception — 40 guests, pure emotion.','vg_wed_4')">
+      <div class="vcard-bg vbg-6"><div class="media-wrap" id="mw-vg_wed_4" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Wedding Film</div><div class="vcard-dur">9:15</div>
+      <div class="vcard-info"><div class="vcard-year">2022</div><div class="vcard-title">Kemi & Tobi</div><div class="vcard-client">Ikeja, Lagos</div></div>
+    </div>
+    <div class="vcard vh-mid" onclick="openVideo('Wedding','Blessing & Emeka','Grand reception at Eko Hotel — 500 guests, full cinematic production.','vg_wed_5')">
+      <div class="vcard-bg vbg-7"><div class="media-wrap" id="mw-vg_wed_5" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Wedding Film</div><div class="vcard-dur">16:30</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Blessing & Emeka</div><div class="vcard-client">Eko Hotel</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADVERT ═══════════════ -->
+<div class="cat-section" id="cat-advert">
+  <div class="cat-section-head">
+    <div>
+      <h2 class="cat-title">Brand Adverts</h2>
+      <p class="cat-sub">Commercial productions for brands that want visuals with real impact — product-forward, story-driven, built to convert and to last.</p>
+    </div>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30)">05 FILMS</span>
+  </div>
+  <div class="vgrid vgrid-2">
+    <div class="vcard vh-tall" onclick="openVideo('Brand Advert','Brand Pulse — Hero Film','60-second hero ad for Lagos lifestyle brand.','vg_ad_1')">
+      <div class="vcard-bg vbg-8"><div class="media-wrap" id="mw-vg_ad_1" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Brand Advert</div><div class="vcard-dur">1:02</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Brand Pulse — Hero</div><div class="vcard-client">Lagos Lifestyle Co.</div></div>
+    </div>
+    <div style="display:grid;gap:3px">
+      <div class="vcard vh-mid" onclick="openVideo('Brand Advert','Glow Campaign','30-second skincare campaign — clean, minimal, Lagos summer.','vg_ad_2')">
+        <div class="vcard-bg vbg-9"><div class="media-wrap" id="mw-vg_ad_2" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+        <div class="vcard-type">Brand Advert</div><div class="vcard-dur">0:32</div>
+        <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Glow Campaign</div><div class="vcard-client">Skincare Brand</div></div>
+      </div>
+      <div class="vcard vh-mid" onclick="openVideo('Brand Advert','Moves — Sneaker Ad','Fast-cut sneaker ad shot on Lagos streets.','vg_ad_3')">
+        <div class="vcard-bg vbg-10"><div class="media-wrap" id="mw-vg_ad_3" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+        <div class="vcard-type">Brand Advert</div><div class="vcard-dur">0:45</div>
+        <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Moves</div><div class="vcard-client">Footwear Brand</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CHURCH ═══════════════ -->
+<div class="cat-section" id="cat-church">
+  <div class="cat-section-head">
+    <div>
+      <h2 class="cat-title">Church Highlights</h2>
+      <p class="cat-sub">Cinematic highlight reels of church services, conferences, and special events — capturing the worship, the word, and the community.</p>
+    </div>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30)">03 FILMS</span>
+  </div>
+  <div class="vgrid vgrid-3">
+    <div class="vcard vh-tall" onclick="openVideo('Church Highlight','Sunday Echoes','Full Sunday service highlight — worship, message, altar call.','vg_ch_1')">
+      <div class="vcard-bg vbg-1"><div class="media-wrap" id="mw-vg_ch_1" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Church Highlight</div><div class="vcard-dur">8:15</div>
+      <div class="vcard-info"><div class="vcard-year">2023</div><div class="vcard-title">Sunday Echoes</div><div class="vcard-client">Lagos Church</div></div>
+    </div>
+    <div class="vcard vh-tall" onclick="openVideo('Church Highlight','Encounter Conference','3-day conference highlight — 4,000 attendees, 3 cameras, 1 story.','vg_ch_2')">
+      <div class="vcard-bg vbg-2"><div class="media-wrap" id="mw-vg_ch_2" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Church Highlight</div><div class="vcard-dur">12:44</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Encounter Conference</div><div class="vcard-client">Annual Conference</div></div>
+    </div>
+    <div class="vcard vh-tall" onclick="openVideo('Church Highlight','Easter Sunday','Easter Sunday cinematic highlight — sunrise service to main congregation.','vg_ch_3')">
+      <div class="vcard-bg vbg-3"><div class="media-wrap" id="mw-vg_ch_3" style="position:absolute;inset:0"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div><div class="vcard-overlay"></div><div class="vcard-play"></div>
+      <div class="vcard-type">Church Highlight</div><div class="vcard-dur">6:30</div>
+      <div class="vcard-info"><div class="vcard-year">2024</div><div class="vcard-title">Easter Sunday</div><div class="vcard-client">Easter Special</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="site-content.js"></script>
+<script>
+if (window.AnonContent) {
+  window.addEventListener(window.AnonContent.events.updated, () => {
+    if (window.__anonContentReloaded) return;
+    window.__anonContentReloaded = true;
+    window.location.reload();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED MEDIA ENGINE
+   ─ Add/update URLs in the MEDIA_CONFIG object below.
+   ─ Set src:"" to keep the dark gradient placeholder.
+   ─ type: "image" | "video"
+   ─ Everything else (lazy loading, fade-in, fallback) is automatic.
+═══════════════════════════════════════════════════════════ */
+const MEDIA_CONFIG = {
+  /* ── gallery.html ──────────────────────────── */
+  /* Video preview panels (expanding) */
+  g_vpanel_1: { src:'', type:'video', alt:'Documentary — Quiet Hours' },
+  g_vpanel_2: { src:'', type:'video', alt:'Music Video — Neon Reverie' },
+  g_vpanel_3: { src:'', type:'video', alt:'Wedding — Adaeze & Chidi' },
+  g_vpanel_4: { src:'', type:'video', alt:'Brand Advert — Brand Pulse' },
+  g_vpanel_5: { src:'', type:'video', alt:'Church — Sunday Echoes' },
+  /* Photo preview cards (fanned) */
+  g_pcard_1:  { src:'', type:'image', alt:'Faces of Lagos' },
+  g_pcard_2:  { src:'', type:'image', alt:'Harmattan Gold' },
+  g_pcard_3:  { src:'', type:'image', alt:'Brand Pulse' },
+  g_pcard_4:  { src:'', type:'image', alt:'The City Breathes' },
+  g_pcard_5:  { src:'', type:'image', alt:'Quiet Luxury' },
+
+  /* ── photo-gallery.html ─────────────────────── */
+  /* Series 01 — Faces of Lagos */
+  pg_s1_p1: { src:'', type:'image', alt:'Faces of Lagos 01' },
+  pg_s1_p2: { src:'', type:'image', alt:'Faces of Lagos 02' },
+  pg_s1_p3: { src:'', type:'image', alt:'Faces of Lagos 03' },
+  pg_s1_p4: { src:'', type:'image', alt:'Faces of Lagos 04' },
+  pg_s1_p5: { src:'', type:'image', alt:'Faces of Lagos 05' },
+  /* Series 02 — Harmattan Gold */
+  pg_s2_p1: { src:'', type:'image', alt:'Harmattan Gold 01' },
+  pg_s2_p2: { src:'', type:'image', alt:'Harmattan Gold 02' },
+  pg_s2_p3: { src:'', type:'image', alt:'Harmattan Gold 03' },
+  pg_s2_p4: { src:'', type:'image', alt:'Harmattan Gold 04' },
+  pg_s2_p5: { src:'', type:'image', alt:'Harmattan Gold 05' },
+  /* Series 03 — Brand Pulse */
+  pg_s3_p1: { src:'', type:'image', alt:'Brand Pulse — Hero Shot' },
+  pg_s3_p2: { src:'', type:'image', alt:'Brand Pulse — Product' },
+  pg_s3_p3: { src:'', type:'image', alt:'Brand Pulse — Lifestyle' },
+  pg_s3_p4: { src:'', type:'image', alt:'Brand Pulse — Lookbook' },
+  pg_s3_p5: { src:'', type:'image', alt:'Brand Pulse — More' },
+  /* Series 04 — The City Breathes */
+  pg_s4_p1: { src:'', type:'image', alt:'City Breathes 01' },
+  pg_s4_p2: { src:'', type:'image', alt:'City Breathes 02' },
+  pg_s4_p3: { src:'', type:'image', alt:'City Breathes 03' },
+  pg_s4_p4: { src:'', type:'image', alt:'City Breathes 04' },
+  pg_s4_p5: { src:'', type:'image', alt:'City Breathes 05' },
+  /* Lightbox thumbnails — shown inside opened series */
+  pg_lb_thumb: [], /* populated dynamically from series src */
+
+  /* ── video-gallery.html ─────────────────────── */
+  /* Documentary */
+  vg_doc_1: { src:'', type:'video', alt:'Quiet Hours',     thumb:'' },
+  vg_doc_2: { src:'', type:'video', alt:'Tide & Trade',    thumb:'' },
+  vg_doc_3: { src:'', type:'video', alt:'The Makers',      thumb:'' },
+  vg_doc_4: { src:'', type:'video', alt:'City of Sound',   thumb:'' },
+  vg_doc_5: { src:'', type:'video', alt:'Harvest',         thumb:'' },
+  vg_doc_6: { src:'', type:'video', alt:'Beyond the Frame',thumb:'' },
+  /* Music Video */
+  vg_mv_1:  { src:'', type:'video', alt:'Neon Reverie',    thumb:'' },
+  vg_mv_2:  { src:'', type:'video', alt:'Ọjọ Ìbí',        thumb:'' },
+  vg_mv_3:  { src:'', type:'video', alt:'Midnight Lagos',  thumb:'' },
+  vg_mv_4:  { src:'', type:'video', alt:'Gold Rush',       thumb:'' },
+  vg_mv_5:  { src:'', type:'video', alt:'Still Waters',    thumb:'' },
+  vg_mv_6:  { src:'', type:'video', alt:'Move',            thumb:'' },
+  /* Wedding */
+  vg_wed_1: { src:'', type:'video', alt:'Adaeze & Chidi',  thumb:'' },
+  vg_wed_2: { src:'', type:'video', alt:'Folake & Seun',   thumb:'' },
+  vg_wed_3: { src:'', type:'video', alt:'Amaka & Daniel',  thumb:'' },
+  vg_wed_4: { src:'', type:'video', alt:'Kemi & Tobi',     thumb:'' },
+  vg_wed_5: { src:'', type:'video', alt:'Blessing & Emeka',thumb:'' },
+  /* Brand Advert */
+  vg_ad_1:  { src:'', type:'video', alt:'Brand Pulse Hero',thumb:'' },
+  vg_ad_2:  { src:'', type:'video', alt:'Glow Campaign',   thumb:'' },
+  vg_ad_3:  { src:'', type:'video', alt:'Moves',           thumb:'' },
+  /* Church */
+  vg_ch_1:  { src:'', type:'video', alt:'Sunday Echoes',   thumb:'' },
+  vg_ch_2:  { src:'', type:'video', alt:'Encounter Conf',  thumb:'' },
+  vg_ch_3:  { src:'', type:'video', alt:'Easter Sunday',   thumb:'' },
+};
+if (window.AnonContent) window.AnonContent.mergeIntoConfig(MEDIA_CONFIG);
+
+/* ── Core renderer ─────────────────────────────────────── */
+function _createMediaEl(src, type, alt) {
+  if (!src) return null;
+  let el;
+  if (type === 'video') {
+    el = document.createElement('video');
+    el.src = src; el.muted = true; el.loop = true;
+    el.playsInline = true; el.preload = 'none';
+    el.setAttribute('aria-label', alt);
+  } else {
+    el = document.createElement('img');
+    el.src = src; el.alt = alt;
+    el.loading = 'lazy'; el.decoding = 'async';
+  }
+  return el;
+}
+
+function _mountInWrap(wrap, src, type, alt) {
+  if (!src) return;
+  const el = _createMediaEl(src, type, alt);
+  if (!el) return;
+  const event = type === 'video' ? 'canplay' : 'load';
+  el.addEventListener(event, () => {
+    el.classList.add('m-loaded');
+    wrap.classList.add('m-ready');
+  });
+  el.addEventListener('error', () => {
+    el.remove();
+    const fb = wrap.querySelector('.media-fallback');
+    if (fb) fb.style.opacity = '1';
+  });
+  const fb = wrap.querySelector('.media-fallback');
+  wrap.insertBefore(el, fb || null);
+}
+
+/* Thumbnail src — use thumb if set, else poster frame from video, else image src */
+function _thumbSrc(cfg) {
+  return cfg.thumb || cfg.src || '';
+}
+
+/* ── Intersection Observer — lazy load on enter viewport ── */
+const _mObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const w = e.target;
+    if (w.dataset.mLoaded) return;
+    w.dataset.mLoaded = '1';
+    _mountInWrap(w, w.dataset.mSrc||'', w.dataset.mType||'image', w.dataset.mAlt||'');
+    _mObs.unobserve(w);
+  });
+}, { rootMargin:'250px 0px', threshold:0 });
+
+/* ── Register a .media-wrap div with config key ─────────── */
+function registerMedia(selector, cfgKey, scope) {
+  const root = scope || document;
+  const wraps = root.querySelectorAll(selector);
+  wraps.forEach(w => {
+    const cfg = MEDIA_CONFIG[cfgKey];
+    if (!cfg || !cfg.src) return;
+    w.dataset.mSrc  = cfg.src;
+    w.dataset.mType = cfg.type;
+    w.dataset.mAlt  = cfg.alt || '';
+    _mObs.observe(w);
+  });
+}
+
+/* ── Register a background-style .X-bg div ──────────────── */
+function registerBgMedia(el, cfgKey) {
+  if (!el) return;
+  const cfg = MEDIA_CONFIG[cfgKey];
+  if (!cfg || !cfg.src) return;
+  // Wrap content in a media-wrap if not already
+  if (!el.querySelector('.media-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'media-wrap';
+    wrap.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+    const fb = document.createElement('div');
+    fb.className = 'media-fallback';
+    wrap.appendChild(fb);
+    el.style.position = 'relative';
+    el.prepend(wrap);
+    wrap.dataset.mSrc  = cfg.src;
+    wrap.dataset.mType = cfg.type;
+    wrap.dataset.mAlt  = cfg.alt || '';
+    _mObs.observe(wrap);
+  }
+}
+
+/* ── Video modal: attach src when opened ────────────────── */
+function _attachModalVideo(cfgKey) {
+  const cfg = MEDIA_CONFIG[cfgKey];
+  const player = document.getElementById('vm-player-wrap');
+  if (!player) return;
+  player.innerHTML = '';
+  if (cfg && cfg.embedUrl) {
+    const frame = document.createElement('iframe');
+    frame.src = cfg.embedUrl;
+    frame.allow = 'autoplay; fullscreen; picture-in-picture';
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.style.cssText = 'width:100%;height:100%;border:0';
+    player.appendChild(frame);
+  } else if (cfg && (cfg.sourceUrl || cfg.src)) {
+    const v = document.createElement('video');
+    v.src = cfg.sourceUrl || cfg.src; v.controls = true; v.autoplay = true;
+    v.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    player.appendChild(v);
+  } else {
+    player.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px"><div style=\"font-size:40px;opacity:.1\">▶</div><div style=\"font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3)\">Add video URL to MEDIA_CONFIG</div></div>';
+  }
+}
+
+/* ── Lightbox thumbnails: render from config keys ───────── */
+function _renderLbThumbs(seriesKeys, activeIdx) {
+  const c = document.getElementById('lb-thumbs');
+  if (!c) return;
+  c.innerHTML = '';
+  seriesKeys.forEach((key, i) => {
+    const cfg = MEDIA_CONFIG[key];
+    const src = cfg ? _thumbSrc(cfg) : '';
+    const t = document.createElement('div');
+    t.className = 'lb-thumb' + (i === activeIdx ? ' active' : '');
+    t.innerHTML = src
+      ? `<img src="${src}" alt="${cfg.alt||''}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;min-height:72px;opacity:0;transition:opacity .4s" onload="this.style.opacity=1">`
+      : `<div class="lb-thumb-inner" style="min-height:72px"></div>`;
+    t.onclick = () => {
+      document.querySelectorAll('.lb-thumb').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      _lbShowMain(key, i, seriesKeys.length);
+    };
+    c.appendChild(t);
+  });
+}
+
+function _lbShowMain(key, idx, total) {
+  const cfg = MEDIA_CONFIG[key];
+  const bg = document.getElementById('lb-bg');
+  const icon = document.getElementById('lb-main-icon');
+  if (!bg) return;
+  bg.innerHTML = '';
+  if (cfg && cfg.src) {
+    const el = _createMediaEl(cfg.src, cfg.type, cfg.alt||'');
+    if (el) {
+      el.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s';
+      const ev = cfg.type==='video'?'canplay':'load';
+      el.addEventListener(ev, () => el.style.opacity='1');
+      bg.appendChild(el);
+    }
+  } else {
+    if (icon) icon.style.display = 'flex';
+  }
+  const ctr = document.getElementById('lb-counter');
+  if (ctr) ctr.textContent = `${idx+1} / ${total}`;
+}
+
+/* Pacman cursor is loaded from assets/js/pacman-cursor.js */
+
+
+/* Observe all vcard media wraps */
+(()=>{const w=document.getElementById('mw-vg_doc_1');if(w&&MEDIA_CONFIG['vg_doc_1']&&MEDIA_CONFIG['vg_doc_1'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_1'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_1'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_1'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_doc_2');if(w&&MEDIA_CONFIG['vg_doc_2']&&MEDIA_CONFIG['vg_doc_2'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_2'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_2'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_2'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_doc_3');if(w&&MEDIA_CONFIG['vg_doc_3']&&MEDIA_CONFIG['vg_doc_3'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_3'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_3'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_3'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_doc_4');if(w&&MEDIA_CONFIG['vg_doc_4']&&MEDIA_CONFIG['vg_doc_4'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_4'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_4'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_4'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_doc_5');if(w&&MEDIA_CONFIG['vg_doc_5']&&MEDIA_CONFIG['vg_doc_5'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_5'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_5'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_5'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_doc_6');if(w&&MEDIA_CONFIG['vg_doc_6']&&MEDIA_CONFIG['vg_doc_6'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_doc_6'].src;w.dataset.mType=MEDIA_CONFIG['vg_doc_6'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_doc_6'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_1');if(w&&MEDIA_CONFIG['vg_mv_1']&&MEDIA_CONFIG['vg_mv_1'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_1'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_1'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_1'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_2');if(w&&MEDIA_CONFIG['vg_mv_2']&&MEDIA_CONFIG['vg_mv_2'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_2'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_2'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_2'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_3');if(w&&MEDIA_CONFIG['vg_mv_3']&&MEDIA_CONFIG['vg_mv_3'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_3'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_3'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_3'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_4');if(w&&MEDIA_CONFIG['vg_mv_4']&&MEDIA_CONFIG['vg_mv_4'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_4'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_4'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_4'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_5');if(w&&MEDIA_CONFIG['vg_mv_5']&&MEDIA_CONFIG['vg_mv_5'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_5'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_5'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_5'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_mv_6');if(w&&MEDIA_CONFIG['vg_mv_6']&&MEDIA_CONFIG['vg_mv_6'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_mv_6'].src;w.dataset.mType=MEDIA_CONFIG['vg_mv_6'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_mv_6'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_wed_1');if(w&&MEDIA_CONFIG['vg_wed_1']&&MEDIA_CONFIG['vg_wed_1'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_wed_1'].src;w.dataset.mType=MEDIA_CONFIG['vg_wed_1'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_wed_1'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_wed_2');if(w&&MEDIA_CONFIG['vg_wed_2']&&MEDIA_CONFIG['vg_wed_2'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_wed_2'].src;w.dataset.mType=MEDIA_CONFIG['vg_wed_2'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_wed_2'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_wed_3');if(w&&MEDIA_CONFIG['vg_wed_3']&&MEDIA_CONFIG['vg_wed_3'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_wed_3'].src;w.dataset.mType=MEDIA_CONFIG['vg_wed_3'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_wed_3'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_wed_4');if(w&&MEDIA_CONFIG['vg_wed_4']&&MEDIA_CONFIG['vg_wed_4'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_wed_4'].src;w.dataset.mType=MEDIA_CONFIG['vg_wed_4'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_wed_4'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_wed_5');if(w&&MEDIA_CONFIG['vg_wed_5']&&MEDIA_CONFIG['vg_wed_5'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_wed_5'].src;w.dataset.mType=MEDIA_CONFIG['vg_wed_5'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_wed_5'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ad_1');if(w&&MEDIA_CONFIG['vg_ad_1']&&MEDIA_CONFIG['vg_ad_1'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ad_1'].src;w.dataset.mType=MEDIA_CONFIG['vg_ad_1'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ad_1'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ad_2');if(w&&MEDIA_CONFIG['vg_ad_2']&&MEDIA_CONFIG['vg_ad_2'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ad_2'].src;w.dataset.mType=MEDIA_CONFIG['vg_ad_2'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ad_2'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ad_3');if(w&&MEDIA_CONFIG['vg_ad_3']&&MEDIA_CONFIG['vg_ad_3'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ad_3'].src;w.dataset.mType=MEDIA_CONFIG['vg_ad_3'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ad_3'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ch_1');if(w&&MEDIA_CONFIG['vg_ch_1']&&MEDIA_CONFIG['vg_ch_1'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ch_1'].src;w.dataset.mType=MEDIA_CONFIG['vg_ch_1'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ch_1'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ch_2');if(w&&MEDIA_CONFIG['vg_ch_2']&&MEDIA_CONFIG['vg_ch_2'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ch_2'].src;w.dataset.mType=MEDIA_CONFIG['vg_ch_2'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ch_2'].alt||'';_mObs.observe(w);}})()
+(()=>{const w=document.getElementById('mw-vg_ch_3');if(w&&MEDIA_CONFIG['vg_ch_3']&&MEDIA_CONFIG['vg_ch_3'].src){w.dataset.mSrc=MEDIA_CONFIG['vg_ch_3'].src;w.dataset.mType=MEDIA_CONFIG['vg_ch_3'].type;w.dataset.mAlt=MEDIA_CONFIG['vg_ch_3'].alt||'';_mObs.observe(w);}})()
+
+const VIDEO_LAYOUTS = [
+  { sectionId:'cat-doc', key:'documentary', label:'Documentary', countSelector:'doc' },
+  { sectionId:'cat-music', key:'music-video', label:'Music Video', countSelector:'music' },
+  { sectionId:'cat-wedding', key:'wedding', label:'Wedding Film', countSelector:'wedding' },
+  { sectionId:'cat-advert', key:'advert', label:'Brand Advert', countSelector:'advert' },
+  { sectionId:'cat-church', key:'church', label:'Church Highlight', countSelector:'church' }
+];
+
+function _videoCfgFromItem(item){
+  return {
+    src:item.src||'',
+    sourceUrl:item.sourceUrl||item.src||'',
+    type:item.embedUrl&&item.thumb?'image':'video',
+    alt:item.title||'',
+    thumb:item.thumb||'',
+    embedUrl:item.embedUrl||'',
+    videoProvider:item.videoProvider||''
+  };
+}
+
+function _applyVideoCard(card,item,cfgKey,label){
+  if(!card||!item)return;
+  card.style.display='';
+  const wrap=card.querySelector('.media-wrap');
+  if(wrap){
+    wrap.innerHTML='<div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".7"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    wrap.dataset.mLoaded='';
+    wrap.classList.remove('m-ready');
+    wrap.dataset.mSrc=MEDIA_CONFIG[cfgKey].src||'';
+    wrap.dataset.mType=MEDIA_CONFIG[cfgKey].type||'image';
+    wrap.dataset.mAlt=MEDIA_CONFIG[cfgKey].alt||'';
+    _mObs.observe(wrap);
+  }
+  const typeEl=card.querySelector('.vcard-type');
+  const yearEl=card.querySelector('.vcard-year');
+  const titleEl=card.querySelector('.vcard-title');
+  const clientEl=card.querySelector('.vcard-client');
+  const durEl=card.querySelector('.vcard-dur');
+  if(typeEl) typeEl.textContent=label;
+  if(yearEl) yearEl.textContent=item.year||'';
+  if(titleEl) titleEl.textContent=item.title||'Untitled';
+  if(clientEl) clientEl.textContent=item.client||'Anon Studios';
+  if(durEl) durEl.textContent=item.duration||'';
+  card.onclick=()=>openVideo(label,item.title||'Untitled',item.description||item.title||'Video',cfgKey);
+}
+
+function _refreshVideoWrappers(section){
+  section.querySelectorAll('div').forEach(node=>{
+    if(node.classList.contains('cat-section')||node.classList.contains('cat-section-head')||node.classList.contains('vcard')) return;
+    const cards=node.querySelectorAll('.vcard');
+    if(!cards.length) return;
+    node.hidden=[...cards].every(card=>card.style.display==='none');
+  });
+}
+
+function adaptVideoCategoryLayouts(){
+  if(!window.AnonContent||typeof window.AnonContent.getVideoCategoryMeta!=='function') return;
+  const meta=window.AnonContent.getVideoCategoryMeta();
+  VIDEO_LAYOUTS.forEach(layout=>{
+    const section=document.getElementById(layout.sectionId);
+    const categoryMeta=meta[layout.key];
+    if(!section||!categoryMeta) return;
+    const items=categoryMeta.items||[];
+    const baseCards=Array.from(section.querySelectorAll('.vcard')).filter(card=>!card.classList.contains('anon-video-extra'));
+    section.querySelectorAll('.anon-video-extra-grid').forEach(node=>node.remove());
+    baseCards.forEach((card,index)=>{
+      const item=items[index];
+      if(!item){ card.style.display='none'; return; }
+      const cfgKey='anon_dyn_'+layout.key+'_'+index;
+      MEDIA_CONFIG[cfgKey]=_videoCfgFromItem(item);
+      _applyVideoCard(card,item,cfgKey,layout.label);
+    });
+    if(items.length>baseCards.length&&baseCards.length){
+      const grid=document.createElement('div');
+      grid.className='vgrid vgrid-3 anon-video-extra-grid';
+      grid.style.marginTop='3px';
+      const template=baseCards[baseCards.length-1];
+      for(let i=baseCards.length;i<items.length;i++){
+        const item=items[i];
+        const clone=template.cloneNode(true);
+        clone.classList.add('anon-video-extra');
+        const cfgKey='anon_dyn_'+layout.key+'_'+i;
+        MEDIA_CONFIG[cfgKey]=_videoCfgFromItem(item);
+        _applyVideoCard(clone,item,cfgKey,layout.label);
+        grid.appendChild(clone);
+      }
+      section.appendChild(grid);
+    }
+    const headCount=section.querySelector('.cat-section-head span:last-child');
+    if(headCount) headCount.textContent=String(items.length).padStart(2,'0')+' FILMS';
+    _refreshVideoWrappers(section);
+  });
+}
+/* NAV */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
+
+/* CATEGORY SWITCH */
+function switchCat(btn,cat){
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.cat-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  const section = document.getElementById('cat-'+cat);
+  section.classList.add('active');
+  // Reset and immediately show all cards in the newly active section
+  section.querySelectorAll('.vcard').forEach((c,i)=>{
+    c.classList.remove('visible');
+    setTimeout(()=>c.classList.add('visible'), i * 60);
+  });
+  // Scroll back to top of tabs
+  document.querySelector('.cat-tabs').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* SCROLL REVEAL — only for initial page load */
+function revealCards(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach((en,i)=>{
+      if(en.isIntersecting){
+        setTimeout(()=>en.target.classList.add('visible'),i*80);
+        obs.unobserve(en.target);
+      }
+    });
+  },{threshold:.08});
+  document.querySelectorAll('.cat-section.active .vcard').forEach(c=>obs.observe(c));
+}
+adaptVideoCategoryLayouts();
+revealCards();
+
+/* VIDEO MODAL */
+function openVideo(cat,title,desc,cfgKey){
+  document.getElementById('vm-cat').textContent=cat;
+  document.getElementById('vm-title').textContent=title;
+  document.getElementById('vm-desc').textContent=desc;
+  _attachModalVideo(cfgKey||'');
+  document.getElementById('vmodal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('vmodal').classList.remove('open');
+  document.body.style.overflow='';
+  const pw=document.getElementById('vm-player-wrap'); if(pw){const v=pw.querySelector('video'); if(v)v.pause(); pw.innerHTML='';}
+}
+document.getElementById('vmodal').addEventListener('click',e=>{if(e.target===document.getElementById('vmodal'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+if (window.AnonContent) {
+  window.AnonContent.hydrateVideoPage();
+  if (typeof window.AnonContent.refreshRemote === 'function') {
+    window.AnonContent.refreshRemote().then(() => {
+      window.AnonContent.hydrateVideoPage();
+    });
+  }
+}
+</script>
+<script src="assets/js/pacman-cursor.js?v=20260404d" defer></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin - Anon Studios</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080807;--bg2:#0f0e0d;--bg3:#161513;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.04);
+  --w:#f0ebe2;--w60:rgba(240,235,226,.55);--w30:rgba(240,235,226,.25);
+  --gold:#2dd4a0;--golddim:rgba(45,212,160,.08);--goldborder:rgba(45,212,160,.25);
+  --red:#e05555;--reddim:rgba(224,85,85,.1);
+  --sans:'Barlow',-apple-system,sans-serif;
+  --display:'Bebas Neue',sans-serif;
+  --mono:'Space Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:var(--sans);font-size:14px;min-height:100vh}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:var(--sans)}
+input,textarea,select{font-family:var(--sans)}
+.admin-wrap{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--line);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-brand{padding:28px 24px 20px;border-bottom:1px solid var(--line)}
+.sidebar-logo{font-family:var(--display);font-size:20px;letter-spacing:4px;color:var(--w)}
+.sidebar-logo em{color:var(--gold);font-style:normal}
+.sidebar-sub{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);margin-top:4px}
+.sidebar-nav{padding:16px 0;flex:1}
+.nav-section{padding:8px 24px 4px;font-family:var(--mono);font-size:7px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 24px;cursor:pointer;font-size:13px;font-weight:500;color:var(--w60);transition:color .2s,background .2s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--w);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--gold);background:var(--golddim);border-left-color:var(--gold)}
+.nav-item svg{width:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5}
+.sidebar-footer{padding:20px 24px;border-top:1px solid var(--line);display:grid;gap:10px}
+.sidebar-footer a,.sidebar-footer button{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);display:flex;align-items:center;gap:8px;transition:color .2s;background:none;border:none;padding:0;text-align:left}
+.sidebar-footer a:hover,.sidebar-footer button:hover{color:var(--gold)}
+.main{padding:40px 48px;overflow-y:auto}
+.page-header{margin-bottom:36px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.page-title{font-family:var(--display);font-size:36px;letter-spacing:3px;margin-bottom:6px}
+.page-desc{font-size:13px;color:var(--w60);font-weight:300;line-height:1.6;max-width:820px}
+.section{display:none}
+.section.active{display:block}
+.section-title{font-family:var(--display);font-size:22px;letter-spacing:2px;margin-bottom:20px;color:var(--gold)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
+.stat-box{background:var(--bg2);border:1px solid var(--line);padding:20px}
+.stat-box-n{font-family:var(--display);font-size:32px;letter-spacing:2px;color:var(--gold)}
+.stat-box-l{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);margin-top:4px}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:28px}
+.media-card{background:var(--bg2);border:1px solid var(--line);padding:20px;position:relative;transition:border-color .3s}
+.media-card:hover{border-color:var(--goldborder)}
+.mc-label{font-family:var(--mono);font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.mc-name{font-size:13px;font-weight:600;color:var(--w);margin-bottom:14px}
+.mc-preview{width:100%;height:140px;background:var(--bg3);border:1px solid var(--line2);margin-bottom:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.mc-preview img,.mc-preview iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0}
+.mc-preview-icon{opacity:.12}.mc-preview-icon svg{width:28px;stroke:var(--w)}
+.mc-type-badge{position:absolute;top:8px;left:8px;font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;background:rgba(0,0,0,.7);color:var(--gold);padding:3px 7px;z-index:2}
+.mc-status{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#666;z-index:2}.mc-status.has-media{background:var(--gold)}
+.mc-input,.form-input,.mc-select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--w);padding:10px 12px;font-size:12px;outline:none;transition:border-color .3s}.mc-input:focus,.form-input:focus,.mc-select:focus{border-color:var(--gold)}
+.mc-textarea{min-height:84px;resize:vertical}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.form-label{font-family:var(--mono);font-size:7.5px;letter-spacing:2px;text-transform:uppercase;color:var(--w30)}
+.btn{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;border:1px solid;cursor:pointer;transition:background .25s,color .25s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--gold);color:var(--bg);border-color:var(--gold)}.btn-primary:hover{background:transparent;color:var(--gold)}
+.btn-ghost{background:transparent;color:var(--w60);border-color:var(--line)}.btn-ghost:hover{color:var(--w);border-color:rgba(255,255,255,.3)}
+.btn-danger{background:transparent;color:var(--red);border-color:rgba(224,85,85,.3)}.btn-danger:hover{background:var(--reddim)}
+.mc-input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;top:24px;right:24px;z-index:9999;background:var(--bg2);border:1px solid var(--goldborder);padding:14px 20px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);transform:translateX(120%);transition:transform .4s cubic-bezier(.22,1,.36,1)}
+.toast.show{transform:translateX(0)}.toast.error{border-color:rgba(224,85,85,.4);color:var(--red)}
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:var(--bg2);border:1px solid var(--line);padding:48px;width:100%;max-width:400px}.login-logo{font-family:var(--display);font-size:28px;letter-spacing:4px;margin-bottom:6px}.login-logo em{color:var(--gold);font-style:normal}
+.login-sub{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);margin-bottom:32px}.login-err{font-family:var(--mono);font-size:9px;color:var(--red);margin-top:10px;display:none}
+.empty-state{padding:18px;border:1px dashed var(--line);color:var(--w60)}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--w60);line-height:1.6}
+.mobile-menu-btn{display:none}
+@media(max-width:768px){.admin-wrap{grid-template-columns:1fr}.sidebar{position:fixed;left:-240px;z-index:200;transition:left .3s;height:100vh}.sidebar.open{left:0}.main{padding:24px 20px 80px}.media-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}.mobile-menu-btn{display:flex;position:fixed;top:14px;left:14px;z-index:300;width:36px;height:36px;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--line)}}
+@media(min-width:769px){.mobile-menu-btn{display:none}}
+</style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">ANON<em>.</em></div>
+    <div class="login-sub">Admin Dashboard</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="loginPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="doLogin()">Enter Admin</button>
+    <div class="login-err" id="loginErr">Incorrect password. Try again.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="admin-wrap">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><div class="sidebar-logo">ANON<em>.</em></div><div class="sidebar-sub">Media Admin</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="showSection('dashboard',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+      <div class="nav-section">Portfolio</div>
+      <div class="nav-item" onclick="showSection('hero',this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>Hero Cards</div>
+      <div class="nav-item" onclick="showSection('about',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg>About Section</div>
+      <div class="nav-item" onclick="showSection('work',this)"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Featured Work</div>
+      <div class="nav-section">Gallery</div>
+      <div class="nav-item" onclick="showSection('photos',this)"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo Gallery</div>
+      <div class="nav-item" onclick="showSection('videos',this)"><svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>Video Gallery</div>
+      <div class="nav-section">Settings</div>
+      <div class="nav-item" onclick="showSection('settings',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Admin Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/" target="_blank">View Live Site</a>
+      <button onclick="logoutAdmin()">Log Out</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="section active" id="sec-dashboard">
+      <div class="page-header"><div class="page-title">Dashboard</div><div class="page-desc">Overview of your live content library. Photos and videos are managed separately, but the public site still routes them into the right sections automatically by tag.</div></div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-box-n" id="stat-total">0</div><div class="stat-box-l">Total Items</div></div>
+        <div class="stat-box"><div class="stat-box-n" id="stat-photos">0</div><div class="stat-box-l">Photos</div></div>
+        <div class="stat-box"><div class="stat-box-n" id="stat-videos">0</div><div class="stat-box-l">Videos</div></div>
+        <div class="stat-box"><div class="stat-box-n" id="stat-featured">0</div><div class="stat-box-l">Featured Slots Used</div></div>
+      </div>
+      <div class="section-title">Recent Updates</div>
+      <div id="recent-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="section" id="sec-hero"><div class="page-header"><div class="page-title">Hero Cards</div><div class="page-desc">Pick exact uploaded items for the three homepage hero cards. This is separate from gallery auto-placement.</div></div><div class="toolbar"><div class="note">Choose from already uploaded items.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save Hero Selection</button></div><div class="media-grid" id="grid-hero"></div></div>
+    <div class="section" id="sec-about"><div class="page-header"><div class="page-title">About Section</div><div class="page-desc">Set the main image and secondary visual independently from the gallery.</div></div><div class="toolbar"><div class="note">Use uploaded items only.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save About Selection</button></div><div class="media-grid" id="grid-about"></div></div>
+    <div class="section" id="sec-work"><div class="page-header"><div class="page-title">Featured Work</div><div class="page-desc">Choose featured work cards from anything already uploaded in either gallery.</div></div><div class="toolbar"><div class="note">Mix photos and videos freely.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save Featured Work</button></div><div class="media-grid" id="grid-work"></div></div>
+    <div class="section" id="sec-photos"><div class="page-header"><div class="page-title">Photo Gallery</div><div class="page-desc">Upload photos through the backend and edit them anytime. New uploads appear here immediately so they can always be updated later.</div></div><div id="grid-photos"></div></div>
+    <div class="section" id="sec-videos"><div class="page-header"><div class="page-title">Video Gallery</div><div class="page-desc">Save YouTube, Vimeo, or direct video links. Titles stay editable and every saved video remains available here for later changes.</div></div><div id="grid-videos"></div></div>
+    <div class="section" id="sec-settings"><div class="page-header"><div class="page-title">Admin Settings</div><div class="page-desc">Change the admin password for /admin. The default password is anon2025 until you update it.</div></div><div style="background:var(--bg2);border:1px solid var(--line);padding:24px;max-width:420px"><div class="form-group" style="margin-bottom:12px"><label class="form-label">New Password</label><input class="form-input" type="password" id="new-pass" placeholder="Enter new password"></div><div class="form-group" style="margin-bottom:16px"><label class="form-label">Confirm Password</label><input class="form-input" type="password" id="confirm-pass" placeholder="Confirm new password"></div><button class="btn btn-primary" onclick="changePassword()">Update Password</button></div></div>
+  </main>
+</div>
+<script>
+const ADMIN_STORAGE_KEY = 'anon-studios-content-v1';
+const VIDEO_CATEGORIES = [
+  { value: 'documentary', label: 'Documentary' },
+  { value: 'wedding', label: 'Wedding' },
+  { value: 'advert', label: 'Advert' },
+  { value: 'church', label: 'Church' },
+  { value: 'music-video', label: 'Music Video' }
+];
+const PHOTO_CATEGORIES = [
+  { value: 'portrait', label: 'Portrait' },
+  { value: 'editorial', label: 'Editorial' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'street', label: 'Street' },
+  { value: 'fashion', label: 'Fashion' }
+];
+const PHOTO_SERIES_PRESETS = {
+  portrait: { key: 'faces-of-lagos', name: 'Faces of Lagos', description: 'An ongoing portrait series documenting the raw, unguarded humanity of Lagos.', year: '2023 - Ongoing' },
+  editorial: { key: 'harmattan-gold', name: 'Harmattan Gold', description: 'A sun-drenched editorial series exploring light, texture, and the atmospheric haze of harmattan.', year: '2024' },
+  fashion: { key: 'harmattan-gold', name: 'Harmattan Gold', description: 'A fashion-led editorial series exploring light, texture, and atmosphere.', year: '2024' },
+  commercial: { key: 'brand-pulse', name: 'Brand Pulse', description: 'Full commercial campaign imagery from concept to delivery.', year: '2023' },
+  street: { key: 'the-city-breathes', name: 'The City Breathes', description: 'Street photography across Lagos from dusk to dawn.', year: '2022 - 2024' }
+};
+const HERO_SLOTS = [
+  { key: 'hero_card_1', label: 'Hero Card 1', filter: item => true },
+  { key: 'hero_card_2', label: 'Hero Card 2', filter: item => true },
+  { key: 'hero_card_3', label: 'Hero Card 3', filter: item => true },
+  { key: 'about_main', label: 'About Main Visual', filter: item => item.type === 'image' },
+  { key: 'about_sec', label: 'About Secondary Visual', filter: item => true }
+];
+const state = { store: { items: [], settings: { heroSlots: {}, featuredWorkIds: [] } } };
+
+function normalizeSettings(settings) {
+  return {
+    heroSlots: {
+      hero_card_1: settings?.heroSlots?.hero_card_1 || '',
+      hero_card_2: settings?.heroSlots?.hero_card_2 || '',
+      hero_card_3: settings?.heroSlots?.hero_card_3 || '',
+      about_main: settings?.heroSlots?.about_main || '',
+      about_sec: settings?.heroSlots?.about_sec || ''
+    },
+    featuredWorkIds: Array.from({ length: 6 }, (_, i) => (settings?.featuredWorkIds?.[i] || ''))
+  };
+}
+
+function normalizeTag(value) {
+  return String(value || '').trim().toLowerCase().replace(/[_/]+/g, '-').replace(/\s+/g, '-');
+}
+
+function categoryLabel(type, value) {
+  const list = type === 'video' ? VIDEO_CATEGORIES : PHOTO_CATEGORIES;
+  const found = list.find(entry => entry.value === value);
+  return found ? found.label : value;
+}
+
+function getPhotoPreset(category) {
+  return PHOTO_SERIES_PRESETS[category] || PHOTO_SERIES_PRESETS.portrait;
+}
+
+function normalizeItem(item) {
+  if (!item) return item;
+  const type = item.type === 'video' ? 'video' : 'image';
+  const rawCategory = item.category || (Array.isArray(item.tags) ? item.tags[0] : String(item.tags || '').split(',')[0]);
+  const category = normalizeTag(rawCategory || (type === 'video' ? 'documentary' : 'portrait'));
+  return {
+    ...item,
+    type,
+    category,
+    tags: Array.isArray(item.tags) ? item.tags : [category],
+    videoProvider: String(item.videoProvider || '').trim(),
+    fileCode: String(item.fileCode || '').trim(),
+    useHls: Boolean(item.useHls),
+    seriesKey: type === 'image' ? String(item.seriesKey || '').trim() : '',
+    seriesName: type === 'image' ? String(item.seriesName || '').trim() : '',
+    seriesDescription: type === 'image' ? String(item.seriesDescription || '').trim() : '',
+    seriesYear: type === 'image' ? String(item.seriesYear || '').trim() : ''
+  };
+}
+
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''
+  : 'https://anon-studios-backend.onrender.com'; // Adjust this to your real Render backend URL
+
+async function api(url, options) {
+  const response = await fetch(BACKEND_URL + url, {
+    credentials: 'include',
+    headers: { Accept: 'application/json', ...(options && options.body ? { 'Content-Type': 'application/json' } : {}) },
+    ...options
+  });
+  let data = {};
+  try { data = await response.json(); } catch (error) {}
+  if (!response.ok) throw new Error(data.error || data.detail || 'Request failed');
+  return data;
+}
+
+async function uploadImageFile(file, title, tags) {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('title', title);
+  body.append('tags', tags);
+  const response = await fetch(BACKEND_URL + '/api/upload-image', { method: 'POST', body, credentials: 'include' });
+  const uploaded = await response.json();
+  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'Upload failed');
+  return uploaded;
+}
+
+async function uploadDoodstreamVideoFile(file, title) {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('title', title);
+  const response = await fetch(BACKEND_URL + '/api/doodstream/upload', { method: 'POST', body, credentials: 'include' });
+  const uploaded = await response.json();
+  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'DoodStream upload failed');
+  return uploaded;
+}
+
+function showToast(message, type) {
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.className = 'toast show' + (type === 'error' ? ' error' : '');
+  setTimeout(() => { el.className = 'toast'; }, 2600);
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function optionMarkup(items, selected, placeholder) {
+  return ['<option value="">' + placeholder + '</option>']
+    .concat(items.map(item => '<option value="' + item.id + '" ' + (item.id === selected ? 'selected' : '') + '>' + escapeHtml(item.title) + ' (' + item.type + ')</option>'))
+    .join('');
+}
+
+function selectMarkup(options, selected, placeholder) {
+  return ['<option value="">' + placeholder + '</option>']
+    .concat(options.map(option => '<option value="' + option.value + '" ' + (option.value === selected ? 'selected' : '') + '>' + option.label + '</option>'))
+    .join('');
+}
+
+function doLogin() {
+  api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password: document.getElementById('loginPass').value }) })
+    .then(() => {
+      document.getElementById('loginErr').style.display = 'none';
+      document.getElementById('loginPass').value = '';
+      initAdmin();
+      showToast('Welcome back');
+    })
+    .catch(() => { document.getElementById('loginErr').style.display = 'block'; });
+}
+
+function logoutAdmin() {
+  api('/api/admin/logout', { method: 'POST' }).finally(() => { document.getElementById('loginScreen').style.display = 'flex'; });
+}
+
+function changePassword() {
+  const next = document.getElementById('new-pass').value.trim();
+  const confirm = document.getElementById('confirm-pass').value.trim();
+  const current = prompt('Enter your current admin password');
+  if (!current) return;
+  if (!next) { showToast('Enter a new password', 'error'); return; }
+  if (next !== confirm) { showToast('Passwords do not match', 'error'); return; }
+  api('/api/admin/password', { method: 'POST', body: JSON.stringify({ currentPassword: current, nextPassword: next }) })
+    .then(() => {
+      document.getElementById('new-pass').value = '';
+      document.getElementById('confirm-pass').value = '';
+      showToast('Password updated');
+    })
+    .catch(error => showToast(error.message, 'error'));
+}
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function itemsByType(type) {
+  return (state.store.items || []).map(normalizeItem).filter(item => item.type === type);
+}
+
+function renderDashboard() {
+  const items = (state.store.items || []).map(normalizeItem);
+  const settings = normalizeSettings(state.store.settings);
+  document.getElementById('stat-total').textContent = String(items.length);
+  document.getElementById('stat-photos').textContent = String(itemsByType('image').length);
+  document.getElementById('stat-videos').textContent = String(itemsByType('video').length);
+  document.getElementById('stat-featured').textContent = String(Object.values(settings.heroSlots).filter(Boolean).length + settings.featuredWorkIds.filter(Boolean).length);
+  const list = document.getElementById('recent-list');
+  list.innerHTML = items.length ? items.slice(0, 8).map(item => '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg2);border:1px solid var(--line)"><div style="width:40px;height:40px;background:var(--bg3);flex-shrink:0;overflow:hidden">' + ((item.thumb || item.src) ? '<img src="' + escapeHtml(item.thumb || item.src) + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;opacity:.2">.</div>') + '</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(item.title) + '</div><div style="font-family:var(--mono);font-size:8px;color:var(--w30);letter-spacing:1px;margin-top:2px">' + escapeHtml(categoryLabel(item.type, item.category)) + ' - ' + escapeHtml(item.type.toUpperCase()) + '</div></div></div>').join('') : '<div style="color:var(--w30);font-size:13px;padding:20px 0">No content saved yet.</div>';
+}
+
+function renderSelectionGrid(targetId, defs, values) {
+  const items = (state.store.items || []).map(normalizeItem);
+  const target = document.getElementById(targetId);
+  target.innerHTML = '';
+  defs.forEach(def => {
+    const candidates = items.filter(def.filter);
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = '<div class="mc-label">Selection</div><div class="mc-name">' + def.label + '</div><div class="form-group"><label class="form-label">Choose Uploaded Item</label><select class="mc-select" data-slot="' + def.key + '">' + optionMarkup(candidates, values[def.key] || '', 'Auto-select from gallery') + '</select></div><div class="note">Leave blank to let the site choose automatically.</div>';
+    target.appendChild(card);
+  });
+}
+
+function renderFeaturedWork() {
+  const items = (state.store.items || []).map(normalizeItem);
+  const settings = normalizeSettings(state.store.settings);
+  const target = document.getElementById('grid-work');
+  target.className = 'media-grid';
+  target.innerHTML = '';
+  for (let i = 0; i < 6; i += 1) {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = '<div class="mc-label">Featured Work</div><div class="mc-name">Slot ' + (i + 1) + '</div><div class="form-group"><label class="form-label">Choose Uploaded Item</label><select class="mc-select" data-featured-index="' + i + '">' + optionMarkup(items, settings.featuredWorkIds[i] || '', 'Auto-select from gallery') + '</select></div><div class="note">Pick from uploaded photo or video items.</div>';
+    target.appendChild(card);
+  }
+}
+
+function previewMarkup(item) {
+  if (item.type === 'image') return (item.thumb || item.src) ? '<img src="' + escapeHtml(item.thumb || item.src) + '">' : '';
+  if (item.thumb) return '<img src="' + escapeHtml(item.thumb) + '">';
+  return '<div class="mc-preview-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+}
+
+function buildPhotoCard(item) {
+  const preset = getPhotoPreset(item.category);
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="image"><div class="mc-label">Photo Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('image', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Project Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Photo Category</label><select class="mc-select" data-field="category">' + selectMarkup(PHOTO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="mc-input" data-field="seriesName" value="' + escapeHtml(item.seriesName || preset.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="mc-input mc-textarea" data-field="seriesDescription">' + escapeHtml(item.seriesDescription || preset.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="mc-input" data-field="seriesYear" value="' + escapeHtml(item.seriesYear || preset.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Replace Photo</label><input class="form-input" data-upload-field="imageFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">This project stays linked to the matching front-end series.</div></div>';
+}
+
+function buildVideoCard(item) {
+  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : 'direct';
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="video"><div class="mc-label">Video Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('video', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Video Category</label><select class="mc-select" data-field="category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="mc-select" data-field="videoProvider"><option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option><option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="mc-input" data-field="sourceUrl" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="mc-input" data-field="fileCode" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Use existing DoodStream file code if needed"></div><div class="form-group"><label class="form-label">Replace / Upload Video To DoodStream</label><input class="form-input" data-upload-field="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="mc-input" data-field="thumb" value="' + escapeHtml(item.thumb || '') + '"></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" data-upload-field="thumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Duration</label><input class="mc-input" data-field="duration" value="' + escapeHtml(item.duration || '') + '"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">DoodStream uploads happen through your backend. For DoodStream-branded content, use a file upload or paste the existing file code. Direct URL entries still support YouTube, Vimeo, and raw video links.</div></div>';
+}
+
+function syncPhotoPreset(form) {
+  const category = normalizeTag(form.querySelector('[name="photoCategory"]').value || 'portrait');
+  const preset = getPhotoPreset(category);
+  if (!form.querySelector('[name="photoSeriesName"]').value.trim()) form.querySelector('[name="photoSeriesName"]').value = preset.name;
+  if (!form.querySelector('[name="photoSeriesDescription"]').value.trim()) form.querySelector('[name="photoSeriesDescription"]').value = preset.description;
+  if (!form.querySelector('[name="photoSeriesYear"]').value.trim()) form.querySelector('[name="photoSeriesYear"]').value = preset.year;
+}
+
+function renderPhotos() {
+  const target = document.getElementById('grid-photos');
+  const items = itemsByType('image').sort((a, b) => {
+    if ((a.seriesName || '') !== (b.seriesName || '')) return (a.seriesName || '').localeCompare(b.seriesName || '');
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+  const groups = {};
+  items.forEach(item => {
+    const key = item.seriesKey || item.seriesName || item.category || 'other';
+    if (!groups[key]) groups[key] = { title: item.seriesName || getPhotoPreset(item.category).name, category: item.category, items: [] };
+    groups[key].items.push(item);
+  });
+  const groupMarkup = Object.values(groups).map(group => '<div style="margin-bottom:18px"><div class="toolbar" style="margin-bottom:12px"><div><div class="mc-label">Series</div><div class="mc-name" style="margin-bottom:0">' + escapeHtml(group.title) + '</div></div><div class="note">' + escapeHtml(categoryLabel('image', group.category)) + '</div></div><div class="media-grid">' + group.items.map(buildPhotoCard).join('') + '</div></div>').join('');
+  target.className = '';
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Photo</div><div class="mc-name">Create New Photo Project</div><form id="photoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Project Title</label><input class="form-input" name="photoTitle" required></div><div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" name="photoCategory">' + selectMarkup(PHOTO_CATEGORIES, 'portrait', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="form-input" name="photoSeriesName" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" name="photoSeriesDescription">' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="form-input" name="photoSeriesYear" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="form-input" name="photoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="photoClient"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="photoDescription"></textarea></div><div class="form-group"><label class="form-label">Project Images</label><input class="form-input" name="photoFile" type="file" accept="image/*" multiple required></div><button class="btn btn-primary" type="submit">Upload Project Images</button></form><div class="note" style="margin-top:12px">Upload one image or many at once. The front-end series will now adapt to however many images the project has.</div></div>' + (groupMarkup || '<div class="empty-state">No photo projects yet.</div>');
+  const form = document.getElementById('photoForm');
+  form.addEventListener('submit', submitPhoto);
+  form.querySelector('[name="photoCategory"]').addEventListener('change', () => {
+    form.querySelector('[name="photoSeriesName"]').value = '';
+    form.querySelector('[name="photoSeriesDescription"]').value = '';
+    form.querySelector('[name="photoSeriesYear"]').value = '';
+    syncPhotoPreset(form);
+  });
+  target.onclick = handleCardAction;
+}
+
+function renderVideos() {
+  const target = document.getElementById('grid-videos');
+  const items = itemsByType('video').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  target.className = '';
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="doodstream">DoodStream</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream"></div><div class="form-group"><label class="form-label">Upload Video To DoodStream</label><input class="form-input" name="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" name="videoThumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use DoodStream when you want the video uploaded through your backend. Use direct mode for YouTube, Vimeo, or raw hosted video links. Any DoodStream ad/logo behavior must follow your DoodStream account entitlements and API terms.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
+  document.getElementById('videoForm').addEventListener('submit', submitVideo);
+  target.querySelector('.media-grid').addEventListener('click', handleCardAction);
+}
+
+function renderAll() {
+  const settings = normalizeSettings(state.store.settings);
+  renderDashboard();
+  renderSelectionGrid('grid-hero', HERO_SLOTS.slice(0, 3), settings.heroSlots);
+  renderSelectionGrid('grid-about', HERO_SLOTS.slice(3), settings.heroSlots);
+  renderFeaturedWork();
+  renderPhotos();
+  renderVideos();
+}
+
+async function refreshStore() {
+  state.store = await api('/api/content');
+  window.localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(state.store));
+  renderAll();
+}
+
+async function saveHomeSelections() {
+  const settings = normalizeSettings(state.store.settings);
+  document.querySelectorAll('[data-slot]').forEach(select => { settings.heroSlots[select.dataset.slot] = select.value; });
+  document.querySelectorAll('[data-featured-index]').forEach(select => { settings.featuredWorkIds[Number(select.dataset.featuredIndex)] = select.value; });
+  state.store = await api('/api/settings', { method: 'PUT', body: JSON.stringify(settings) });
+  renderAll();
+  showToast('Selections saved');
+}
+
+async function submitPhoto(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const files = Array.from(form.querySelector('[name="photoFile"]').files || []);
+  if (!files.length) { showToast('Choose at least one image file', 'error'); return; }
+  const category = normalizeTag(form.querySelector('[name="photoCategory"]').value || 'portrait');
+  const preset = getPhotoPreset(category);
+  try {
+    const baseTitle = form.querySelector('[name="photoTitle"]').value.trim();
+    const seriesName = form.querySelector('[name="photoSeriesName"]').value.trim() || preset.name;
+    const seriesDescription = form.querySelector('[name="photoSeriesDescription"]').value.trim() || preset.description;
+    const seriesYear = form.querySelector('[name="photoSeriesYear"]').value.trim() || preset.year;
+    const projectYear = form.querySelector('[name="photoYear"]').value.trim();
+    const client = form.querySelector('[name="photoClient"]').value.trim();
+    const description = form.querySelector('[name="photoDescription"]').value.trim();
+    const seriesKey = normalizeTag(seriesName.replace(/\s+/g, '-'));
+    let latestStore = state.store;
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      const imageTitle = files.length === 1 ? baseTitle : `${baseTitle} ${i + 1}`;
+      const uploaded = await uploadImageFile(file, imageTitle, category);
+      latestStore = await api('/api/content', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'image',
+          title: imageTitle,
+          src: uploaded.src,
+          thumb: uploaded.thumb,
+          category,
+          tags: [category],
+          seriesKey,
+          seriesName,
+          seriesDescription,
+          seriesYear,
+          year: projectYear,
+          client,
+          description
+        })
+      });
+    }
+    state.store = latestStore;
+    renderAll();
+    form.reset();
+    form.querySelector('[name="photoCategory"]').value = 'portrait';
+    syncPhotoPreset(form);
+    showToast(files.length > 1 ? 'Project images uploaded' : 'Photo project uploaded');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+async function submitVideo(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const title = form.querySelector('[name="videoTitle"]').value.trim();
+  const category = normalizeTag(form.querySelector('[name="videoCategory"]').value || 'documentary');
+  const videoProvider = normalizeTag(form.querySelector('[name="videoProvider"]').value || 'direct');
+  const fileCodeInput = form.querySelector('[name="videoFileCode"]').value.trim();
+  const videoFile = form.querySelector('[name="videoFile"]').files[0];
+  const videoUrlInput = form.querySelector('[name="videoUrl"]').value.trim();
+  let thumbUrl = form.querySelector('[name="videoThumb"]').value.trim();
+  const thumbFile = form.querySelector('[name="videoThumbFile"]').files[0];
+  try {
+    if (thumbFile) {
+      const uploadedThumb = await uploadImageFile(thumbFile, title + '-thumb', category + ',video-thumb');
+      thumbUrl = uploadedThumb.src;
+    }
+    let src = videoUrlInput;
+    let sourceUrl = videoUrlInput;
+    let fileCode = '';
+    let duration = form.querySelector('[name="videoDuration"]').value.trim();
+    if (videoProvider === 'doodstream') {
+      if (videoFile) {
+        const uploadedVideo = await uploadDoodstreamVideoFile(videoFile, title);
+        src = uploadedVideo.src;
+        sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
+        fileCode = uploadedVideo.fileCode || '';
+        duration = uploadedVideo.duration || duration;
+        if (!thumbUrl) thumbUrl = uploadedVideo.thumb || '';
+      } else {
+        fileCode = fileCodeInput;
+        if (!fileCode) throw new Error('Add a DoodStream file or paste a DoodStream file code');
+        src = '/api/doodstream/stream/' + encodeURIComponent(fileCode);
+        sourceUrl = 'https://doodstream.com/e/' + fileCode;
+      }
+    } else if (!videoUrlInput) {
+      throw new Error('Add a video URL for direct, YouTube, or Vimeo sources');
+    }
+    state.store = await api('/api/content', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'video',
+        title,
+        category,
+        tags: [category],
+        src,
+        sourceUrl,
+        thumb: thumbUrl,
+        videoProvider: videoProvider === 'doodstream' ? 'doodstream' : '',
+        fileCode,
+        useHls: false,
+        year: form.querySelector('[name="videoYear"]').value.trim(),
+        client: form.querySelector('[name="videoClient"]').value.trim(),
+        duration,
+        description: form.querySelector('[name="videoDescription"]').value.trim()
+      })
+    });
+    renderAll();
+    form.reset();
+    form.querySelector('[name="videoCategory"]').value = 'documentary';
+    showToast('Video saved');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+async function handleCardAction(event) {
+  const button = event.target.closest('[data-action]');
+  if (!button) return;
+  const card = event.target.closest('[data-item-id]');
+  const id = card.dataset.itemId;
+  if (button.dataset.action === 'delete') {
+    state.store = await api('/api/content/' + encodeURIComponent(id), { method: 'DELETE' });
+    renderAll();
+    showToast('Item deleted');
+    return;
+  }
+
+  const item = normalizeItem((state.store.items || []).find(entry => entry.id === id));
+  const payload = { type: item.type };
+  card.querySelectorAll('[data-field]').forEach(field => {
+    payload[field.dataset.field] = field.value;
+  });
+  payload.category = normalizeTag(payload.category || item.category);
+  payload.tags = [payload.category];
+  if (item.type === 'image') {
+    payload.seriesKey = normalizeTag((payload.seriesName || item.seriesName || getPhotoPreset(payload.category).name).replace(/\s+/g, '-'));
+    const replacement = card.querySelector('[data-upload-field="imageFile"]').files[0];
+    if (replacement) {
+      const uploaded = await uploadImageFile(replacement, payload.title || item.title, payload.category);
+      payload.src = uploaded.src;
+      payload.thumb = uploaded.thumb;
+    }
+  } else {
+    payload.videoProvider = normalizeTag(payload.videoProvider || item.videoProvider || 'direct');
+    const replacementVideo = card.querySelector('[data-upload-field="videoFile"]').files[0];
+    const nextFileCode = String(payload.fileCode || item.fileCode || '').trim();
+    if (payload.videoProvider === 'doodstream') {
+      if (replacementVideo) {
+        const uploadedVideo = await uploadDoodstreamVideoFile(replacementVideo, payload.title || item.title);
+        payload.src = uploadedVideo.src;
+        payload.sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
+        payload.fileCode = uploadedVideo.fileCode || '';
+        payload.duration = uploadedVideo.duration || payload.duration || item.duration || '';
+        if (!payload.thumb) payload.thumb = uploadedVideo.thumb || '';
+      } else {
+        if (!nextFileCode) throw new Error('Add a DoodStream file code or upload a replacement video');
+        payload.fileCode = nextFileCode;
+        payload.src = '/api/doodstream/stream/' + encodeURIComponent(nextFileCode);
+        payload.sourceUrl = 'https://doodstream.com/e/' + nextFileCode;
+      }
+    } else {
+      payload.videoProvider = '';
+      payload.fileCode = '';
+      payload.src = payload.sourceUrl || item.sourceUrl || item.src;
+    }
+    const replacement = card.querySelector('[data-upload-field="thumbFile"]').files[0];
+    if (replacement) {
+      const uploaded = await uploadImageFile(replacement, (payload.title || item.title) + '-thumb', payload.category + ',video-thumb');
+      payload.thumb = uploaded.src;
+    }
+  }
+
+  state.store = await api('/api/content/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(payload) });
+  renderAll();
+  showToast('Item updated');
+}
+
+function initAdmin() {
+  api('/api/admin/session')
+    .then(session => {
+      if (!session.authenticated) {
+        document.getElementById('loginScreen').style.display = 'flex';
+        return;
+      }
+      document.getElementById('loginScreen').style.display = 'none';
+      refreshStore();
+    })
+    .catch(() => {
+      document.getElementById('loginScreen').style.display = 'flex';
+      showToast('Admin session check failed', 'error');
+    });
+}
+
+initAdmin();
+</script>
+</body>
+</html>
+
+
