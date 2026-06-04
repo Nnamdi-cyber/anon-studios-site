@@ -4,7 +4,7 @@
 
   const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? ''
-    : 'https://anon-studios-backend.onrender.com'; // Adjust this to your real Render backend URL
+    : 'https://anon-studios-site.onrender.com'; // Adjust this to your real Render backend URL
 
   const SESSION_TTL_MS = 60 * 60 * 1000;
 

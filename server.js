@@ -531,7 +531,7 @@ app.use(compression({
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'portfolio (5).html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/admin', (req, res) => {
