@@ -10,7 +10,8 @@ const FILES_TO_COPY = [
   'admin.html',
   'home-animations.js',
   'home-interactions.js',
-  'site-content.js'
+  'site-content.js',
+  'vercel.json'
 ];
 
 // List of folders to copy recursively
