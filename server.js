@@ -531,14 +531,14 @@ app.use(compression({
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.use(express.static(__dirname, {
+app.use(express.static(path.join(__dirname, 'public'), {
   etag: true,
   lastModified: true,
   maxAge: '7d',
