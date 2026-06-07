@@ -58,7 +58,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .pcard:nth-child(3){width:280px;height:390px;transform:rotate(0)}
 .pcard:nth-child(4){width:260px;height:340px;transform:rotate(2deg) translateY(12px)}
 .pcard:nth-child(5){width:220px;height:295px;transform:rotate(4.5deg) translateY(22px)}
-.pcard:hover{transform:rotate(0) translateY(-12px) scale(1.03)!important;box-shadow:0 40px 80px rgba(0,0,0,.7);z-index:10}
+.pcard:hover,.pcard.touch-hover{transform:rotate(0) translateY(-12px) scale(1.03)!important;box-shadow:0 40px 80px rgba(0,0,0,.7);z-index:10}
 .pcard-bg{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;overflow:hidden}
 .pcard:nth-child(1) .pcard-bg{background:linear-gradient(160deg,#1a1208,#0d0908)}
 .pcard:nth-child(2) .pcard-bg{background:linear-gradient(160deg,#0d1a14,#070e0a)}
@@ -587,6 +587,56 @@ function _lbShowMain(key, idx, total) {
 [...Array(5)].forEach((_,i)=>{const k=['g_pcard_1','g_pcard_2','g_pcard_3','g_pcard_4','g_pcard_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
 window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
 if (window.AnonContent) window.AnonContent.hydrateGalleryPage();
+
+// Interactive horizontal scroll focus for photo-strip cards on mobile/touch
+(function() {
+  const strip = document.querySelector('.photo-strip');
+  const cards = document.querySelectorAll('.pcard');
+  if (!strip || !cards.length) return;
+
+  let activeIndex = -1;
+  const updateFocus = () => {
+    const stripRect = strip.getBoundingClientRect();
+    const stripCenter = stripRect.left + stripRect.width / 2;
+    
+    let closestCard = null;
+    let minDistance = Infinity;
+    let closestIndex = -1;
+    
+    cards.forEach((card, idx) => {
+      const cardRect = card.getBoundingClientRect();
+      const cardCenter = cardRect.left + cardRect.width / 2;
+      const distance = Math.abs(cardCenter - stripCenter);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestCard = card;
+        closestIndex = idx;
+      }
+    });
+    
+    if (closestIndex !== activeIndex) {
+      activeIndex = closestIndex;
+      cards.forEach((card, idx) => {
+        if (idx === closestIndex) {
+          card.classList.add('touch-hover');
+        } else {
+          card.classList.remove('touch-hover');
+        }
+      });
+    }
+  };
+
+  strip.addEventListener('scroll', updateFocus, { passive: true });
+  setTimeout(updateFocus, 200);
+  
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      cards.forEach(c => c.classList.remove('touch-hover'));
+      activeIndex = -1;
+    });
+  });
+})();
 </script>
 <script src="../assets/js/pacman-cursor.js?v=20260404d" defer></script>
 </body>
