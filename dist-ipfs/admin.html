@@ -68,24 +68,24 @@ input,textarea,select{font-family:var(--sans)}
 .mc-input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .toast{position:fixed;top:24px;right:24px;z-index:9999;background:var(--bg2);border:1px solid var(--goldborder);padding:14px 20px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);transform:translateX(120%);transition:transform .4s cubic-bezier(.22,1,.36,1)}
 .toast.show{transform:translateX(0)}.toast.error{border-color:rgba(224,85,85,.4);color:var(--red)}
-/* RETRO PAC-MAN ARCADE LOGIN STYLES */
-.login-screen{position:fixed;inset:0;background:#000000;display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden}
-.login-box{position:relative;background:#020205;border:4px double #0000ff;border-radius:12px;padding:52px 40px;width:100%;max-width:440px;box-shadow:0 0 25px #0000ff, inset 0 0 15px #0000ff;z-index:2;display:flex;flex-direction:column;gap:32px;transition:transform .15s;font-family:'Press Start 2P', monospace}
+/* RETRO PAC-MAN ARCADE LOGIN STYLES (THEMED) */
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden}
+.login-box{position:relative;background:var(--bg2);border:4px double var(--gold);border-radius:12px;padding:52px 40px;width:100%;max-width:440px;box-shadow:0 0 25px rgba(45,212,160,0.15), inset 0 0 15px rgba(45,212,160,0.1);z-index:2;display:flex;flex-direction:column;gap:32px;transition:transform .15s;font-family:'Press Start 2P', monospace}
 .login-header{text-align:center;margin-bottom:8px}
-.login-logo{font-size:36px;letter-spacing:4px;margin-bottom:12px;color:#facc15;text-shadow:4px 4px 0px #ef4444;text-align:center;line-height:1}
-.login-logo em{color:#2dd4a0;font-style:normal}
-.login-sub{font-size:9px;letter-spacing:1px;color:#ffffff;text-transform:uppercase;margin-bottom:0;text-align:center;line-height:1.4}
+.login-logo{font-size:36px;letter-spacing:4px;margin-bottom:12px;color:var(--gold);text-shadow:4px 4px 0px rgba(255,255,255,0.03);text-align:center;line-height:1}
+.login-logo em{color:var(--w);font-style:normal}
+.login-sub{font-size:9px;letter-spacing:1px;color:var(--w60);text-transform:uppercase;margin-bottom:0;text-align:center;line-height:1.4}
 
 .login-form-group{display:flex;flex-direction:column;gap:16px}
 .login-input-wrap{position:relative;width:100%}
-.login-input{width:100%;background:#000000;border:3px solid #0000ff;border-radius:4px;color:#facc15;padding:16px;font-family:'Press Start 2P', monospace;font-size:12px;letter-spacing:2px;text-align:center;outline:none;transition:border-color .3s,box-shadow .3s}
-.login-input:focus{border-color:#facc15;box-shadow:0 0 15px #facc15}
+.login-input{width:100%;background:var(--bg);border:3px solid var(--line);border-radius:4px;color:var(--gold);padding:16px;font-family:'Press Start 2P', monospace;font-size:12px;letter-spacing:2px;text-align:center;outline:none;transition:border-color .3s,box-shadow .3s}
+.login-input:focus{border-color:var(--gold);box-shadow:0 0 15px rgba(45,212,160,0.25)}
 
-.login-btn{font-family:'Press Start 2P', monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;width:100%;background:#facc15;color:#000000;border:3px solid #facc15;border-radius:4px;padding:16px;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 0px #ca8a04}
-.login-btn:hover{background:#000000;color:#facc15;box-shadow:0 0 15px #facc15}
+.login-btn{font-family:'Press Start 2P', monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;width:100%;background:var(--gold);color:var(--bg);border:3px solid var(--gold);border-radius:4px;padding:16px;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 0px rgba(45,212,160,0.3)}
+.login-btn:hover{background:var(--bg);color:var(--gold);box-shadow:0 0 15px rgba(45,212,160,0.2)}
 .login-btn:active{transform:translateY(4px);box-shadow:none}
 
-.login-err{font-family:'Press Start 2P', monospace;font-size:8px;color:#ef4444;text-align:center;border:2px dashed #ef4444;padding:12px;border-radius:4px;display:none;margin-top:0;line-height:1.6;background:rgba(239,68,68,0.05)}
+.login-err{font-family:'Press Start 2P', monospace;font-size:8px;color:var(--red);text-align:center;border:2px dashed var(--red);padding:12px;border-radius:4px;display:none;margin-top:0;line-height:1.6;background:var(--reddim)}
 
 /* PACMAN ANIMATED CHASE ENGINE */
 .pacman-chase{position:absolute;bottom:14px;left:-120px;width:100%;display:flex;align-items:center;gap:14px;pointer-events:none;z-index:3;animation:chaseLoop 10s linear infinite}
@@ -93,16 +93,16 @@ input,textarea,select{font-family:var(--sans)}
   0% { left: -120px; }
   100% { left: 100%; }
 }
-.pacman-sprite{width:20px;height:20px;background:transparent;border:10px solid #facc15;border-right-color:transparent;border-radius:50%;animation:pacmanMouth .25s ease-in-out infinite alternate}
+.pacman-sprite{width:20px;height:20px;background:transparent;border:10px solid var(--gold);border-right-color:transparent;border-radius:50%;animation:pacmanMouth .25s ease-in-out infinite alternate}
 @keyframes pacmanMouth {
   0% { border-right-color: transparent; }
-  100% { border-right-color: #facc15; }
+  100% { border-right-color: var(--gold); }
 }
-.pacman-dot{width:4px;height:4px;background:#ffffff;border-radius:50%}
-.ghost-sprite{position:relative;width:18px;height:18px;border-radius:9px 9px 0 0;background:#ef4444;box-shadow:0 0 8px #ef4444}
-.ghost-sprite::after{content:'oo';font-family:monospace;font-size:8px;color:#ffffff;text-shadow:0 0 1px #000;position:absolute;top:3px;left:3px;letter-spacing:-1px}
-.ghost-sprite.pinky{background:#f472b6;box-shadow:0 0 8px #f472b6}
-.ghost-sprite.inky{background:#38bdf8;box-shadow:0 0 8px #38bdf8}
+.pacman-dot{width:4px;height:4px;background:var(--w30);border-radius:50%}
+.ghost-sprite{position:relative;width:18px;height:18px;border-radius:9px 9px 0 0;background:var(--red);box-shadow:0 0 8px var(--red)}
+.ghost-sprite::after{content:'oo';font-family:monospace;font-size:8px;color:var(--w);text-shadow:0 0 1px #000;position:absolute;top:3px;left:3px;letter-spacing:-1px}
+.ghost-sprite.pinky{background:var(--w60);box-shadow:0 0 8px rgba(240,235,226,0.3)}
+.ghost-sprite.inky{background:var(--w30);box-shadow:0 0 8px rgba(240,235,226,0.15)}
 
 .blink{animation:blinkAction 1.2s step-end infinite}
 @keyframes blinkAction {
