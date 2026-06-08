@@ -58,6 +58,10 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .photo-card.selected .card-select{background:var(--gold);border-color:var(--gold)}
 .card-select svg{width:12px;height:12px;fill:none;stroke:var(--bg);stroke-width:3;opacity:0;transition:opacity .25s}
 .photo-card.selected .card-select svg{opacity:1}
+.card-download{position:absolute;top:16px;left:16px;z-index:10;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(8,8,7,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;color:var(--w);transition:opacity .25s,background .25s,color .25s}
+.photo-card:hover .card-download{opacity:1}
+.card-download:hover{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.card-download svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:3}
 
 /* FLOATING BAR */
 .floating-bar{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);z-index:400;width:90%;max-width:680px;background:rgba(15,14,13,.92);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:40px;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 30px 60px rgba(0,0,0,.8);transition:transform .4s cubic-bezier(.22,1,.36,1)}
@@ -255,10 +259,16 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
     <!-- img loaded dynamically -->
   </div>
   
-  <button class="lb-select-btn" id="lb-select-btn">
-    <span class="bubble" style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #fff;margin-right:8px"></span>
-    Select
-  </button>
+  <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); z-index:5; display:flex; gap:12px;">
+    <button class="lb-select-btn" id="lb-select-btn" style="position:static; transform:none;">
+      <span class="bubble" style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #fff;margin-right:8px"></span>
+      Select
+    </button>
+    <button class="lb-download-btn" id="lb-download-btn" style="background:rgba(8,8,7,.7); border:1px solid rgba(255,255,255,.15); border-radius:30px; padding:10px 24px; font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; display:flex; align-items:center; gap:8px; color:var(--w); transition:border-color .25s, background .25s, color .25s;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom:-1px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Download
+    </button>
+  </div>
 </div>
 
 <!-- SCRIPTS -->
@@ -302,6 +312,7 @@ const lbClose = document.getElementById('lb-close');
 const lbPrev = document.getElementById('lb-prev');
 const lbNext = document.getElementById('lb-next');
 const lbSelectBtn = document.getElementById('lb-select-btn');
+const lbDownloadBtn = document.getElementById('lb-download-btn');
 
 // Format Bytes
 function formatBytes(bytes) {
@@ -458,6 +469,9 @@ function renderGallery() {
       <div class="card-select">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
+      <div class="card-download" title="Download High-Res">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </div>
       <div class="card-img-wrap">
         <img src="${photo.cloudinaryUrl}" alt="${photo.title || ''}" loading="lazy" decoding="async">
       </div>
@@ -477,6 +491,12 @@ function renderGallery() {
     card.querySelector('.card-select').addEventListener('click', (e) => {
       e.stopPropagation();
       toggleSelect(photo.id);
+    });
+    
+    // Direct single photo download
+    card.querySelector('.card-download').addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadSinglePhoto(photo);
     });
     
     // Lightbox open on card body click
@@ -715,6 +735,57 @@ downloadBtn.addEventListener('click', async () => {
 progressCancel.addEventListener('click', () => {
   downloadCanceled = true;
 });
+
+lbDownloadBtn.addEventListener('click', () => {
+  const photo = galleryData.photos[lightboxIndex];
+  downloadSinglePhoto(photo);
+});
+
+async function downloadSinglePhoto(photo) {
+  downloadCanceled = false;
+  progressOverlay.classList.add('active');
+  progressBarFill.style.width = '0%';
+  document.getElementById('progress-title').textContent = 'Fetching High-Res File';
+  document.getElementById('progress-subtitle').textContent = 'Decentralized Storage Retrieval';
+  progressLabel.textContent = `Downloading: ${photo.title}`;
+  progressStats.textContent = '0% completed';
+  
+  try {
+    const blob = await fetchWithFallback(photo, (fraction) => {
+      const percent = Math.round(fraction * 100);
+      progressBarFill.style.width = `${percent}%`;
+      progressStats.textContent = `${percent}% completed`;
+    });
+    
+    progressLabel.textContent = 'Preparing file download...';
+    progressBarFill.style.width = '100%';
+    progressStats.textContent = 'Done';
+    
+    let ext = photo.format || 'jpg';
+    let filename = photo.title;
+    if (!filename.toLowerCase().endsWith('.' + ext)) {
+      filename = filename + '.' + ext;
+    }
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      progressOverlay.classList.remove('active');
+    }, 800);
+  } catch (err) {
+    if (err.message !== 'Canceled') {
+      alert(`Download failed: ${err.message}`);
+    }
+    progressOverlay.classList.remove('active');
+  }
+}
 
 // Run Init
 init();
