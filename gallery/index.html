@@ -121,7 +121,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   .pg-header-ruler{display:none}.pg-scroll{display:none}
   .sec-divider{flex-direction:column;align-items:flex-start;gap:10px;padding:24px 20px 14px}.sec-title{font-size:clamp(24px,8vw,38px);letter-spacing:1px}.sec-label{font-size:7px;letter-spacing:3px}.sec-count,.sec-cta{font-size:8px}
   .video-preview{padding:24px 20px 44px}.vpanels{height:240px;gap:2px}.vpanel:nth-child(3),.vpanel:nth-child(4),.vpanel:nth-child(5){display:none}.vpanel:hover{flex:2.5}.vpanel-name{font-size:13px}.vpanel-cat{font-size:7px}
-  .photo-preview{padding:24px 20px 44px}.photo-strip{gap:8px}.pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:flex}.pcard:nth-child(1){width:120px;height:170px;transform:rotate(-4deg) translateY(12px)}.pcard:nth-child(2){width:140px;height:200px;transform:rotate(-1.5deg) translateY(5px)}.pcard:nth-child(3){width:155px;height:220px;transform:none;max-width:none}.pcard:nth-child(4){width:140px;height:195px;transform:rotate(2deg) translateY(7px)}.pcard:nth-child(5){width:120px;height:168px;transform:rotate(4.5deg) translateY(12px)}.pcard-name{font-size:11px}.pcard-cat{font-size:7px;letter-spacing:1px}
+  .photo-preview{padding:24px 0 44px}.photo-strip{gap:8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 calc(50vw - 78px) 16px}.pcard{scroll-snap-align:center}.pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:flex}.pcard:nth-child(1){width:120px;height:170px;transform:rotate(-4deg) translateY(12px)}.pcard:nth-child(2){width:140px;height:200px;transform:rotate(-1.5deg) translateY(5px)}.pcard:nth-child(3){width:155px;height:220px;transform:none;max-width:none}.pcard:nth-child(4){width:140px;height:195px;transform:rotate(2deg) translateY(7px)}.pcard:nth-child(5){width:120px;height:168px;transform:rotate(4.5deg) translateY(12px)}.pcard-name{font-size:11px}.pcard-cat{font-size:7px;letter-spacing:1px}
   .photo-meta,.video-meta{flex-direction:column;gap:12px;align-items:flex-start;margin-top:24px;padding-top:16px}.photo-stat-n{font-size:28px}.photo-stat-l{font-size:7px}.vmeta-tags{gap:5px}.vmeta-tag{font-size:7px;padding:5px 9px;letter-spacing:1px}
 }
 .media-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:rgba(255,255,255,.03)}
@@ -588,52 +588,71 @@ function _lbShowMain(key, idx, total) {
 window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
 if (window.AnonContent) window.AnonContent.hydrateGalleryPage();
 
-// Interactive horizontal scroll focus for photo-strip cards on mobile/touch
+// Interactive horizontal scroll focus with smooth real-time interpolation for photo-strip cards on mobile/touch
 (function() {
   const strip = document.querySelector('.photo-strip');
   const cards = document.querySelectorAll('.pcard');
   if (!strip || !cards.length) return;
 
-  let activeIndex = -1;
+  const bases = [
+    { rotate: -4, translate: 12 },
+    { rotate: -1.5, translate: 5 },
+    { rotate: 0, translate: 0 },
+    { rotate: 2, translate: 7 },
+    { rotate: 4.5, translate: 12 }
+  ];
+
   const updateFocus = () => {
+    const isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900;
+    
+    if (!isTouch) {
+      cards.forEach(card => {
+        card.style.transform = '';
+        card.style.boxShadow = '';
+        card.style.zIndex = '';
+        card.classList.remove('touch-hover');
+      });
+      return;
+    }
+
     const stripRect = strip.getBoundingClientRect();
     const stripCenter = stripRect.left + stripRect.width / 2;
-    
-    let closestCard = null;
-    let minDistance = Infinity;
-    let closestIndex = -1;
-    
+    const maxDistance = 160; 
+
     cards.forEach((card, idx) => {
       const cardRect = card.getBoundingClientRect();
       const cardCenter = cardRect.left + cardRect.width / 2;
-      const distance = Math.abs(cardCenter - stripCenter);
+      const distance = cardCenter - stripCenter;
+      const absDistance = Math.abs(distance);
       
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestCard = card;
-        closestIndex = idx;
-      }
+      const factor = Math.max(0, 1 - absDistance / maxDistance);
+      const base = bases[idx] || { rotate: 0, translate: 0 };
+      
+      const rotate = base.rotate * (1 - factor);
+      const translateY = base.translate + (-12 - base.translate) * factor;
+      const scale = 1.0 + (1.04 - 1.0) * factor;
+      const shadowOpacity = 0.15 + 0.45 * factor;
+
+      card.style.transform = `rotate(${rotate}deg) translateY(${translateY}px) scale(${scale})`;
+      card.style.boxShadow = `0 ${20 * factor + 10}px ${40 * factor + 20}px rgba(0,0,0,${shadowOpacity})`;
+      card.style.zIndex = factor > 0.5 ? '10' : '1';
     });
-    
-    if (closestIndex !== activeIndex) {
-      activeIndex = closestIndex;
-      cards.forEach((card, idx) => {
-        if (idx === closestIndex) {
-          card.classList.add('touch-hover');
-        } else {
-          card.classList.remove('touch-hover');
-        }
-      });
-    }
   };
 
   strip.addEventListener('scroll', updateFocus, { passive: true });
-  setTimeout(updateFocus, 200);
-  
+  window.addEventListener('resize', updateFocus, { passive: true });
+  setTimeout(updateFocus, 250);
+
   cards.forEach(card => {
     card.addEventListener('mouseenter', () => {
-      cards.forEach(c => c.classList.remove('touch-hover'));
-      activeIndex = -1;
+      const isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900;
+      if (!isTouch) {
+        cards.forEach(c => {
+          c.style.transform = '';
+          c.style.boxShadow = '';
+          c.style.zIndex = '';
+        });
+      }
     });
   });
 })();
