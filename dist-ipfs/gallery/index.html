@@ -49,17 +49,14 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .sec-title{font-family:var(--display);font-size:clamp(36px,5vw,68px);letter-spacing:2px}
 .sec-count{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30);border:1px solid rgba(45,212,160,.22);padding:4px 10px}
 .sec-cta{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
-.photo-preview{padding:60px 52px 80px;background:var(--bg)}
-.photo-strip{display:flex;gap:16px;align-items:flex-end;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
-.photo-strip::-webkit-scrollbar{display:none}
-.pcard{position:relative;flex-shrink:0;border-radius:4px;overflow:hidden;cursor:pointer;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .45s}
-.pcard:nth-child(1){width:220px;height:300px;transform:rotate(-4deg) translateY(20px)}
-.pcard:nth-child(2){width:260px;height:360px;transform:rotate(-1.5deg) translateY(8px)}
-.pcard:nth-child(3){width:280px;height:390px;transform:rotate(0)}
-.pcard:nth-child(4){width:260px;height:340px;transform:rotate(2deg) translateY(12px)}
-.pcard:nth-child(5){width:220px;height:295px;transform:rotate(4.5deg) translateY(22px)}
-.pcard:hover,.pcard.touch-hover{transform:rotate(0) translateY(-12px) scale(1.03)!important;box-shadow:0 40px 80px rgba(0,0,0,.7);z-index:10}
+.photo-preview{padding:80px 52px 60px;background:var(--bg2);overflow:hidden;position:relative}
+.carousel-viewport{position:relative;width:100%;height:460px;display:flex;align-items:center;justify-content:center;overflow:visible;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;perspective:1000px;transform-style:preserve-3d}
+.carousel-viewport:active{cursor:grabbing}
+.photo-strip{position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;pointer-events:none}
+.pcard{position:absolute;border-radius:4px;overflow:hidden;cursor:pointer;pointer-events:auto;transition:box-shadow .45s,border-color .45s;will-change:transform,opacity;border:1px solid rgba(255,255,255,.03);display:flex;flex-direction:column}
+.pcard:hover,.pcard.touch-hover{box-shadow:0 30px 60px rgba(0,0,0,.8);z-index:100!important}
 .pcard-bg{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;overflow:hidden}
+.pcard:pointer-events:none{pointer-events:none}
 .pcard:nth-child(1) .pcard-bg{background:linear-gradient(160deg,#1a1208,#0d0908)}
 .pcard:nth-child(2) .pcard-bg{background:linear-gradient(160deg,#0d1a14,#070e0a)}
 .pcard:nth-child(3) .pcard-bg{background:linear-gradient(160deg,#14100d,#0a0807)}
@@ -98,6 +95,11 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .vpanel-type{position:absolute;top:14px;left:14px;font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.12);padding:3px 7px}
 .vmeta-tags{display:flex;gap:8px;flex-wrap:wrap}
 .vmeta-tag{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--w30);border:1px solid var(--line);padding:6px 12px}
+.carousel-pagination{display:flex;justify-content:center;margin-top:20px;margin-bottom:10px}
+.pagination-track{position:relative;display:flex;gap:16px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:20px}
+.pagination-dot{width:8px;height:8px;border-radius:50%;background:rgba(240,235,226,.2);cursor:pointer;transition:background .3s}
+.pagination-dot:hover{background:rgba(240,235,226,.45)}
+.pagination-dot-active{position:absolute;top:8px;left:12px;width:8px;height:8px;border-radius:50%;background:var(--gold);pointer-events:none}
 @media(max-width:960px){
   nav{padding:16px 24px}.nav-right{display:none}
   .pg-header{min-height:480px;padding:110px 24px 44px}
@@ -106,8 +108,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   .pg-tags{left:24px;bottom:24px}.pg-year{right:24px;bottom:24px}.pg-scroll{display:none}
   .sec-divider{padding:36px 24px 24px;flex-wrap:wrap}.sec-title{font-size:clamp(28px,5vw,44px)}
   .photo-preview,.video-preview{padding:40px 24px 56px}
-  .pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:none}
-  .pcard:nth-child(3){width:100%;max-width:280px;transform:none}
+  .carousel-viewport{height:380px}
   .vpanels{height:300px}.vpanel:nth-child(4),.vpanel:nth-child(5){display:none}
   .photo-meta,.video-meta{flex-direction:column;align-items:flex-start;gap:14px}
 }
@@ -121,7 +122,8 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   .pg-header-ruler{display:none}.pg-scroll{display:none}
   .sec-divider{flex-direction:column;align-items:flex-start;gap:10px;padding:24px 20px 14px}.sec-title{font-size:clamp(24px,8vw,38px);letter-spacing:1px}.sec-label{font-size:7px;letter-spacing:3px}.sec-count,.sec-cta{font-size:8px}
   .video-preview{padding:24px 20px 44px}.vpanels{height:240px;gap:2px}.vpanel:nth-child(3),.vpanel:nth-child(4),.vpanel:nth-child(5){display:none}.vpanel:hover{flex:2.5}.vpanel-name{font-size:13px}.vpanel-cat{font-size:7px}
-  .photo-preview{padding:24px 0 44px}.photo-strip{gap:8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 calc(50vw - 78px) 16px}.pcard{scroll-snap-align:center}.pcard:nth-child(1),.pcard:nth-child(2),.pcard:nth-child(4),.pcard:nth-child(5){display:flex}.pcard:nth-child(1){width:120px;height:170px;transform:rotate(-4deg) translateY(12px)}.pcard:nth-child(2){width:140px;height:200px;transform:rotate(-1.5deg) translateY(5px)}.pcard:nth-child(3){width:155px;height:220px;transform:none;max-width:none}.pcard:nth-child(4){width:140px;height:195px;transform:rotate(2deg) translateY(7px)}.pcard:nth-child(5){width:120px;height:168px;transform:rotate(4.5deg) translateY(12px)}.pcard-name{font-size:11px}.pcard-cat{font-size:7px;letter-spacing:1px}
+  .photo-preview{padding:24px 0 32px}
+  .carousel-viewport{height:300px}
   .photo-meta,.video-meta{flex-direction:column;gap:12px;align-items:flex-start;margin-top:24px;padding-top:16px}.photo-stat-n{font-size:28px}.photo-stat-l{font-size:7px}.vmeta-tags{gap:5px}.vmeta-tag{font-size:7px;padding:5px 9px;letter-spacing:1px}
 }
 .media-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:rgba(255,255,255,.03)}
@@ -288,49 +290,62 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 </div>
 
 <div class="photo-preview" style="background:var(--bg2)">
-  <!-- 5 fanned portrait cards — Image 1 reference style -->
-  <div class="photo-strip">
+  <!-- 5 fanned portrait cards wrapped in a 3D viewport -->
+  <div class="carousel-viewport" id="carousel-viewport">
+    <div class="photo-strip">
 
-    <div class="pcard" onclick="location.href='../photo-gallery/'">
-      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_1"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
-        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      <div class="pcard" data-index="0">
+        <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_1"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+          <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+        </div>
+        <div class="pcard-overlay"></div>
+        <div class="pcard-info"><div class="pcard-cat">Portrait</div><div class="pcard-name">Faces of Lagos</div></div>
       </div>
-      <div class="pcard-overlay"></div>
-      <div class="pcard-info"><div class="pcard-cat">Portrait</div><div class="pcard-name">Faces of Lagos</div></div>
-    </div>
 
-    <div class="pcard" onclick="location.href='../photo-gallery/'">
-      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_2"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
-        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      <div class="pcard" data-index="1">
+        <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_2"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+          <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+        </div>
+        <div class="pcard-overlay"></div>
+        <div class="pcard-info"><div class="pcard-cat">Editorial</div><div class="pcard-name">Harmattan Gold</div></div>
       </div>
-      <div class="pcard-overlay"></div>
-      <div class="pcard-info"><div class="pcard-cat">Editorial</div><div class="pcard-name">Harmattan Gold</div></div>
-    </div>
 
-    <div class="pcard" onclick="location.href='../photo-gallery/'">
-      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_3"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
-        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      <div class="pcard" data-index="2">
+        <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_3"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+          <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+        </div>
+        <div class="pcard-overlay"></div>
+        <div class="pcard-info"><div class="pcard-cat">Commercial</div><div class="pcard-name">Brand Pulse</div></div>
       </div>
-      <div class="pcard-overlay"></div>
-      <div class="pcard-info"><div class="pcard-cat">Commercial</div><div class="pcard-name">Brand Pulse</div></div>
-    </div>
 
-    <div class="pcard" onclick="location.href='../photo-gallery/'">
-      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_4"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
-        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      <div class="pcard" data-index="3">
+        <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_4"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+          <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+        </div>
+        <div class="pcard-overlay"></div>
+        <div class="pcard-info"><div class="pcard-cat">Street</div><div class="pcard-name">The City Breathes</div></div>
       </div>
-      <div class="pcard-overlay"></div>
-      <div class="pcard-info"><div class="pcard-cat">Street</div><div class="pcard-name">The City Breathes</div></div>
-    </div>
 
-    <div class="pcard" onclick="location.href='../photo-gallery/'">
-      <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_5"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
-        <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+      <div class="pcard" data-index="4">
+        <div class="pcard-bg"><div class="media-wrap" id="mw-g_pcard_5"><div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div></div>
+          <div class="pcard-art"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width=".8"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg></div>
+        </div>
+        <div class="pcard-overlay"></div>
+        <div class="pcard-info"><div class="pcard-cat">Fashion</div><div class="pcard-name">Quiet Luxury</div></div>
       </div>
-      <div class="pcard-overlay"></div>
-      <div class="pcard-info"><div class="pcard-cat">Fashion</div><div class="pcard-name">Quiet Luxury</div></div>
-    </div>
 
+    </div>
+  </div>
+
+  <div class="carousel-pagination">
+    <div class="pagination-track">
+      <div class="pagination-dot-active" id="pagination-dot-active"></div>
+      <div class="pagination-dot" data-index="0"></div>
+      <div class="pagination-dot" data-index="1"></div>
+      <div class="pagination-dot" data-index="2"></div>
+      <div class="pagination-dot" data-index="3"></div>
+      <div class="pagination-dot" data-index="4"></div>
+    </div>
   </div>
 
   <div class="photo-meta">
@@ -588,73 +603,238 @@ function _lbShowMain(key, idx, total) {
 window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
 if (window.AnonContent) window.AnonContent.hydrateGalleryPage();
 
-// Interactive horizontal scroll focus with smooth real-time interpolation for photo-strip cards on mobile/touch
+// Framer-Style CenterLiftCarousel Engine
 (function() {
-  const strip = document.querySelector('.photo-strip');
-  const cards = document.querySelectorAll('.pcard');
-  if (!strip || !cards.length) return;
+  const viewport = document.getElementById('carousel-viewport');
+  const strip = viewport ? viewport.querySelector('.photo-strip') : null;
+  const cards = viewport ? viewport.querySelectorAll('.pcard') : [];
+  const dots = document.querySelectorAll('.pagination-dot');
+  const activeDot = document.getElementById('pagination-dot-active');
+  if (!viewport || !strip || !cards.length) return;
 
-  const bases = [
-    { rotate: -4, translate: 12 },
-    { rotate: -1.5, translate: 5 },
-    { rotate: 0, translate: 0 },
-    { rotate: 2, translate: 7 },
-    { rotate: 4.5, translate: 12 }
-  ];
+  // Carousel layout variables (updated on resize)
+  let W = 320; // card width
+  let G = 32;  // gap
+  let H = 400; // height
+  let step = W + G;
+  let L = cards.length * step;
 
-  const updateFocus = () => {
-    const isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900;
-    
-    if (!isTouch) {
-      cards.forEach(card => {
-        card.style.transform = '';
-        card.style.boxShadow = '';
-        card.style.zIndex = '';
-        card.classList.remove('touch-hover');
-      });
-      return;
+  // Responsive configuration
+  function updateLayoutDimensions() {
+    const wWidth = window.innerWidth;
+    if (wWidth > 1024) {
+      W = 320;
+      G = 32;
+      H = 400;
+    } else if (wWidth > 640) {
+      W = 240;
+      G = 24;
+      H = 320;
+    } else {
+      W = 180;
+      G = 16;
+      H = 260;
     }
-
-    const stripRect = strip.getBoundingClientRect();
-    const stripCenter = stripRect.left + stripRect.width / 2;
-    const maxDistance = 160; 
-
-    cards.forEach((card, idx) => {
-      const cardRect = card.getBoundingClientRect();
-      const cardCenter = cardRect.left + cardRect.width / 2;
-      const distance = cardCenter - stripCenter;
-      const absDistance = Math.abs(distance);
-      
-      const factor = Math.max(0, 1 - absDistance / maxDistance);
-      const base = bases[idx] || { rotate: 0, translate: 0 };
-      
-      const rotate = base.rotate * (1 - factor);
-      const translateY = base.translate + (-12 - base.translate) * factor;
-      const scale = 1.0 + (1.04 - 1.0) * factor;
-      const shadowOpacity = 0.15 + 0.45 * factor;
-
-      card.style.transform = `rotate(${rotate}deg) translateY(${translateY}px) scale(${scale})`;
-      card.style.boxShadow = `0 ${20 * factor + 10}px ${40 * factor + 20}px rgba(0,0,0,${shadowOpacity})`;
-      card.style.zIndex = factor > 0.5 ? '10' : '1';
+    step = W + G;
+    L = cards.length * step;
+    
+    // Apply basic sizing
+    cards.forEach(card => {
+      card.style.width = W + 'px';
+      card.style.height = H + 'px';
     });
-  };
+  }
+  updateLayoutDimensions();
 
-  strip.addEventListener('scroll', updateFocus, { passive: true });
-  window.addEventListener('resize', updateFocus, { passive: true });
-  setTimeout(updateFocus, 250);
+  // Scroll position variables
+  let currentX = 0;
+  let targetX = 0;
+  const lerpFactor = 0.12;
 
-  cards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      const isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900;
-      if (!isTouch) {
-        cards.forEach(c => {
-          c.style.transform = '';
-          c.style.boxShadow = '';
-          c.style.zIndex = '';
-        });
+  // Interaction tracking variables
+  let isDragging = false;
+  let startX = 0;
+  let startScrollX = 0;
+  let lastX = 0;
+  let lastTime = 0;
+  let velocity = 0;
+  const clickThreshold = 5; // px
+
+  // Wheel tracking
+  let wheelSnapTimeout = null;
+
+  // Track initial position: start with card 2 (index 2) centered
+  targetX = 2 * step;
+  currentX = 2 * step;
+
+  // Touch & Mouse Drag Listeners
+  viewport.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    
+    isDragging = true;
+    startX = e.clientX;
+    startScrollX = targetX;
+    lastX = e.clientX;
+    lastTime = performance.now();
+    velocity = 0;
+    
+    viewport.setPointerCapture(e.pointerId);
+  });
+
+  viewport.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    
+    const x = e.clientX;
+    const time = performance.now();
+    const dt = time - lastTime;
+    const dx = x - startX;
+    
+    targetX = startScrollX - dx;
+    
+    if (dt > 0) {
+      velocity = -(x - lastX) / dt; // px / ms
+    }
+    
+    lastX = x;
+    lastTime = time;
+  });
+
+  viewport.addEventListener('pointerup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.releasePointerCapture(e.pointerId);
+
+    const totalDragDist = Math.abs(e.clientX - startX);
+    
+    if (totalDragDist < clickThreshold) {
+      // It's a click! Let's find which card was clicked
+      const clickedCard = e.target.closest('.pcard');
+      if (clickedCard) {
+        const cardIndex = parseInt(clickedCard.getAttribute('data-index'), 10);
+        const baseX_i = cardIndex * step;
+        const x_i = baseX_i - currentX;
+        const wrappedX_i = ((x_i + L/2) % L + L) % L - L/2;
+        
+        if (Math.abs(wrappedX_i) < 15) {
+          // Centered card clicked -> Go to photo-gallery
+          window.location.href = '../photo-gallery/';
+        } else {
+          // Off-center card clicked -> Scroll it to focus
+          targetX += wrappedX_i;
+        }
       }
+    } else {
+      // Apply inertia and snap
+      const snapInertiaX = targetX + velocity * 120;
+      const nearestIndex = Math.round(snapInertiaX / step);
+      targetX = nearestIndex * step;
+    }
+  });
+
+  viewport.addEventListener('pointercancel', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    viewport.releasePointerCapture(e.pointerId);
+    
+    const nearestIndex = Math.round(targetX / step);
+    targetX = nearestIndex * step;
+  });
+
+  // Mouse Wheel Scroll Listener
+  viewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    
+    const delta = e.deltaX !== 0 ? e.deltaX : e.deltaY;
+    targetX += delta * 0.6;
+    
+    clearTimeout(wheelSnapTimeout);
+    
+    wheelSnapTimeout = setTimeout(() => {
+      const nearestIndex = Math.round(targetX / step);
+      targetX = nearestIndex * step;
+    }, 120);
+  }, { passive: false });
+
+  // Pagination Dot Clicks
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const targetIndex = parseInt(dot.getAttribute('data-index'), 10);
+      const currentIndex = Math.round(currentX / step);
+      
+      let diff = targetIndex - (currentIndex % 5);
+      diff = ((diff + 2) % 5 + 5) % 5 - 2;
+      
+      targetX = (currentIndex + diff) * step;
     });
   });
+
+  // Calculate card parameters based on distance from center
+  function getCardOpacity(d) {
+    const limit = L / 2 - W / 2;
+    const mid = step;
+    if (d <= 0) return 1;
+    if (d >= limit) return 0;
+    if (d < mid) {
+      return 1 - 0.45 * (d / mid);
+    } else {
+      return 0.55 * (1 - (d - mid) / (limit - mid));
+    }
+  }
+
+  // Animation Frame Loop
+  function tick() {
+    currentX += (targetX - currentX) * lerpFactor;
+
+    cards.forEach((card, idx) => {
+      const baseX_i = idx * step;
+      const x_i = baseX_i - currentX;
+      const wrappedX_i = ((x_i + L/2) % L + L) % L - L/2;
+      const d_i = Math.abs(wrappedX_i);
+      const factor = Math.min(1, d_i / step);
+
+      const scale = 1.15 - 0.3 * factor;
+      const translateY = -36 + 48 * factor;
+      const rotateY = -14 * factor * Math.sign(wrappedX_i);
+      const rotateZ = 3 * factor * Math.sign(wrappedX_i);
+      const translateZ = -100 * factor;
+      
+      const opacity = getCardOpacity(d_i);
+
+      card.style.transform = `translate3d(${wrappedX_i}px, ${translateY}px, ${translateZ}px) scale(${scale}) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+      card.style.opacity = opacity;
+      
+      if (opacity <= 0.01) {
+        card.style.pointerEvents = 'none';
+        card.style.visibility = 'hidden';
+      } else {
+        card.style.pointerEvents = 'auto';
+        card.style.visibility = 'visible';
+      }
+
+      card.style.zIndex = Math.round((1 - factor) * 100);
+    });
+
+    let normIndex = (currentX / step) % 5;
+    if (normIndex < 0) normIndex += 5;
+
+    if (activeDot) {
+      activeDot.style.transform = `translateX(${normIndex * 24}px)`;
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  // Handle Resize
+  window.addEventListener('resize', () => {
+    const prevStep = step;
+    updateLayoutDimensions();
+    const ratio = step / prevStep;
+    currentX *= ratio;
+    targetX *= ratio;
+  });
+
+  // Start loop
+  requestAnimationFrame(tick);
 })();
 </script>
 <script src="../assets/js/pacman-cursor.js?v=20260404d" defer></script>
