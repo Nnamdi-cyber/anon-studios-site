@@ -19,7 +19,8 @@ const FOLDERS_TO_COPY = [
   'gallery',
   'photo-gallery',
   'video-gallery',
-  'assets'
+  'assets',
+  'delivery'
 ];
 
 function deleteFolderRecursive(directoryPath) {

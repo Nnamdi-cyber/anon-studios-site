@@ -71,6 +71,7 @@ function defaultStore() {
   return {
     items: [],
     settings: defaultSettings(),
+    clientGalleries: [],
     auth: {
       passwordHash: hashValue(defaultPassword),
       updatedAt: Date.now(),
@@ -102,6 +103,31 @@ function normalizeSettings(settings) {
   };
 }
 
+function normalizeClientGallery(cg) {
+  if (!cg) return null;
+  const photos = Array.isArray(cg.photos) ? cg.photos.map(p => ({
+    id: String(p.id || Math.random().toString(36).substring(2, 9)),
+    title: String(p.title || ''),
+    cloudinaryUrl: String(p.cloudinaryUrl || ''),
+    ipfsCid: String(p.ipfsCid || ''),
+    ipfsUrl: String(p.ipfsUrl || ''),
+    size: Number(p.size || 0)
+  })) : [];
+  return {
+    id: String(cg.id || Math.random().toString(36).substring(2, 9)),
+    name: String(cg.name || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]+/g, '-'),
+    client: String(cg.client || '').trim(),
+    description: String(cg.description || '').trim(),
+    date: String(cg.date || '').trim(),
+    password: String(cg.password || '').trim(),
+    coverPhotoId: String(cg.coverPhotoId || '').trim(),
+    photos: photos
+  };
+}
+
 function readStore() {
   ensureDataFile();
   try {
@@ -109,6 +135,7 @@ function readStore() {
     return {
       items: Array.isArray(parsed.items) ? parsed.items : [],
       settings: normalizeSettings(parsed.settings),
+      clientGalleries: Array.isArray(parsed.clientGalleries) ? parsed.clientGalleries.map(normalizeClientGallery).filter(Boolean) : [],
       auth: {
         passwordHash: String(parsed.auth && parsed.auth.passwordHash ? parsed.auth.passwordHash : hashValue(defaultPassword)),
         updatedAt: Number(parsed.auth && parsed.auth.updatedAt ? parsed.auth.updatedAt : Date.now()),
@@ -124,6 +151,7 @@ function writeStore(store) {
   const clean = {
     items: Array.isArray(store.items) ? store.items : [],
     settings: normalizeSettings(store.settings),
+    clientGalleries: Array.isArray(store.clientGalleries) ? store.clientGalleries.map(normalizeClientGallery).filter(Boolean) : [],
     auth: {
       passwordHash: String(store.auth && store.auth.passwordHash ? store.auth.passwordHash : hashValue(defaultPassword)),
       updatedAt: Number(store.auth && store.auth.updatedAt ? store.auth.updatedAt : Date.now()),
@@ -137,6 +165,7 @@ function publicStore(store) {
   return {
     items: store.items,
     settings: store.settings,
+    clientGalleries: store.clientGalleries || [],
   };
 }
 
@@ -538,6 +567,10 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+app.get('/delivery/:name', (req, res) => {
+  res.sendFile(path.join(__dirname, 'delivery', 'index.html'));
+});
+
 app.use(express.static(__dirname, {
   etag: true,
   lastModified: true,
@@ -631,6 +664,160 @@ app.delete('/api/content/:id', requireAdmin, (req, res) => {
   const store = readStore();
   store.items = store.items.filter(item => item.id !== req.params.id);
   res.json(publicStore(writeStore(store)));
+});
+
+// =========================================================================
+// CLIENT DELIVERY GALLERY API ENDPOINTS
+// =========================================================================
+
+// Concurrently upload original image to Pinata IPFS (for full-res block retrieval)
+// and an optimized lightweight version to Cloudinary (for fast gallery viewing).
+app.post('/api/client-gallery/upload', requireAdmin, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+
+  try {
+    const filename = req.file.originalname;
+    const title = path.parse(filename).name;
+
+    const cloudinaryPromise = uploadBufferToCloudinary(req.file.buffer, {
+      folder: 'anon-studios-client-delivery',
+      public_id: slugify(title + '-' + Date.now()),
+      resource_type: 'image',
+      overwrite: true,
+    });
+
+    const pinataPromise = uploadBufferToPinata(req.file.buffer, filename, req.file.mimetype);
+
+    const [cloudinaryResult, pinataResult] = await Promise.all([
+      cloudinaryPromise,
+      pinataPromise
+    ]);
+
+    const cloudinaryUrl = optimizedImageUrl(cloudinaryResult.public_id, 1200);
+
+    res.json({
+      ok: true,
+      title: title,
+      cloudinaryUrl: cloudinaryUrl,
+      ipfsCid: pinataResult.ipfsHash,
+      ipfsUrl: pinataResult.gatewayUrl,
+      size: pinataResult.size
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Dual upload failed',
+      detail: error && error.message ? error.message : 'Unknown upload error'
+    });
+  }
+});
+
+// GET all client galleries (admin list)
+app.get('/api/client-gallery', requireAdmin, (req, res) => {
+  const store = readStore();
+  res.json({ clientGalleries: store.clientGalleries || [] });
+});
+
+// GET public client gallery metadata & images by name slug
+app.get('/api/client-gallery/public/:name', (req, res) => {
+  const store = readStore();
+  const name = String(req.params.name || '').trim().toLowerCase();
+  const gallery = (store.clientGalleries || []).find(g => g.name === name);
+  if (!gallery) return res.status(404).json({ error: 'Client gallery not found' });
+  
+  if (gallery.password && gallery.password.trim() !== '') {
+    return res.json({
+      gallery: {
+        id: gallery.id,
+        name: gallery.name,
+        client: gallery.client,
+        description: gallery.description,
+        date: gallery.date,
+        isLocked: true,
+        coverPhotoId: gallery.coverPhotoId,
+        coverPhoto: gallery.photos.find(p => p.id === gallery.coverPhotoId) || gallery.photos[0] || null
+      }
+    });
+  }
+  
+  res.json({
+    gallery: {
+      ...gallery,
+      isLocked: false
+    }
+  });
+});
+
+// POST verify password and return full client gallery details
+app.post('/api/client-gallery/public/:name/unlock', (req, res) => {
+  const store = readStore();
+  const name = String(req.params.name || '').trim().toLowerCase();
+  const gallery = (store.clientGalleries || []).find(g => g.name === name);
+  if (!gallery) return res.status(404).json({ error: 'Client gallery not found' });
+  
+  const { password } = req.body || {};
+  if (String(password || '').trim() !== String(gallery.password || '').trim()) {
+    return res.status(401).json({ error: 'Incorrect passcode' });
+  }
+  
+  res.json({
+    gallery: {
+      ...gallery,
+      isLocked: false
+    }
+  });
+});
+
+// POST create client gallery
+app.post('/api/client-gallery', requireAdmin, (req, res) => {
+  const store = readStore();
+  const normalized = normalizeClientGallery(req.body);
+  if (!normalized || !normalized.name) {
+    return res.status(400).json({ error: 'Invalid client gallery payload. Name slug is required.' });
+  }
+
+  const exists = (store.clientGalleries || []).some(g => g.name === normalized.name);
+  if (exists) {
+    return res.status(400).json({ error: 'A gallery with this URL name already exists.' });
+  }
+
+  if (!store.clientGalleries) store.clientGalleries = [];
+  store.clientGalleries.unshift(normalized);
+  writeStore(store);
+  res.json({ ok: true, gallery: normalized });
+});
+
+// PUT update client gallery
+app.put('/api/client-gallery/:id', requireAdmin, (req, res) => {
+  const store = readStore();
+  const id = req.params.id;
+  const index = (store.clientGalleries || []).findIndex(g => g.id === id);
+  if (index === -1) return res.status(404).json({ error: 'Client gallery not found' });
+
+  const current = store.clientGalleries[index];
+  const normalized = normalizeClientGallery({ ...current, ...req.body, id: current.id });
+
+  if (normalized.name !== current.name) {
+    const exists = store.clientGalleries.some(g => g.name === normalized.name && g.id !== id);
+    if (exists) {
+      return res.status(400).json({ error: 'A gallery with this URL name already exists.' });
+    }
+  }
+
+  store.clientGalleries[index] = normalized;
+  writeStore(store);
+  res.json({ ok: true, gallery: normalized });
+});
+
+// DELETE client gallery
+app.delete('/api/client-gallery/:id', requireAdmin, (req, res) => {
+  const store = readStore();
+  const id = req.params.id;
+  const exists = (store.clientGalleries || []).some(g => g.id === id);
+  if (!exists) return res.status(404).json({ error: 'Client gallery not found' });
+
+  store.clientGalleries = store.clientGalleries.filter(g => g.id !== id);
+  writeStore(store);
+  res.json({ ok: true });
 });
 
 app.put('/api/settings', requireAdmin, (req, res) => {

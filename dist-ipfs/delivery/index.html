@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Client Delivery — Anon Studios</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+:root{
+  --bg:#080807;--bg2:#0f0e0d;--line:rgba(255,255,255,.07);
+  --w:#f0ebe2;--w60:rgba(240,235,226,.55);--w30:rgba(240,235,226,.25);
+  --gold:#2dd4a0;--golddim:rgba(45,212,160,.08);
+  --sans:'Barlow',-apple-system,sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --display:'Bebas Neue',Impact,sans-serif;
+}
+body{background:var(--bg);color:var(--w);font-family:var(--sans);overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+#cur-dot,#cur-ring{display:none}
+
+/* NAV */
+nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:22px 52px;background:rgba(8,8,7,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--display);font-size:16px;letter-spacing:6px;text-transform:uppercase;color:var(--w)}
+.logo em{color:var(--gold);font-style:normal}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);transition:color .25s}
+.nav-back:hover{color:var(--w)}
+
+/* PAGE CONTAINER */
+.delivery-container{max-width:1440px;margin:0 auto;padding:120px 52px 140px;position:relative}
+
+/* HEADER */
+.del-header{margin-bottom:60px;position:relative;border-bottom:1px solid var(--line);padding-bottom:36px}
+.del-tagline{font-family:var(--mono);font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.del-title{font-family:var(--display);font-size:clamp(48px,7vw,96px);letter-spacing:1px;line-height:1.0;margin-bottom:16px}
+.del-meta{display:flex;flex-wrap:wrap;gap:24px 48px;font-family:var(--mono);font-size:11px;color:var(--w60)}
+.del-meta span em{color:var(--w30);font-style:normal}
+
+/* GRID */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:60px}
+.photo-card{position:relative;aspect-ratio:3/4;border-radius:4px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:rgba(255,255,255,.01);transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
+.photo-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.6)}
+
+.card-img-wrap{position:relative;width:100%;height:100%;overflow:hidden}
+.card-img-wrap img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;will-change:transform}
+.card-img-wrap img.loaded{opacity:1}
+
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent 40%);opacity:0;transition:opacity .3s}
+.photo-card:hover .card-overlay{opacity:1}
+
+.card-info{position:absolute;bottom:0;left:0;right:0;padding:16px;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--w60);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.photo-card:hover .card-info{opacity:1;transform:translateY(0)}
+
+/* CHECKBOX OVERLAY */
+.card-select{position:absolute;top:16px;right:16px;z-index:10;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(8,8,7,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .25s,border-color .25s}
+.photo-card.selected .card-select{background:var(--gold);border-color:var(--gold)}
+.card-select svg{width:12px;height:12px;fill:none;stroke:var(--bg);stroke-width:3;opacity:0;transition:opacity .25s}
+.photo-card.selected .card-select svg{opacity:1}
+
+/* FLOATING BAR */
+.floating-bar{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);z-index:400;width:90%;max-width:680px;background:rgba(15,14,13,.92);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:40px;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 30px 60px rgba(0,0,0,.8);transition:transform .4s cubic-bezier(.22,1,.36,1)}
+.floating-bar.active{transform:translateX(-50%) translateY(0)}
+
+.bar-left{display:flex;align-items:center;gap:18px}
+.select-all-btn{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--w60);cursor:pointer;background:transparent;border:none;outline:none}
+.select-all-btn:hover{color:var(--w)}
+.selected-count{font-family:var(--mono);font-size:11px;color:var(--gold)}
+
+.download-btn{background:var(--gold);color:var(--bg);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;border-radius:30px;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;transition:opacity .25s,transform .25s}
+.download-btn:hover{opacity:.9;transform:scale(1.02)}
+.download-btn:active{transform:scale(0.98)}
+
+/* PROGRESS OVERLAY */
+.progress-overlay{position:fixed;inset:0;z-index:900;background:rgba(8,8,7,.9);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
+.progress-overlay.active{opacity:1;pointer-events:auto}
+
+.progress-box{width:90%;max-width:440px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:36px 32px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,.9)}
+.progress-title{font-family:var(--display);font-size:24px;letter-spacing:2px;margin-bottom:8px}
+.progress-subtitle{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--w30);text-transform:uppercase;margin-bottom:24px}
+
+.progress-bar-wrap{position:relative;width:100%;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.progress-bar-fill{position:absolute;top:0;left:0;height:100%;width:0;background:var(--gold);border-radius:3px;transition:width .2s ease}
+
+.progress-label{font-family:var(--mono);font-size:11px;color:var(--w60);margin-bottom:4px}
+.progress-stats{font-family:var(--mono);font-size:10px;color:var(--w30)}
+
+.progress-cancel{background:transparent;border:1px solid var(--line);color:var(--w60);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:4px;cursor:pointer;margin-top:24px;transition:color .25s,border-color .25s}
+.progress-cancel:hover{color:var(--w);border-color:var(--w30)}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;z-index:800;background:rgba(8,8,7,.97);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
+.lightbox.active{opacity:1;pointer-events:auto}
+
+.lb-content{position:relative;width:90%;height:85%;display:flex;align-items:center;justify-content:center}
+.lb-content img{max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity .4s ease}
+.lb-content img.loaded{opacity:1}
+
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(8,8,7,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--w60);transition:color .25s,border-color .25s}
+.lb-nav:hover{color:var(--w);border-color:var(--w30)}
+.lb-prev{left:16px}
+.lb-next{right:16px}
+
+.lb-close{position:absolute;top:24px;right:24px;z-index:5;font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--w30);background:transparent;border:none;cursor:pointer;transition:color .25s}
+.lb-close:hover{color:var(--w)}
+
+.lb-select-btn{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(8,8,7,.7);border:1px solid rgba(255,255,255,.15);border-radius:30px;padding:10px 24px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;transition:border-color .25s}
+.lb-select-btn.selected{border-color:var(--gold);color:var(--gold)}
+
+/* LOADING SCREEN */
+.page-loader{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .5s}
+.page-loader.hidden{opacity:0;pointer-events:none}
+.spinner{width:36px;height:36px;border:2px solid rgba(255,255,255,.05);border-top:2px solid var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+@media(max-width:960px){
+  nav{padding:16px 24px}
+  .delivery-container{padding:110px 24px 120px}
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+}
+@media(max-width:600px){
+  nav{padding:14px 20px}
+  .delivery-container{padding:96px 20px 100px}
+  .del-title{font-size:36px}
+  .del-meta{flex-direction:column;gap:8px}
+  .floating-bar{width:92%;bottom:16px;padding:8px 16px}
+  .download-btn{padding:10px 16px;font-size:9px;letter-spacing:1px}
+  .lb-prev{left:8px}.lb-next{right:8px}
+}
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+  40% { transform: translateY(-6px) translateX(-50%); }
+  60% { transform: translateY(-3px) translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader">
+  <div class="spinner"></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-left">
+    <a href="../" class="logo">ANON<em>.</em></a>
+  </div>
+  <a href="../gallery/" class="nav-back">← All Galleries</a>
+</nav>
+
+<!-- COVER HERO -->
+<div class="cover-hero" id="cover-hero" style="display:none; position:relative; width:100vw; height:100vh; background:var(--bg); overflow:hidden;">
+  <div id="hero-img-wrap" style="position:absolute; inset:0; width:100%; height:100%; transition:transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+    <img id="hero-cover-img" style="width:100%; height:100%; object-fit:cover; opacity:0; transform:scale(1.15); transition:opacity 1.5s ease, transform 15s cubic-bezier(0.25, 1, 0.5, 1);">
+  </div>
+  <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(8,8,7,0.3), rgba(8,8,7,0.85) 95%);"></div>
+  
+  <div style="position:absolute; bottom:80px; left:0; right:0; padding:0 52px; max-width:1440px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+    <div class="del-tagline" id="hero-tagline" style="margin-bottom:0;">Client Delivery Archive</div>
+    <h1 class="del-title" id="hero-title" style="margin-bottom:0; font-size:clamp(40px, 8vw, 88px);">Client Gallery</h1>
+    <p id="hero-desc" style="font-family:var(--serif); font-style:italic; font-size:clamp(16px, 2.5vw, 24px); color:var(--w60); font-weight:300; max-width:640px; line-height:1.4;"></p>
+    <div class="del-meta" id="hero-meta" style="margin-top:8px;">
+      <span id="hero-meta-client">Client: <em>Loading...</em></span>
+      <span id="hero-meta-date">Date: <em>Loading...</em></span>
+      <span id="hero-meta-count">Photos: <em>0 works</em></span>
+    </div>
+  </div>
+  
+  <div onclick="scrollToGallery()" style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; font-family:var(--mono); font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--w30); transition:color .25s;">
+    <span>Scroll Down</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: bounce 2s infinite; position: relative;"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</div>
+
+<!-- PASSCODE WALL -->
+<div class="passcode-wall" id="passcode-wall" style="display:none; position:fixed; inset:0; z-index:950; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center;">
+  <div style="max-width:360px; width:100%; display:flex; flex-direction:column; gap:24px;">
+    <div>
+      <div class="logo" style="font-size:24px; letter-spacing:8px; margin-bottom:12px;">ANON<em>.</em></div>
+      <div style="font-family:var(--mono); font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--gold);">Protected Archive</div>
+    </div>
+    
+    <div id="passcode-cover-preview" style="width:120px; height:120px; border-radius:50%; overflow:hidden; border:1px solid var(--line); margin:0 auto; background:rgba(255,255,255,0.01); display:none;">
+      <img id="passcode-cover-img" style="width:100%; height:100%; object-fit:cover; filter:grayscale(100%) blur(2px); opacity:0.1; transition:opacity 1s ease;">
+    </div>
+    
+    <div>
+      <h2 id="passcode-client-title" style="font-family:var(--serif); font-size:22px; font-weight:400; margin-bottom:6px; color:var(--w);">Client Gallery</h2>
+      <p id="passcode-date-desc" style="font-family:var(--mono); font-size:9px; color:var(--w30); text-transform:uppercase;">Shoot Archive</p>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <input type="password" id="passcode-input" placeholder="Enter download PIN" style="width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--w); padding:12px; font-family:var(--mono); font-size:12px; text-align:center; outline:none; transition:border-color .25s; border-radius:4px;" onkeydown="if(event.key==='Enter')submitPasscode()">
+      <div id="passcode-error" style="font-family:var(--mono); font-size:9px; color:#e05555; display:none; margin-top: 4px;">Incorrect PIN. Please try again.</div>
+    </div>
+    
+    <button onclick="submitPasscode()" style="background:var(--gold); color:var(--bg); border:none; padding:12px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; border-radius:4px; cursor:pointer; transition:opacity .25s;">Unlock Gallery</button>
+  </div>
+</div>
+
+<div class="delivery-container">
+  <header class="del-header">
+    <div class="del-tagline" id="del-tagline">Client Archive</div>
+    <h1 class="del-title" id="del-title">Client Delivery</h1>
+    <div class="del-meta">
+      <span id="meta-client">Client: <em>Loading...</em></span>
+      <span id="meta-date">Shoot Date: <em>Loading...</em></span>
+      <span id="meta-count">Photos: <em>Loading...</em></span>
+      <span id="meta-size">Size: <em>Loading...</em></span>
+    </div>
+  </header>
+
+  <div class="gallery-grid" id="gallery-grid">
+    <!-- Rendered dynamically -->
+  </div>
+</div>
+
+<!-- FLOATING SELECTION BAR -->
+<div class="floating-bar" id="floating-bar">
+  <div class="bar-left">
+    <button class="select-all-btn" id="select-all-btn">Select All</button>
+    <div class="selected-count" id="selected-count">0 selected</div>
+  </div>
+  <button class="download-btn" id="download-btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom:-1px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    Download
+  </button>
+</div>
+
+<!-- DOWNLOAD PROGRESS OVERLAY -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-box">
+    <div class="progress-title" id="progress-title">Fetching IPFS Blocks</div>
+    <div class="progress-subtitle" id="progress-subtitle">Decentralized Storage Retrieval</div>
+    
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+    
+    <div class="progress-label" id="progress-label">Downloading: Photo 0 of 0</div>
+    <div class="progress-stats" id="progress-stats">0% completed</div>
+    
+    <button class="progress-cancel" id="progress-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lb-close">Close</button>
+  <button class="lb-nav lb-prev" id="lb-prev">←</button>
+  <button class="lb-nav lb-next" id="lb-next">→</button>
+  
+  <div class="lb-content" id="lb-content">
+    <!-- img loaded dynamically -->
+  </div>
+  
+  <button class="lb-select-btn" id="lb-select-btn">
+    <span class="bubble" style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #fff;margin-right:8px"></span>
+    Select
+  </button>
+</div>
+
+<!-- SCRIPTS -->
+<script>
+// Dynamic JSZip importer
+let jszipLoaded = false;
+function loadJSZip() {
+  if (window.JSZip) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    script.onload = () => { jszipLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load JSZip from CDN'));
+    document.head.appendChild(script);
+  });
+}
+
+// State
+let galleryData = null;
+const selectedIds = new Set();
+let lightboxIndex = -1;
+let downloadCanceled = false;
+
+// DOM Elements
+const loader = document.getElementById('page-loader');
+const grid = document.getElementById('gallery-grid');
+const floatingBar = document.getElementById('floating-bar');
+const selectedCount = document.getElementById('selected-count');
+const selectAllBtn = document.getElementById('select-all-btn');
+const downloadBtn = document.getElementById('download-btn');
+
+const progressOverlay = document.getElementById('progress-overlay');
+const progressBarFill = document.getElementById('progress-bar-fill');
+const progressLabel = document.getElementById('progress-label');
+const progressStats = document.getElementById('progress-stats');
+const progressCancel = document.getElementById('progress-cancel');
+
+const lightbox = document.getElementById('lightbox');
+const lbContent = document.getElementById('lb-content');
+const lbClose = document.getElementById('lb-close');
+const lbPrev = document.getElementById('lb-prev');
+const lbNext = document.getElementById('lb-next');
+const lbSelectBtn = document.getElementById('lb-select-btn');
+
+// Format Bytes
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = 2;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Parse gallery name slug from path
+const pathParts = window.location.pathname.split('/');
+const galleryName = pathParts.pop() || pathParts.pop(); // handles trailing slashes
+
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : 'https://anon-studios-site.onrender.com';
+
+// Fetch gallery data
+// Fetch gallery data
+async function init() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/client-gallery/public/${galleryName}`);
+    if (!response.ok) throw new Error('Gallery not found');
+    const data = await response.json();
+    galleryData = data.gallery;
+    
+    if (galleryData.isLocked) {
+      document.getElementById('passcode-client-title').textContent = galleryData.client || 'Client Gallery';
+      document.getElementById('passcode-date-desc').textContent = `${galleryData.description || 'Private Archive'} ${galleryData.date ? '— ' + galleryData.date : ''}`;
+      
+      if (galleryData.coverPhoto && galleryData.coverPhoto.cloudinaryUrl) {
+        const pImg = document.getElementById('passcode-cover-img');
+        pImg.src = galleryData.coverPhoto.cloudinaryUrl;
+        pImg.onload = () => { pImg.style.opacity = '0.6'; };
+        document.getElementById('passcode-cover-preview').style.display = 'block';
+      }
+      
+      document.getElementById('passcode-wall').style.display = 'flex';
+      document.getElementById('cover-hero').style.display = 'none';
+      document.querySelector('.delivery-container').style.display = 'none';
+      document.getElementById('floating-bar').style.display = 'none';
+    } else {
+      document.getElementById('passcode-wall').style.display = 'none';
+      renderGallery();
+    }
+  } catch (err) {
+    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px"><h2 style="font-family:var(--display);letter-spacing:1px;font-size:32px">Gallery Not Found</h2><p style="font-family:var(--mono);font-size:11px;color:var(--w30)">The link may be incorrect or the delivery period has expired.</p><a href="../" style="font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--gold);border:1px solid var(--line);padding:8px 16px;border-radius:4px">Return Home</a></div>`;
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
+
+// Submit passcode
+async function submitPasscode() {
+  const passcode = document.getElementById('passcode-input').value.trim();
+  const errorDiv = document.getElementById('passcode-error');
+  if (!passcode) return;
+
+  errorDiv.style.display = 'none';
+  loader.classList.remove('hidden');
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/client-gallery/public/${galleryName}/unlock`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password: passcode })
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Incorrect PIN. Please try again.');
+      } else {
+        throw new Error('Failed to unlock gallery. Please try again.');
+      }
+    }
+
+    const data = await response.json();
+    galleryData = data.gallery;
+    
+    const wall = document.getElementById('passcode-wall');
+    wall.style.transition = 'opacity 0.6s ease';
+    wall.style.opacity = '0';
+    
+    setTimeout(() => {
+      wall.style.display = 'none';
+      document.querySelector('.delivery-container').style.display = 'block';
+      document.getElementById('floating-bar').style.display = 'flex';
+      renderGallery();
+      loader.classList.add('hidden');
+    }, 600);
+
+  } catch (err) {
+    errorDiv.textContent = err.message;
+    errorDiv.style.display = 'block';
+    loader.classList.add('hidden');
+  }
+}
+
+function scrollToGallery() {
+  document.querySelector('.delivery-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Render UI elements
+function renderGallery() {
+  document.title = `${galleryData.client} Delivery — Anon Studios`;
+  
+  let coverPhoto = galleryData.photos.find(p => p.id === galleryData.coverPhotoId) || galleryData.photos[0];
+  const coverUrl = coverPhoto ? coverPhoto.cloudinaryUrl : '';
+  
+  if (coverUrl) {
+    const heroImg = document.getElementById('hero-cover-img');
+    heroImg.src = coverUrl;
+    heroImg.onload = () => {
+      heroImg.style.opacity = '0.55';
+      heroImg.style.transform = 'scale(1.03)';
+    };
+    
+    document.getElementById('hero-title').textContent = galleryData.client || 'Client Gallery';
+    document.getElementById('hero-desc').textContent = galleryData.description || 'Private Shoot Archive';
+    document.getElementById('hero-meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
+    document.getElementById('hero-meta-date').innerHTML = `Date: <em>${galleryData.date || 'N/A'}</em>`;
+    document.getElementById('hero-meta-count').innerHTML = `Photos: <em>${galleryData.photos.length} works</em>`;
+    
+    document.getElementById('cover-hero').style.display = 'block';
+  } else {
+    document.getElementById('cover-hero').style.display = 'none';
+  }
+  
+  document.getElementById('del-title').textContent = galleryData.description || `${galleryData.client} Delivery`;
+  document.getElementById('del-tagline').textContent = `Client Delivery / ${galleryData.client}`;
+  document.getElementById('meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
+  document.getElementById('meta-date').innerHTML = `Shoot Date: <em>${galleryData.date || 'N/A'}</em>`;
+  
+  const totalSize = (galleryData.photos || []).reduce((acc, p) => acc + (p.size || 0), 0);
+  document.getElementById('meta-count').innerHTML = `Photos: <em>${galleryData.photos.length} works</em>`;
+  document.getElementById('meta-size').innerHTML = `Total Size: <em>${formatBytes(totalSize)}</em>`;
+  
+  grid.innerHTML = '';
+  
+  if (!galleryData.photos.length) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; padding: 100px 0; text-align: center; font-family: var(--mono); color: var(--w30); font-size: 11px;">This gallery contains no photos yet.</div>`;
+    return;
+  }
+  
+  galleryData.photos.forEach((photo, idx) => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.dataset.id = photo.id;
+    card.innerHTML = `
+      <div class="card-select">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="card-img-wrap">
+        <img src="${photo.cloudinaryUrl}" alt="${photo.title || ''}" loading="lazy" decoding="async">
+      </div>
+      <div class="card-overlay"></div>
+      <div class="card-info">
+        <div>${photo.title || `Photo ${idx + 1}`}</div>
+        <div style="color: var(--w30); margin-top: 4px;">IPFS: ${photo.ipfsCid.substring(0, 8)}... (${formatBytes(photo.size)})</div>
+      </div>
+    `;
+    
+    // Lazy loaded transitions
+    const img = card.querySelector('img');
+    img.onload = () => img.classList.add('loaded');
+    if (img.complete) img.classList.add('loaded');
+    
+    // Select Toggle on checkbox click
+    card.querySelector('.card-select').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSelect(photo.id);
+    });
+    
+    // Lightbox open on card body click
+    card.addEventListener('click', () => {
+      openLightbox(idx);
+    });
+    
+    grid.appendChild(card);
+  });
+}
+
+// Select Toggle helper
+function toggleSelect(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+    document.querySelector(`.photo-card[data-id="${id}"]`)?.classList.remove('selected');
+  } else {
+    selectedIds.add(id);
+    document.querySelector(`.photo-card[data-id="${id}"]`)?.classList.add('selected');
+  }
+  updateFloatingBar();
+}
+
+// Update Floating Bar
+function updateFloatingBar() {
+  const count = selectedIds.size;
+  selectedCount.textContent = `${count} selected`;
+  if (count > 0) {
+    floatingBar.classList.add('active');
+  } else {
+    floatingBar.classList.remove('active');
+  }
+  
+  const allSelected = galleryData.photos.every(p => selectedIds.has(p.id));
+  selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+}
+
+// Select All Toggle
+selectAllBtn.addEventListener('click', () => {
+  const allSelected = galleryData.photos.every(p => selectedIds.has(p.id));
+  if (allSelected) {
+    selectedIds.clear();
+    document.querySelectorAll('.photo-card').forEach(c => c.classList.remove('selected'));
+  } else {
+    galleryData.photos.forEach(p => selectedIds.add(p.id));
+    document.querySelectorAll('.photo-card').forEach(c => c.classList.add('selected'));
+  }
+  updateFloatingBar();
+});
+
+// Lightbox Logic
+function openLightbox(idx) {
+  lightboxIndex = idx;
+  const photo = galleryData.photos[idx];
+  lbContent.innerHTML = `<img src="${photo.cloudinaryUrl}" alt="" class="lb-img">`;
+  lightbox.classList.add('active');
+  
+  const img = lbContent.querySelector('img');
+  img.onload = () => img.classList.add('loaded');
+  
+  updateLightboxSelectState();
+}
+
+function updateLightboxSelectState() {
+  const photo = galleryData.photos[lightboxIndex];
+  if (selectedIds.has(photo.id)) {
+    lbSelectBtn.classList.add('selected');
+    lbSelectBtn.querySelector('.bubble').style.background = 'var(--gold)';
+    lbSelectBtn.querySelector('.bubble').style.borderColor = 'var(--gold)';
+  } else {
+    lbSelectBtn.classList.remove('selected');
+    lbSelectBtn.querySelector('.bubble').style.background = 'transparent';
+    lbSelectBtn.querySelector('.bubble').style.borderColor = '#fff';
+  }
+}
+
+lbSelectBtn.addEventListener('click', () => {
+  const photo = galleryData.photos[lightboxIndex];
+  toggleSelect(photo.id);
+  updateLightboxSelectState();
+});
+
+function closeLightbox() {
+  lightbox.classList.remove('active');
+  lbContent.innerHTML = '';
+  lightboxIndex = -1;
+}
+
+lbClose.addEventListener('click', closeLightbox);
+
+lbPrev.addEventListener('click', () => {
+  if (lightboxIndex > 0) {
+    openLightbox(lightboxIndex - 1);
+  } else {
+    openLightbox(galleryData.photos.length - 1);
+  }
+});
+
+lbNext.addEventListener('click', () => {
+  if (lightboxIndex < galleryData.photos.length - 1) {
+    openLightbox(lightboxIndex + 1);
+  } else {
+    openLightbox(0);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!lightbox.classList.contains('active')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lbPrev.click();
+  if (e.key === 'ArrowRight') lbNext.click();
+});
+
+// Array Buffer Fetch helper supporting fallback IPFS gateways
+async function fetchWithFallback(photo, onProgress) {
+  // Try dedicated gateway first if present in URL, otherwise fallback to Cloudflare and Public gateways
+  const gateways = [
+    photo.ipfsUrl,
+    `https://cloudflare-ipfs.com/ipfs/${photo.ipfsCid}`,
+    `https://ipfs.io/ipfs/${photo.ipfsCid}`
+  ].filter(Boolean);
+  
+  let lastError = null;
+  for (let url of gateways) {
+    if (downloadCanceled) throw new Error('Canceled');
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Gateway returned ${response.status}`);
+      
+      const contentLength = response.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength, 10) : (photo.size || 0);
+      
+      const reader = response.body.getReader();
+      let loaded = 0;
+      const chunks = [];
+      
+      while (true) {
+        if (downloadCanceled) throw new Error('Canceled');
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.length;
+        if (onProgress && total > 0) {
+          onProgress(loaded / total);
+        }
+      }
+      
+      return new Blob(chunks);
+    } catch (err) {
+      if (err.message === 'Canceled') throw err;
+      lastError = err;
+      console.warn(`Gateway failed: ${url}. Error: ${err.message}`);
+    }
+  }
+  throw lastError || new Error('All gateways failed');
+}
+
+// Compile & Download ZIP
+downloadBtn.addEventListener('click', async () => {
+  if (selectedIds.size === 0) return;
+  
+  downloadCanceled = false;
+  progressOverlay.classList.add('active');
+  progressBarFill.style.width = '0%';
+  progressStats.textContent = 'Initializing JSZip compiler...';
+  progressLabel.textContent = 'Loading packages...';
+  
+  try {
+    // 1. Load JSZip
+    await loadJSZip();
+    const zip = new JSZip();
+    
+    const photosToDownload = galleryData.photos.filter(p => selectedIds.has(p.id));
+    const totalPhotos = photosToDownload.length;
+    
+    // 2. Fetch photos in blocks/files sequentially
+    for (let i = 0; i < totalPhotos; i++) {
+      if (downloadCanceled) throw new Error('Canceled');
+      const photo = photosToDownload[i];
+      const percentBase = (i / totalPhotos) * 100;
+      
+      progressLabel.textContent = `Downloading ${i + 1} of ${totalPhotos}: ${photo.title || `photo-${i+1}`}`;
+      progressStats.textContent = `${Math.round(percentBase)}% completed`;
+      progressBarFill.style.width = `${percentBase}%`;
+      
+      const blob = await fetchWithFallback(photo, (fraction) => {
+        const itemPercent = fraction * (100 / totalPhotos);
+        const currentTotalPercent = percentBase + itemPercent;
+        progressBarFill.style.width = `${currentTotalPercent}%`;
+        progressStats.textContent = `${Math.round(currentTotalPercent)}% completed`;
+      });
+      
+      // Add extension to filename if missing
+      let ext = photo.format || 'jpg';
+      if (!photo.title.toLowerCase().endsWith('.' + ext)) {
+        photo.title = photo.title + '.' + ext;
+      }
+      
+      zip.file(photo.title, blob);
+    }
+    
+    // 3. Generate ZIP
+    if (downloadCanceled) throw new Error('Canceled');
+    progressLabel.textContent = 'Generating zip archive...';
+    progressBarFill.style.width = '98%';
+    progressStats.textContent = 'Almost done...';
+    
+    const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+      progressStats.textContent = `Compressing: ${Math.round(metadata.percent)}%`;
+      progressBarFill.style.width = `${98 + (metadata.percent / 100) * 2}%`;
+    });
+    
+    // 4. Download zip
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${galleryData.name}-delivery.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clear overlay
+    setTimeout(() => {
+      progressOverlay.classList.remove('active');
+    }, 1000);
+    
+  } catch (err) {
+    if (err.message === 'Canceled') {
+      console.log('Download canceled by user.');
+    } else {
+      alert(`Download failed: ${err.message}`);
+    }
+    progressOverlay.classList.remove('active');
+  }
+});
+
+progressCancel.addEventListener('click', () => {
+  downloadCanceled = true;
+});
+
+// Run Init
+init();
+</script>
+</body>
+</html>
