@@ -219,6 +219,22 @@ body.login-active #pacScroll {
   </main>
 </div>
 
+<!-- EDIT ITEM DETAILS MODAL -->
+<div class="modal" id="modal-edit-item">
+  <div class="modal-box" style="max-width:650px; width:95%; max-height:85vh; overflow-y:auto; border-radius:8px">
+    <div class="modal-title" id="edit-item-modal-title">Edit Item Details</div>
+    <input type="hidden" id="edit-item-id">
+    <input type="hidden" id="edit-item-type">
+    <form id="editItemForm" style="display:grid; gap:14px" onsubmit="saveItemEdit(event)">
+      <div id="edit-item-fields-container" style="display:grid; gap:14px"></div>
+      <div class="modal-buttons" style="margin-top:16px; border-top:1px solid var(--line); padding-top:16px">
+        <button class="btn btn-secondary" type="button" onclick="closeEditItemModal()">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="btn-save-edit">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- CREATE/EDIT CLIENT GALLERY MODAL -->
 <div class="modal" id="modal-client-gallery">
   <div class="modal-box" style="max-width:800px; width:90%">
@@ -548,13 +564,41 @@ function previewMarkup(item) {
 }
 
 function buildPhotoCard(item) {
-  const preset = getPhotoPreset(item.category);
-  return '<div class="media-card" data-item-id="' + item.id + '" data-type="image"><div class="mc-label">Photo Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('image', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Project Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Photo Category</label><select class="mc-select" data-field="category">' + selectMarkup(PHOTO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="mc-input" data-field="seriesName" value="' + escapeHtml(item.seriesName || preset.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="mc-input mc-textarea" data-field="seriesDescription">' + escapeHtml(item.seriesDescription || preset.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="mc-input" data-field="seriesYear" value="' + escapeHtml(item.seriesYear || preset.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Upload Storage Provider</label><select class="mc-select" data-upload-provider="imageFile"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Replace Photo</label><input class="form-input" data-upload-field="imageFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">This project stays linked to the matching front-end series.</div></div>';
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="image">' +
+    '<div class="mc-label">Photo Project</div>' +
+    '<div class="mc-name">' + escapeHtml(item.title) + '</div>' +
+    '<div class="mc-preview">' +
+      '<div class="mc-type-badge">' + escapeHtml(categoryLabel('image', item.category)) + '</div>' +
+      '<div class="mc-status has-media"></div>' +
+      previewMarkup(item) +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--w30);margin-top:6px;font-family:var(--mono)">' +
+      'Series: ' + escapeHtml(item.seriesName || 'N/A') + ' | Year: ' + escapeHtml(item.year || 'N/A') +
+    '</div>' +
+    '<div class="mc-input-row" style="margin-top:12px">' +
+      '<button class="btn btn-primary" data-action="edit">Edit Details</button>' +
+      '<button class="btn btn-danger" data-action="delete">Delete</button>' +
+    '</div>' +
+  '</div>';
 }
 
 function buildVideoCard(item) {
-  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : (item.videoProvider === 'pinata' ? 'pinata' : 'direct');
-  return '<div class="media-card" data-item-id="' + item.id + '" data-type="video"><div class="mc-label">Video Project</div><div class="mc-name">' + escapeHtml(item.title) + '</div><div class="mc-preview"><div class="mc-type-badge">' + escapeHtml(categoryLabel('video', item.category)) + '</div><div class="mc-status has-media"></div>' + previewMarkup(item) + '</div><div class="form-group"><label class="form-label">Title</label><input class="mc-input" data-field="title" value="' + escapeHtml(item.title) + '"></div><div class="form-group"><label class="form-label">Video Category</label><select class="mc-select" data-field="category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="mc-select" data-field="videoProvider"><option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option><option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option><option value="pinata"' + (sourceType === 'pinata' ? ' selected' : '') + '>Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="mc-input" data-field="sourceUrl" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="mc-input" data-field="fileCode" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Use existing DoodStream file code if needed"></div><div class="form-group"><label class="form-label">Replace / Upload Video (DoodStream/Pinata)</label><input class="form-input" data-upload-field="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="mc-input" data-field="thumb" value="' + escapeHtml(item.thumb || '') + '"></div><div class="form-group"><label class="form-label">Thumbnail Upload Provider</label><select class="mc-select" data-upload-provider="thumbFile"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" data-upload-field="thumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="mc-input" data-field="year" value="' + escapeHtml(item.year || '') + '"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="mc-input" data-field="client" value="' + escapeHtml(item.client || '') + '"></div><div class="form-group"><label class="form-label">Duration</label><input class="mc-input" data-field="duration" value="' + escapeHtml(item.duration || '') + '"></div><div class="form-group"><label class="form-label">Description</label><textarea class="mc-input mc-textarea" data-field="description">' + escapeHtml(item.description || '') + '</textarea></div><div class="mc-input-row"><button class="btn btn-primary" data-action="save">Save</button><button class="btn btn-danger" data-action="delete">Delete</button></div><div class="note">Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options. Direct URL supports YouTube.</div></div>';
+  return '<div class="media-card" data-item-id="' + item.id + '" data-type="video">' +
+    '<div class="mc-label">Video Project</div>' +
+    '<div class="mc-name">' + escapeHtml(item.title) + '</div>' +
+    '<div class="mc-preview">' +
+      '<div class="mc-type-badge">' + escapeHtml(categoryLabel('video', item.category)) + '</div>' +
+      '<div class="mc-status has-media"></div>' +
+      previewMarkup(item) +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--w30);margin-top:6px;font-family:var(--mono)">' +
+      'Year: ' + escapeHtml(item.year || 'N/A') + ' | Client: ' + escapeHtml(item.client || 'N/A') +
+    '</div>' +
+    '<div class="mc-input-row" style="margin-top:12px">' +
+      '<button class="btn btn-primary" data-action="edit">Edit Details</button>' +
+      '<button class="btn btn-danger" data-action="delete">Delete</button>' +
+    '</div>' +
+  '</div>';
 }
 
 function syncPhotoPreset(form) {
@@ -777,84 +821,199 @@ async function handleCardAction(event) {
   if (!button) return;
   const card = event.target.closest('[data-item-id]');
   const id = card.dataset.itemId;
+  
   if (button.dataset.action === 'delete') {
+    if (!confirm('Are you sure you want to delete this project?')) return;
     state.store = await api('/api/content/' + encodeURIComponent(id), { method: 'DELETE' });
     renderAll();
     showToast('Item deleted');
     return;
   }
+  
+  if (button.dataset.action === 'edit') {
+    openEditItemModal(id);
+    return;
+  }
+}
 
-  const item = normalizeItem((state.store.items || []).find(entry => entry.id === id));
-  const payload = { type: item.type };
-  card.querySelectorAll('[data-field]').forEach(field => {
-    payload[field.dataset.field] = field.value;
-  });
-  payload.category = normalizeTag(payload.category || item.category);
-  payload.tags = [payload.category];
-  if (item.type === 'image') {
-    payload.seriesKey = normalizeTag((payload.seriesName || item.seriesName || getPhotoPreset(payload.category).name).replace(/\s+/g, '-'));
-    const replacement = card.querySelector('[data-upload-field="imageFile"]').files[0];
-    const imageProvider = card.querySelector('[data-upload-provider="imageFile"]')?.value || 'cloudinary';
-    if (replacement) {
-      if (imageProvider === 'pinata') {
-        const uploaded = await uploadPinataFile(replacement, payload.title || item.title);
-        payload.src = uploaded.src;
-        payload.thumb = uploaded.src;
-      } else {
-        const uploaded = await uploadImageFile(replacement, payload.title || item.title, payload.category);
-        payload.src = uploaded.src;
-        payload.thumb = uploaded.thumb;
-      }
-    }
+// --- ITEM EDIT MODAL CONTROLLERS ---
+function openEditItemModal(itemId) {
+  const item = normalizeItem((state.store.items || []).find(entry => entry.id === itemId));
+  if (!item) return;
+  document.getElementById('edit-item-id').value = item.id;
+  document.getElementById('edit-item-type').value = item.type;
+  document.getElementById('edit-item-modal-title').textContent = item.type === 'video' ? 'Edit Video Project' : 'Edit Photo Project';
+  
+  const container = document.getElementById('edit-item-fields-container');
+  if (item.type === 'video') {
+    container.innerHTML = renderVideoEditFields(item);
   } else {
-    payload.videoProvider = normalizeTag(payload.videoProvider || item.videoProvider || 'direct');
-    const replacementVideo = card.querySelector('[data-upload-field="videoFile"]').files[0];
-    const nextFileCode = String(payload.fileCode || item.fileCode || '').trim();
-    if (payload.videoProvider === 'doodstream') {
-      if (replacementVideo) {
-        const uploadedVideo = await uploadDoodstreamVideoFile(replacementVideo, payload.title || item.title);
-        payload.src = uploadedVideo.src;
-        payload.sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
-        payload.fileCode = uploadedVideo.fileCode || '';
-        payload.duration = uploadedVideo.duration || payload.duration || item.duration || '';
-        if (!payload.thumb) payload.thumb = uploadedVideo.thumb || '';
+    container.innerHTML = renderPhotoEditFields(item);
+  }
+  document.getElementById('modal-edit-item').style.display = 'flex';
+}
+
+function closeEditItemModal() {
+  document.getElementById('modal-edit-item').style.display = 'none';
+  document.getElementById('edit-item-fields-container').innerHTML = '';
+}
+
+function renderVideoEditFields(item) {
+  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : (item.videoProvider === 'pinata' ? 'pinata' : 'direct');
+  return '<div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-video-title" required value="' + escapeHtml(item.title) + '"></div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
+      '<div class="form-group"><label class="form-label">Video Category</label><select class="form-input" id="edit-video-category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div>' +
+      '<div class="form-group"><label class="form-label">Source Type</label><select class="form-input" id="edit-video-provider">' +
+        '<option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option>' +
+        '<option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option>' +
+        '<option value="pinata"' + (sourceType === 'pinata' ? ' selected' : '') + '>Pinata (IPFS)</option>' +
+      '</select></div>' +
+    '</div>' +
+    '<div class="form-group"><label class="form-label">Video URL</label><input class="form-input" id="edit-video-url" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div>' +
+    '<div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" id="edit-video-file-code" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Optional file code if it exists on DoodStream"></div>' +
+    '<div class="form-group"><label class="form-label">Upload Video File (replacing current)</label><input class="form-input" id="edit-video-file" type="file" accept="video/*"></div>' +
+    '<div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" id="edit-video-thumb" value="' + escapeHtml(item.thumb || '') + '"></div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
+      '<div class="form-group"><label class="form-label">Thumbnail Provider</label><select class="form-input" id="edit-video-thumb-provider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div>' +
+      '<div class="form-group"><label class="form-label">Upload Thumbnail File</label><input class="form-input" id="edit-video-thumb-file" type="file" accept="image/*"></div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">' +
+      '<div class="form-group"><label class="form-label">Year</label><input class="form-input" id="edit-video-year" value="' + escapeHtml(item.year || '') + '"></div>' +
+      '<div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" id="edit-video-client" value="' + escapeHtml(item.client || '') + '"></div>' +
+      '<div class="form-group"><label class="form-label">Duration</label><input class="form-input" id="edit-video-duration" value="' + escapeHtml(item.duration || '') + '"></div>' +
+    '</div>' +
+    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-video-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>';
+}
+
+function renderPhotoEditFields(item) {
+  const preset = getPhotoPreset(item.category);
+  return '<div class="form-group"><label class="form-label">Project Title</label><input class="form-input" id="edit-photo-title" required value="' + escapeHtml(item.title) + '"></div>' +
+    '<div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" id="edit-photo-category">' + selectMarkup(PHOTO_CATEGORIES, item.category, 'Select category') + '</select></div>' +
+    '<div class="form-group"><label class="form-label">Series Name</label><input class="form-input" id="edit-photo-series-name" value="' + escapeHtml(item.seriesName || preset.name) + '"></div>' +
+    '<div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" id="edit-photo-series-description" style="height:60px">' + escapeHtml(item.seriesDescription || preset.description) + '</textarea></div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
+      '<div class="form-group"><label class="form-label">Series Year</label><input class="form-input" id="edit-photo-series-year" value="' + escapeHtml(item.seriesYear || preset.year) + '"></div>' +
+      '<div class="form-group"><label class="form-label">Project Year</label><input class="form-input" id="edit-photo-year" value="' + escapeHtml(item.year || '') + '"></div>' +
+    '</div>' +
+    '<div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" id="edit-photo-client" value="' + escapeHtml(item.client || '') + '"></div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
+      '<div class="form-group"><label class="form-label">Upload Storage Provider</label><select class="form-input" id="edit-photo-provider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div>' +
+      '<div class="form-group"><label class="form-label">Replace Image File</label><input class="form-input" id="edit-photo-file" type="file" accept="image/*"></div>' +
+    '</div>' +
+    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-photo-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>';
+}
+
+async function saveItemEdit(event) {
+  event.preventDefault();
+  const id = document.getElementById('edit-item-id').value;
+  const type = document.getElementById('edit-item-type').value;
+  const btn = document.getElementById('btn-save-edit');
+  const originalText = btn.textContent;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    const item = normalizeItem((state.store.items || []).find(entry => entry.id === id));
+    const payload = { type };
+
+    if (type === 'image') {
+      payload.title = document.getElementById('edit-photo-title').value.trim();
+      payload.category = normalizeTag(document.getElementById('edit-photo-category').value || item.category);
+      payload.tags = [payload.category];
+      payload.seriesName = document.getElementById('edit-photo-series-name').value.trim() || getPhotoPreset(payload.category).name;
+      payload.seriesDescription = document.getElementById('edit-photo-series-description').value.trim() || getPhotoPreset(payload.category).description;
+      payload.seriesYear = document.getElementById('edit-photo-series-year').value.trim() || getPhotoPreset(payload.category).year;
+      payload.year = document.getElementById('edit-photo-year').value.trim();
+      payload.client = document.getElementById('edit-photo-client').value.trim();
+      payload.description = document.getElementById('edit-photo-description').value.trim();
+      payload.seriesKey = normalizeTag(payload.seriesName.replace(/\s+/g, '-'));
+
+      const replacement = document.getElementById('edit-photo-file').files[0];
+      const imageProvider = document.getElementById('edit-photo-provider').value || 'cloudinary';
+      if (replacement) {
+        if (imageProvider === 'pinata') {
+          const uploaded = await uploadPinataFile(replacement, payload.title);
+          payload.src = uploaded.src;
+          payload.thumb = uploaded.src;
+        } else {
+          const uploaded = await uploadImageFile(replacement, payload.title, payload.category);
+          payload.src = uploaded.src;
+          payload.thumb = uploaded.thumb;
+        }
       } else {
-        if (!nextFileCode) throw new Error('Add a DoodStream file code or upload a replacement video');
-        payload.fileCode = nextFileCode;
-        payload.src = '/api/doodstream/stream/' + encodeURIComponent(nextFileCode);
-        payload.sourceUrl = 'https://doodstream.com/e/' + nextFileCode;
-      }
-    } else if (payload.videoProvider === 'pinata') {
-      if (replacementVideo) {
-        const uploadedVideo = await uploadPinataFile(replacementVideo, payload.title || item.title);
-        payload.src = uploadedVideo.src;
-        payload.sourceUrl = uploadedVideo.src;
-        payload.fileCode = '';
-      } else {
-        payload.fileCode = '';
-        payload.src = payload.sourceUrl || item.sourceUrl || item.src;
+        payload.src = item.src;
+        payload.thumb = item.thumb;
       }
     } else {
-      payload.videoProvider = '';
-      payload.fileCode = '';
-      payload.src = payload.sourceUrl || item.sourceUrl || item.src;
-    }
-    const replacement = card.querySelector('[data-upload-field="thumbFile"]').files[0];
-    const thumbProvider = card.querySelector('[data-upload-provider="thumbFile"]')?.value || 'cloudinary';
-    if (replacement) {
-      if (thumbProvider === 'pinata') {
-        const uploaded = await uploadPinataFile(replacement, (payload.title || item.title) + '-thumb');
-        payload.thumb = uploaded.src;
+      payload.title = document.getElementById('edit-video-title').value.trim();
+      payload.category = normalizeTag(document.getElementById('edit-video-category').value || item.category);
+      payload.tags = [payload.category];
+      payload.videoProvider = normalizeTag(document.getElementById('edit-video-provider').value || 'direct');
+      payload.year = document.getElementById('edit-video-year').value.trim();
+      payload.client = document.getElementById('edit-video-client').value.trim();
+      payload.duration = document.getElementById('edit-video-duration').value.trim();
+      payload.description = document.getElementById('edit-video-description').value.trim();
+
+      const replacementVideo = document.getElementById('edit-video-file').files[0];
+      const nextFileCode = String(document.getElementById('edit-video-file-code').value || '').trim();
+      if (payload.videoProvider === 'doodstream') {
+        if (replacementVideo) {
+          const uploadedVideo = await uploadDoodstreamVideoFile(replacementVideo, payload.title);
+          payload.src = uploadedVideo.src;
+          payload.sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
+          payload.fileCode = uploadedVideo.fileCode || '';
+          payload.duration = uploadedVideo.duration || payload.duration || item.duration || '';
+          payload.thumb = uploadedVideo.thumb || item.thumb || '';
+        } else {
+          if (!nextFileCode) throw new Error('Add a DoodStream file code or upload a replacement video');
+          payload.fileCode = nextFileCode;
+          payload.src = '/api/doodstream/stream/' + encodeURIComponent(nextFileCode);
+          payload.sourceUrl = 'https://doodstream.com/e/' + nextFileCode;
+          payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
+        }
+      } else if (payload.videoProvider === 'pinata') {
+        if (replacementVideo) {
+          const uploadedVideo = await uploadPinataFile(replacementVideo, payload.title);
+          payload.src = uploadedVideo.src;
+          payload.sourceUrl = uploadedVideo.src;
+          payload.fileCode = '';
+        } else {
+          payload.fileCode = '';
+          payload.src = document.getElementById('edit-video-url').value.trim() || item.sourceUrl || item.src;
+          payload.sourceUrl = payload.src;
+        }
+        payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
       } else {
-        const uploaded = await uploadImageFile(replacement, (payload.title || item.title) + '-thumb', payload.category + ',video-thumb');
-        payload.thumb = uploaded.src;
+        payload.videoProvider = '';
+        payload.fileCode = '';
+        payload.src = document.getElementById('edit-video-url').value.trim() || item.sourceUrl || item.src;
+        payload.sourceUrl = payload.src;
+        payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
+      }
+
+      const replacementThumb = document.getElementById('edit-video-thumb-file').files[0];
+      const thumbProvider = document.getElementById('edit-video-thumb-provider').value || 'cloudinary';
+      if (replacementThumb) {
+        if (thumbProvider === 'pinata') {
+          const uploaded = await uploadPinataFile(replacementThumb, payload.title + '-thumb');
+          payload.thumb = uploaded.src;
+        } else {
+          const uploaded = await uploadImageFile(replacementThumb, payload.title + '-thumb', payload.category + ',video-thumb');
+          payload.thumb = uploaded.src;
+        }
       }
     }
-  }
 
-  state.store = await api('/api/content/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(payload) });
-  renderAll();
-  showToast('Item updated');
+    state.store = await api('/api/content/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(payload) });
+    closeEditItemModal();
+    renderAll();
+    showToast('Item updated');
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 // --- CLIENT GALLERY LOGIC ---
