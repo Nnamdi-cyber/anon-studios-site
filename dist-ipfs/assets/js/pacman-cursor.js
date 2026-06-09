@@ -86,7 +86,7 @@
       pacScroll.style.display = 'block';
       return;
     }
-    ensureForceStyle().textContent = 'html,body,body *,a,button{cursor:none !important;}';
+    ensureForceStyle().textContent = '*, *::before, *::after { cursor: none !important; }';
     document.documentElement.classList.remove('pacman-prehide');
     pacCursor.style.display = 'block';
     pacCursor.style.opacity = '1';
