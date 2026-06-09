@@ -27,6 +27,7 @@ const {
   isPinataConfigured,
   uploadBufferToPinata,
 } = require('./services/pinata');
+const { defaultVideos } = require('./services/default-videos');
 require('dotenv').config();
 
 const app = express();
@@ -81,8 +82,32 @@ function defaultStore() {
 
 function ensureDataFile() {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  
+  let store;
   if (!fs.existsSync(contentFile)) {
-    fs.writeFileSync(contentFile, JSON.stringify(defaultStore(), null, 2));
+    store = defaultStore();
+  } else {
+    try {
+      store = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
+    } catch (e) {
+      store = defaultStore();
+    }
+  }
+
+  if (!store.items) store.items = [];
+
+  let modified = false;
+  for (const defaultVid of defaultVideos) {
+    const exists = store.items.some(item => item.id === defaultVid.id || (item.type === 'video' && item.title === defaultVid.title));
+    if (!exists) {
+      store.items.push(defaultVid);
+      modified = true;
+    }
+  }
+
+  if (modified || !fs.existsSync(contentFile)) {
+    fs.writeFileSync(contentFile, JSON.stringify(store, null, 2), 'utf8');
+    console.log(`Seeded missing default videos on server startup.`);
   }
 }
 
