@@ -1,5 +1,6 @@
 {
   "cleanUrls": true,
+  "outputDirectory": "dist-ipfs",
   "rewrites": [
     { "source": "/delivery/:name", "destination": "/delivery/index.html" }
   ]
