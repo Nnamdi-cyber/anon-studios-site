@@ -1354,7 +1354,7 @@ if (window.AnonContent) {
    Set src to a URL string. Leave "" to show placeholder.
    type: "image" | "video"
    For videos use direct .mp4 links (YouTube/Vimeo not supported directly).
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  */
 const MEDIA = {
   /* Hero fanned cards */
   hero_card_1: { src: '', type: 'image', alt: 'Anon Studios â€” Editorial' },
@@ -1380,7 +1380,13 @@ function createMediaEl(src, type, alt) {
   let el;
   if (type === 'video') {
     el = document.createElement('video');
-    el.src = src;
+    let playUrl = src;
+    if (src.includes('stream.mux.com') && src.endsWith('.m3u8')) {
+      const parts = src.split('/');
+      const playbackId = parts[parts.length - 1].split('.')[0];
+      playUrl = 'https://stream.mux.com/' + playbackId + '/capped-1080p.mp4';
+    }
+    el.src = playUrl;
     el.autoplay = true;
     el.muted = true;
     el.loop = true;

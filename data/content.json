@@ -1,6 +1,37 @@
 {
   "items": [
     {
+      "id": "songs-of-seraph",
+      "type": "video",
+      "title": "SONGS OF SERAPH",
+      "src": "https://stream.mux.com/kiKJ00Ryi4imj4ANfeDm49OOA01DRlzOP9g01stTcaAUqQ.m3u8",
+      "sourceUrl": "https://stream.mux.com/kiKJ00Ryi4imj4ANfeDm49OOA01DRlzOP9g01stTcaAUqQ.m3u8",
+      "thumb": "https://res.cloudinary.com/dedlc07zt/image/upload/c_limit,f_auto,q_auto,w_1400/v1/anon-studios/video-thumbs/songs-of-seraph-1781036750614?_a=BAMAOGWQ0",
+      "width": 0,
+      "height": 0,
+      "embedUrl": "",
+      "videoProvider": "mux",
+      "fileCode": "kiKJ00Ryi4imj4ANfeDm49OOA01DRlzOP9g01stTcaAUqQ",
+      "useHls": true,
+      "muxPlaybackId": "kiKJ00Ryi4imj4ANfeDm49OOA01DRlzOP9g01stTcaAUqQ",
+      "muxAssetId": "gm01Ldrm9JNk77rPnBRhaq5m27CMjH02dBPZg7QqrULsQ",
+      "muxAccountIndex": 1,
+      "category": "church",
+      "seriesKey": "",
+      "seriesName": "",
+      "seriesDescription": "",
+      "seriesYear": "",
+      "year": "",
+      "client": "",
+      "duration": "0:00",
+      "description": "",
+      "tags": [
+        "church"
+      ],
+      "featured": false,
+      "createdAt": 1781036750613
+    },
+    {
       "id": "doodstream-test-clip",
       "type": "video",
       "title": "DoodStream Test Clip",
@@ -690,6 +721,7 @@
       ""
     ]
   },
+  "clientGalleries": [],
   "auth": {
     "passwordHash": "8ee2ac28bb723e3262c51a9e11bd8e6e90c8f039999a1d454328e517625c680b",
     "updatedAt": 1775218675183

@@ -28,6 +28,12 @@ const {
   uploadBufferToPinata,
 } = require('./services/pinata');
 const { defaultVideos } = require('./services/default-videos');
+const {
+  isMuxConfigured,
+  getUploadAccount,
+  createDirectUpload,
+  resolveMuxAsset
+} = require('./services/mux');
 require('dotenv').config();
 
 const app = express();
@@ -187,8 +193,18 @@ function writeStore(store) {
 }
 
 function publicStore(store) {
+  const enrichedItems = (store.items || []).map(item => {
+    if (item.type === 'video' && item.videoProvider === 'mux') {
+      const idx = item.muxAccountIndex;
+      return {
+        ...item,
+        muxDataEnvKey: process.env[`MUX_DATA_ENV_KEY_${idx}`] || ''
+      };
+    }
+    return item;
+  });
   return {
-    items: store.items,
+    items: enrichedItems,
     settings: store.settings,
     clientGalleries: store.clientGalleries || [],
   };
@@ -400,6 +416,9 @@ function normalizeItem(item) {
     videoProvider: String(item.videoProvider || '').trim(),
     fileCode: String(item.fileCode || '').trim(),
     useHls: Boolean(item.useHls),
+    muxPlaybackId: String(item.muxPlaybackId || '').trim(),
+    muxAssetId: String(item.muxAssetId || '').trim(),
+    muxAccountIndex: item.muxAccountIndex ? Number(item.muxAccountIndex) : 0,
     category,
     seriesKey: type === 'image' ? String(item.seriesKey || normalizeSeriesKey(item.seriesName || category)).trim() : '',
     seriesName: type === 'image' ? String(item.seriesName || '').trim() : '',
@@ -1103,6 +1122,60 @@ app.get('/api/doodstream/stream/:fileCode', async (req, res) => {
     res.status(500).json({
       error: 'Unable to proxy the DoodStream stream',
       detail: error && error.message ? error.message : 'Unknown proxy error',
+    });
+  }
+});
+
+// Mux Direct Upload endpoints
+app.post('/api/mux/upload-link', requireAdmin, async (req, res) => {
+  try {
+    const store = readStore();
+    const account = getUploadAccount(store);
+    const uploadData = await createDirectUpload(account);
+    res.json({
+      ok: true,
+      uploadUrl: uploadData.uploadUrl,
+      uploadId: uploadData.uploadId,
+      accountIndex: account.index
+    });
+  } catch (error) {
+    console.error('Mux upload link generation error:', error);
+    res.status(500).json({
+      error: 'Mux upload link generation failed',
+      detail: error && error.message ? error.message : 'Unknown error'
+    });
+  }
+});
+
+app.get('/api/mux/resolve-asset', requireAdmin, async (req, res) => {
+  try {
+    const uploadId = String(req.query.uploadId || '').trim();
+    const accountIndex = Number(req.query.accountIndex || 0);
+    if (!uploadId || !accountIndex) {
+      return res.status(400).json({ error: 'Missing uploadId or accountIndex' });
+    }
+    const assetDetails = await resolveMuxAsset(accountIndex, uploadId);
+    
+    const formatDuration = (seconds) => {
+      if (!seconds || isNaN(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    res.json({
+      ok: true,
+      assetId: assetDetails.assetId,
+      playbackId: assetDetails.playbackId,
+      duration: formatDuration(assetDetails.duration),
+      playbackUrl: `https://stream.mux.com/${assetDetails.playbackId}.m3u8`,
+      thumbUrl: `https://image.mux.com/${assetDetails.playbackId}/thumbnail.jpg`
+    });
+  } catch (error) {
+    console.error('Mux asset resolution error:', error);
+    res.status(500).json({
+      error: 'Mux asset resolution failed',
+      detail: error && error.message ? error.message : 'Unknown error'
     });
   }
 });

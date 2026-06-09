@@ -131,6 +131,114 @@ input,textarea,select{font-family:var(--sans)}
 body.login-active #pacScroll {
   display: none !important;
 }
+
+/* FILE DROPZONE PREMIUM STYLING */
+.file-dropzone {
+  border: 2px dashed var(--line);
+  border-radius: 4px;
+  padding: 24px 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.01);
+  cursor: pointer;
+  transition: border-color 0.25s, background-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+.file-dropzone:hover {
+  border-color: var(--goldborder);
+  background: rgba(45, 212, 160, 0.02);
+}
+.file-dropzone.dragover {
+  border-color: var(--gold);
+  background: rgba(45, 212, 160, 0.06);
+  box-shadow: 0 0 10px rgba(45, 212, 160, 0.15);
+}
+.dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.dropzone-icon {
+  width: 24px;
+  height: 24px;
+  stroke: var(--w30);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dropzone-text {
+  font-size: 11px;
+  color: var(--w60);
+}
+.dropzone-text .highlight {
+  color: var(--gold);
+  text-decoration: underline;
+}
+.dropzone-subtext {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--w30);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.dropzone-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  width: 100%;
+  padding: 4px 8px;
+}
+.file-icon {
+  width: 24px;
+  height: 24px;
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.file-details {
+  flex-grow: 1;
+  overflow: hidden;
+}
+.file-name {
+  font-size: 11px;
+  color: var(--w);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.file-size {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--w60);
+  margin-top: 2px;
+}
+.btn-remove-file {
+  background: transparent;
+  border: none;
+  color: var(--w30);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-remove-file:hover {
+  color: var(--red);
+}
 </style>
 </head>
 <body class="login-active">
@@ -239,7 +347,7 @@ body.login-active #pacScroll {
 <div class="modal" id="modal-client-gallery">
   <div class="modal-box" style="max-width:800px; width:90%">
     <div class="modal-title" id="client-modal-title">Create Delivery Gallery</div>
-    
+    <form id="cg-form" onsubmit="event.preventDefault(); saveClientGallery();" style="display:grid; gap:14px">
       <input type="hidden" id="cg-id">
       <input type="hidden" id="cg-cover-photo-id">
       
@@ -406,35 +514,206 @@ async function api(url, options) {
   return data;
 }
 
-async function uploadImageFile(file, title, tags) {
-  const body = new FormData();
-  body.append('file', file);
-  body.append('title', title);
-  body.append('tags', tags);
-  const response = await fetch(BACKEND_URL + '/api/upload-image', { method: 'POST', body, credentials: 'include' });
-  const uploaded = await response.json();
-  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'Upload failed');
-  return uploaded;
+function uploadImageFile(file, title, tags, progressCallback) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const body = new FormData();
+    body.append('file', file);
+    body.append('title', title);
+    body.append('tags', tags);
+
+    xhr.open('POST', BACKEND_URL + '/api/upload-image');
+    xhr.withCredentials = true;
+
+    if (progressCallback && xhr.upload) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          progressCallback(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (_) {}
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error || data.detail || 'Upload failed'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during image upload'));
+    xhr.send(body);
+  });
 }
 
-async function uploadDoodstreamVideoFile(file, title) {
-  const body = new FormData();
-  body.append('file', file);
-  body.append('title', title);
-  const response = await fetch(BACKEND_URL + '/api/doodstream/upload', { method: 'POST', body, credentials: 'include' });
-  const uploaded = await response.json();
-  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'DoodStream upload failed');
-  return uploaded;
+function uploadDoodstreamVideoFile(file, title, progressCallback) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const body = new FormData();
+    body.append('file', file);
+    body.append('title', title);
+
+    xhr.open('POST', BACKEND_URL + '/api/doodstream/upload');
+    xhr.withCredentials = true;
+
+    if (progressCallback && xhr.upload) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          progressCallback(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (_) {}
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error || data.detail || 'DoodStream upload failed'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload to DoodStream'));
+    xhr.send(body);
+  });
 }
 
-async function uploadPinataFile(file, title) {
-  const body = new FormData();
-  body.append('file', file);
-  body.append('title', title);
-  const response = await fetch(BACKEND_URL + '/api/pinata/upload', { method: 'POST', body, credentials: 'include' });
-  const uploaded = await response.json();
-  if (!response.ok) throw new Error(uploaded.error || uploaded.detail || 'IPFS upload failed');
-  return uploaded;
+function uploadPinataFile(file, title, progressCallback) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const body = new FormData();
+    body.append('file', file);
+    body.append('title', title);
+
+    xhr.open('POST', BACKEND_URL + '/api/pinata/upload');
+    xhr.withCredentials = true;
+
+    if (progressCallback && xhr.upload) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          progressCallback(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (_) {}
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error || data.detail || 'IPFS upload failed'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload to Pinata (IPFS)'));
+    xhr.send(body);
+  });
+}
+
+async function uploadVideoToMux(file, title, progressCallback) {
+  const res = await fetch(BACKEND_URL + '/api/mux/upload-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title }),
+    credentials: 'include'
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Failed to initialize Mux upload');
+  const { uploadUrl, uploadId, accountIndex } = data;
+
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl);
+    xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && progressCallback) {
+        progressCallback(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error('Mux direct upload failed with status ' + xhr.status));
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload to Mux'));
+    xhr.send(file);
+  });
+
+  if (progressCallback) progressCallback('processing');
+  const resolveRes = await fetch(BACKEND_URL + '/api/mux/resolve-asset?uploadId=' + uploadId + '&accountIndex=' + accountIndex, {
+    credentials: 'include'
+  });
+  const resolveData = await resolveRes.json();
+  if (!resolveData.ok) throw new Error(resolveData.error || 'Failed to resolve Mux asset details');
+  
+  return {
+    src: resolveData.playbackUrl,
+    sourceUrl: resolveData.playbackUrl,
+    fileCode: resolveData.playbackId,
+    muxPlaybackId: resolveData.playbackId,
+    muxAssetId: resolveData.assetId,
+    muxAccountIndex: accountIndex,
+    duration: resolveData.duration,
+    thumb: resolveData.thumbUrl
+  };
+}
+
+function syncVideoFormFields(form, isEdit = false) {
+  const providerSelect = isEdit ? form.querySelector('#edit-video-provider') : form.querySelector('[name="videoProvider"]');
+  if (!providerSelect) return;
+  const val = providerSelect.value;
+
+  const fieldUrl = isEdit ? form.querySelector('#edit-video-url').closest('.form-group') : form.querySelector('[name="videoUrl"]').closest('.form-group');
+  const fieldCode = isEdit ? form.querySelector('#edit-video-file-code').closest('.form-group') : form.querySelector('[name="videoFileCode"]').closest('.form-group');
+  const fieldFile = isEdit ? form.querySelector('#edit-video-file').closest('.form-group') : form.querySelector('[name="videoFile"]').closest('.form-group');
+  const fieldThumbUrl = isEdit ? form.querySelector('#edit-video-thumb').closest('.form-group') : form.querySelector('[name="videoThumb"]').closest('.form-group');
+  const fieldThumbProvider = isEdit ? form.querySelector('#edit-video-thumb-provider').closest('.form-group') : form.querySelector('[name="videoThumbProvider"]').closest('.form-group');
+  const fieldThumbFile = isEdit ? form.querySelector('#edit-video-thumb-file').closest('.form-group') : form.querySelector('[name="videoThumbFile"]').closest('.form-group');
+
+  const codeLabel = fieldCode.querySelector('.form-label');
+  const codeInput = isEdit ? form.querySelector('#edit-video-file-code') : form.querySelector('[name="videoFileCode"]');
+  const urlLabel = fieldUrl.querySelector('.form-label');
+  const urlInput = isEdit ? form.querySelector('#edit-video-url') : form.querySelector('[name="videoUrl"]');
+
+  if (val === 'direct') {
+    fieldUrl.style.display = 'block';
+    urlLabel.textContent = 'Video URL';
+    urlInput.placeholder = 'YouTube, Vimeo, or direct video URL';
+    fieldCode.style.display = 'none';
+    fieldFile.style.display = 'none';
+    fieldThumbUrl.style.display = 'block';
+    fieldThumbProvider.style.display = 'none';
+    fieldThumbFile.style.display = 'none';
+  } else if (val === 'mux') {
+    fieldUrl.style.display = 'none';
+    fieldCode.style.display = 'block';
+    codeLabel.textContent = 'Mux Playback ID';
+    codeInput.placeholder = 'Optional if uploading a file, or paste existing Playback ID';
+    fieldFile.style.display = 'block';
+    fieldThumbUrl.style.display = 'block';
+    fieldThumbUrl.querySelector('.form-label').textContent = 'Custom Thumbnail URL (Optional)';
+    fieldThumbProvider.style.display = 'block';
+    fieldThumbFile.style.display = 'block';
+  } else if (val === 'doodstream') {
+    fieldUrl.style.display = 'none';
+    fieldCode.style.display = 'block';
+    codeLabel.textContent = 'DoodStream File Code';
+    codeInput.placeholder = 'Optional if uploading a file, or paste DoodStream code';
+    fieldFile.style.display = 'block';
+    fieldThumbUrl.style.display = 'block';
+    fieldThumbUrl.querySelector('.form-label').textContent = 'Thumbnail URL';
+    fieldThumbProvider.style.display = 'block';
+    fieldThumbFile.style.display = 'block';
+  } else if (val === 'pinata') {
+    fieldUrl.style.display = 'block';
+    urlLabel.textContent = 'IPFS URL';
+    urlInput.placeholder = 'IPFS gateway video URL (e.g. gateway.pinata.cloud/ipfs/...)';
+    fieldCode.style.display = 'none';
+    fieldFile.style.display = 'block';
+    fieldThumbUrl.style.display = 'block';
+    fieldThumbProvider.style.display = 'block';
+    fieldThumbFile.style.display = 'block';
+  }
 }
 
 function showToast(message, type) {
@@ -623,7 +902,7 @@ function renderPhotos() {
   });
   const groupMarkup = Object.values(groups).map(group => '<div style="margin-bottom:18px"><div class="toolbar" style="margin-bottom:12px"><div><div class="mc-label">Series</div><div class="mc-name" style="margin-bottom:0">' + escapeHtml(group.title) + '</div></div><div class="note">' + escapeHtml(categoryLabel('image', group.category)) + '</div></div><div class="media-grid">' + group.items.map(buildPhotoCard).join('') + '</div></div>').join('');
   target.className = '';
-  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Photo</div><div class="mc-name">Create New Photo Project</div><form id="photoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Project Title</label><input class="form-input" name="photoTitle" required></div><div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" name="photoCategory">' + selectMarkup(PHOTO_CATEGORIES, 'portrait', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="form-input" name="photoSeriesName" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" name="photoSeriesDescription">' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="form-input" name="photoSeriesYear" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="form-input" name="photoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="photoClient"></div><div class="form-group"><label class="form-label">Storage Provider</label><select class="form-input" name="photoProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="photoDescription"></textarea></div><div class="form-group"><label class="form-label">Project Images</label><input class="form-input" name="photoFile" type="file" accept="image/*" multiple required></div><button class="btn btn-primary" type="submit">Upload Project Images</button></form><div class="note" style="margin-top:12px">Upload one image or many at once. The front-end series will now adapt to however many images the project has.</div></div>' + (groupMarkup || '<div class="empty-state">No photo projects yet.</div>');
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Photo</div><div class="mc-name">Create New Photo Project</div><form id="photoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Project Title</label><input class="form-input" name="photoTitle" required></div><div class="form-group"><label class="form-label">Photo Category</label><select class="form-input" name="photoCategory">' + selectMarkup(PHOTO_CATEGORIES, 'portrait', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Series Name</label><input class="form-input" name="photoSeriesName" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.name) + '"></div><div class="form-group"><label class="form-label">Series Description</label><textarea class="form-input" name="photoSeriesDescription">' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.description) + '</textarea></div><div class="form-group"><label class="form-label">Series Year</label><input class="form-input" name="photoSeriesYear" value="' + escapeHtml(PHOTO_SERIES_PRESETS.portrait.year) + '"></div><div class="form-group"><label class="form-label">Project Year</label><input class="form-input" name="photoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="photoClient"></div><div class="form-group"><label class="form-label">Storage Provider</label><select class="form-input" name="photoProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="photoDescription"></textarea></div><div class="form-group"><label class="form-label">Project Images</label><div class="file-dropzone" data-accept="image/*" data-multiple="true"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop images here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove files">&times;</button></div><input class="form-input" name="photoFile" type="file" accept="image/*" multiple required style="display:none;"></div></div><div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div><button class="btn btn-primary" type="submit">Upload Project Images</button></form><div class="note" style="margin-top:12px">Upload one image or many at once. The front-end series will now adapt to however many images the project has.</div></div>' + (groupMarkup || '<div class="empty-state">No photo projects yet.</div>');
   const form = document.getElementById('photoForm');
   form.addEventListener('submit', submitPhoto);
   form.querySelector('[name="photoCategory"]').addEventListener('change', () => {
@@ -632,6 +911,7 @@ function renderPhotos() {
     form.querySelector('[name="photoSeriesYear"]').value = '';
     syncPhotoPreset(form);
   });
+  initDropzones(target);
   target.onclick = handleCardAction;
 }
 
@@ -639,8 +919,12 @@ function renderVideos() {
   const target = document.getElementById('grid-videos');
   const items = itemsByType('video').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   target.className = '';
-  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="doodstream">DoodStream</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream"></div><div class="form-group"><label class="form-label">Upload Video (DoodStream/Pinata)</label><input class="form-input" name="videoFile" type="file" accept="video/*"></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Thumbnail Storage Provider</label><select class="form-input" name="videoThumbProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><input class="form-input" name="videoThumbFile" type="file" accept="image/*"></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options. Direct URL supports YouTube.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
-  document.getElementById('videoForm').addEventListener('submit', submitVideo);
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="mux">Mux Video</option><option value="doodstream">DoodStream</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">File Code / Mux Playback ID</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream or Mux"></div><div class="form-group"><label class="form-label">Upload Video (Mux/DoodStream/Pinata)</label><div class="file-dropzone" data-accept="video/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop video here or <span class="highlight">browse</span></div><div class="dropzone-subtext">Max size ~2GB</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoFile" type="file" accept="video/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Thumbnail Storage Provider</label><select class="form-input" name="videoThumbProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><div class="file-dropzone" data-accept="image/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop image here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoThumbFile" type="file" accept="image/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use Mux Video for adaptive streaming optimization (recommended). Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
+  const vForm = document.getElementById('videoForm');
+  vForm.addEventListener('submit', submitVideo);
+  vForm.querySelector('[name="videoProvider"]').addEventListener('change', () => syncVideoFormFields(vForm, false));
+  syncVideoFormFields(vForm, false);
+  initDropzones(target);
   target.querySelector('.media-grid').addEventListener('click', handleCardAction);
 }
 
@@ -683,6 +967,22 @@ async function submitPhoto(event) {
   const category = normalizeTag(form.querySelector('[name="photoCategory"]').value || 'portrait');
   const preset = getPhotoPreset(category);
   const storageProvider = form.querySelector('[name="photoProvider"]').value || 'cloudinary';
+  
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving...';
+  
+  const progressContainer = form.querySelector('.upload-progress-container');
+  const progressStatus = progressContainer ? progressContainer.querySelector('.progress-status') : null;
+  const progressPercent = progressContainer ? progressContainer.querySelector('.progress-percent') : null;
+  const progressFill = progressContainer ? progressContainer.querySelector('.progress-fill') : null;
+  if (progressContainer) {
+    progressContainer.style.display = 'block';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressFill) progressFill.style.width = '0%';
+  }
+
   try {
     const baseTitle = form.querySelector('[name="photoTitle"]').value.trim();
     const seriesName = form.querySelector('[name="photoSeriesName"]').value.trim() || preset.name;
@@ -696,14 +996,23 @@ async function submitPhoto(event) {
     for (let i = 0; i < files.length; i += 1) {
       const file = files[i];
       const imageTitle = files.length === 1 ? baseTitle : `${baseTitle} ${i + 1}`;
+      
+      const progressCb = (percent) => {
+        const totalProgress = Math.round(((i * 100) + percent) / files.length);
+        if (progressStatus) progressStatus.textContent = `Uploading file ${i + 1} of ${files.length} (${percent}%)...`;
+        if (progressPercent) progressPercent.textContent = `${totalProgress}%`;
+        if (progressFill) progressFill.style.width = `${totalProgress}%`;
+        submitBtn.textContent = `Uploading (${totalProgress}%)...`;
+      };
+      
       let src = '';
       let thumb = '';
       if (storageProvider === 'pinata') {
-        const uploaded = await uploadPinataFile(file, imageTitle);
+        const uploaded = await uploadPinataFile(file, imageTitle, progressCb);
         src = uploaded.src;
         thumb = uploaded.src;
       } else {
-        const uploaded = await uploadImageFile(file, imageTitle, category);
+        const uploaded = await uploadImageFile(file, imageTitle, category, progressCb);
         src = uploaded.src;
         thumb = uploaded.thumb;
       }
@@ -734,6 +1043,10 @@ async function submitPhoto(event) {
     showToast(files.length > 1 ? 'Project images uploaded' : 'Photo project uploaded');
   } catch (error) {
     showToast(error.message, 'error');
+  } finally {
+    if (progressContainer) progressContainer.style.display = 'none';
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
   }
 }
 
@@ -750,22 +1063,103 @@ async function submitVideo(event) {
   const thumbFile = form.querySelector('[name="videoThumbFile"]').files[0];
   const videoThumbProvider = form.querySelector('[name="videoThumbProvider"]').value || 'cloudinary';
   try {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    const progressContainer = form.querySelector('.upload-progress-container');
+    const progressStatus = progressContainer ? progressContainer.querySelector('.progress-status') : null;
+    const progressPercent = progressContainer ? progressContainer.querySelector('.progress-percent') : null;
+    const progressFill = progressContainer ? progressContainer.querySelector('.progress-fill') : null;
+
     if (thumbFile) {
+      if (progressContainer) {
+        progressContainer.style.display = 'block';
+        if (progressPercent) progressPercent.textContent = '0%';
+        if (progressFill) progressFill.style.width = '0%';
+      }
+      const thumbProgressCb = (percent) => {
+        if (progressStatus) progressStatus.textContent = `Uploading thumbnail (${percent}%)...`;
+        if (progressPercent) progressPercent.textContent = `${percent}%`;
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        submitBtn.textContent = `Saving (${percent}%)...`;
+      };
       if (videoThumbProvider === 'pinata') {
-        const uploadedThumb = await uploadPinataFile(thumbFile, title + '-thumb');
+        const uploadedThumb = await uploadPinataFile(thumbFile, title + '-thumb', thumbProgressCb);
         thumbUrl = uploadedThumb.src;
       } else {
-        const uploadedThumb = await uploadImageFile(thumbFile, title + '-thumb', category + ',video-thumb');
+        const uploadedThumb = await uploadImageFile(thumbFile, title + '-thumb', category + ',video-thumb', thumbProgressCb);
         thumbUrl = uploadedThumb.src;
       }
+      if (progressContainer) progressContainer.style.display = 'none';
     }
+
     let src = videoUrlInput;
     let sourceUrl = videoUrlInput;
     let fileCode = '';
+    let muxPlaybackId = '';
+    let muxAssetId = '';
+    let muxAccountIndex = 0;
+    let useHls = false;
     let duration = form.querySelector('[name="videoDuration"]').value.trim();
-    if (videoProvider === 'doodstream') {
+
+    if (videoProvider === 'mux') {
       if (videoFile) {
-        const uploadedVideo = await uploadDoodstreamVideoFile(videoFile, title);
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+
+        const progressCb = (percent) => {
+          if (percent === 'processing') {
+            if (progressStatus) progressStatus.textContent = 'Processing on Mux (almost ready)...';
+            if (progressPercent) progressPercent.textContent = '99%';
+            if (progressFill) progressFill.style.width = '99%';
+            submitBtn.textContent = 'Processing...';
+          } else {
+            if (progressStatus) progressStatus.textContent = 'Uploading to Mux...';
+            if (progressPercent) progressPercent.textContent = `${percent}%`;
+            if (progressFill) progressFill.style.width = `${percent}%`;
+            submitBtn.textContent = `Uploading (${percent}%)...`;
+          }
+        };
+        const uploadedVideo = await uploadVideoToMux(videoFile, title, progressCb);
+        if (progressContainer) progressContainer.style.display = 'none';
+        src = uploadedVideo.src;
+        sourceUrl = uploadedVideo.sourceUrl;
+        fileCode = uploadedVideo.fileCode;
+        muxPlaybackId = uploadedVideo.muxPlaybackId;
+        muxAssetId = uploadedVideo.muxAssetId;
+        muxAccountIndex = uploadedVideo.muxAccountIndex;
+        duration = uploadedVideo.duration || duration;
+        useHls = true;
+        if (!thumbUrl) thumbUrl = uploadedVideo.thumb || '';
+      } else {
+        fileCode = fileCodeInput;
+        if (!fileCode) throw new Error('Add a Mux Playback ID or upload a video file');
+        muxPlaybackId = fileCode;
+        src = `https://stream.mux.com/${fileCode}.m3u8`;
+        sourceUrl = src;
+        useHls = true;
+        if (!thumbUrl) thumbUrl = `https://image.mux.com/${fileCode}/thumbnail.jpg`;
+      }
+    } else if (videoProvider === 'doodstream') {
+      if (videoFile) {
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+        const progressCb = (percent) => {
+          if (progressStatus) progressStatus.textContent = `Uploading to DoodStream (${percent}%)...`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressFill) progressFill.style.width = `${percent}%`;
+          submitBtn.textContent = `Uploading (${percent}%)...`;
+        };
+        const uploadedVideo = await uploadDoodstreamVideoFile(videoFile, title, progressCb);
+        if (progressContainer) progressContainer.style.display = 'none';
         src = uploadedVideo.src;
         sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
         fileCode = uploadedVideo.fileCode || '';
@@ -779,7 +1173,19 @@ async function submitVideo(event) {
       }
     } else if (videoProvider === 'pinata') {
       if (videoFile) {
-        const uploadedVideo = await uploadPinataFile(videoFile, title);
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+        const progressCb = (percent) => {
+          if (progressStatus) progressStatus.textContent = `Uploading to IPFS (${percent}%)...`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressFill) progressFill.style.width = `${percent}%`;
+          submitBtn.textContent = `Uploading (${percent}%)...`;
+        };
+        const uploadedVideo = await uploadPinataFile(videoFile, title, progressCb);
+        if (progressContainer) progressContainer.style.display = 'none';
         src = uploadedVideo.src;
         sourceUrl = uploadedVideo.src;
       } else if (!videoUrlInput) {
@@ -800,7 +1206,10 @@ async function submitVideo(event) {
         thumb: thumbUrl,
         videoProvider: videoProvider,
         fileCode,
-        useHls: false,
+        useHls,
+        muxPlaybackId,
+        muxAssetId,
+        muxAccountIndex,
         year: form.querySelector('[name="videoYear"]').value.trim(),
         client: form.querySelector('[name="videoClient"]').value.trim(),
         duration,
@@ -813,6 +1222,14 @@ async function submitVideo(event) {
     showToast('Video saved');
   } catch (error) {
     showToast(error.message, 'error');
+    const progressContainer = form.querySelector('.upload-progress-container');
+    if (progressContainer) progressContainer.style.display = 'none';
+  } finally {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Video';
+    }
   }
 }
 
@@ -847,8 +1264,16 @@ function openEditItemModal(itemId) {
   const container = document.getElementById('edit-item-fields-container');
   if (item.type === 'video') {
     container.innerHTML = renderVideoEditFields(item);
+    initDropzones(container);
+    const form = document.getElementById('editItemForm');
+    const providerSelect = form.querySelector('#edit-video-provider');
+    if (providerSelect) {
+      providerSelect.addEventListener('change', () => syncVideoFormFields(form, true));
+      syncVideoFormFields(form, true);
+    }
   } else {
     container.innerHTML = renderPhotoEditFields(item);
+    initDropzones(container);
   }
   document.getElementById('modal-edit-item').style.display = 'flex';
 }
@@ -859,30 +1284,32 @@ function closeEditItemModal() {
 }
 
 function renderVideoEditFields(item) {
-  const sourceType = item.videoProvider === 'doodstream' ? 'doodstream' : (item.videoProvider === 'pinata' ? 'pinata' : 'direct');
+  const sourceType = item.videoProvider === 'mux' ? 'mux' : (item.videoProvider === 'doodstream' ? 'doodstream' : (item.videoProvider === 'pinata' ? 'pinata' : 'direct'));
   return '<div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-video-title" required value="' + escapeHtml(item.title) + '"></div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
       '<div class="form-group"><label class="form-label">Video Category</label><select class="form-input" id="edit-video-category">' + selectMarkup(VIDEO_CATEGORIES, item.category, 'Select category') + '</select></div>' +
       '<div class="form-group"><label class="form-label">Source Type</label><select class="form-input" id="edit-video-provider">' +
         '<option value="direct"' + (sourceType === 'direct' ? ' selected' : '') + '>Direct / YouTube / Vimeo</option>' +
+        '<option value="mux"' + (sourceType === 'mux' ? ' selected' : '') + '>Mux Video</option>' +
         '<option value="doodstream"' + (sourceType === 'doodstream' ? ' selected' : '') + '>DoodStream</option>' +
         '<option value="pinata"' + (sourceType === 'pinata' ? ' selected' : '') + '>Pinata (IPFS)</option>' +
       '</select></div>' +
     '</div>' +
-    '<div class="form-group"><label class="form-label">Video URL</label><input class="form-input" id="edit-video-url" value="' + escapeHtml(item.videoProvider === 'doodstream' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div>' +
-    '<div class="form-group"><label class="form-label">DoodStream File Code</label><input class="form-input" id="edit-video-file-code" value="' + escapeHtml(item.fileCode || '') + '" placeholder="Optional file code if it exists on DoodStream"></div>' +
-    '<div class="form-group"><label class="form-label">Upload Video File (replacing current)</label><input class="form-input" id="edit-video-file" type="file" accept="video/*"></div>' +
+    '<div class="form-group"><label class="form-label">Video URL</label><input class="form-input" id="edit-video-url" value="' + escapeHtml(item.videoProvider === 'doodstream' || item.videoProvider === 'mux' ? '' : (item.sourceUrl || item.src || '')) + '" placeholder="Direct file, YouTube, or Vimeo URL"></div>' +
+    '<div class="form-group"><label class="form-label">File Code / Mux Playback ID</label><input class="form-input" id="edit-video-file-code" value="' + escapeHtml(item.muxPlaybackId || item.fileCode || '') + '" placeholder="Optional file code or Mux Playback ID"></div>' +
+    '<div class="form-group"><label class="form-label">Upload Video File (replacing current)</label><div class="file-dropzone" data-accept="video/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop video here or <span class="highlight">browse</span></div><div class="dropzone-subtext">Max size ~2GB</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" id="edit-video-file" type="file" accept="video/*" style="display:none;"></div></div>' +
     '<div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" id="edit-video-thumb" value="' + escapeHtml(item.thumb || '') + '"></div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
       '<div class="form-group"><label class="form-label">Thumbnail Provider</label><select class="form-input" id="edit-video-thumb-provider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div>' +
-      '<div class="form-group"><label class="form-label">Upload Thumbnail File</label><input class="form-input" id="edit-video-thumb-file" type="file" accept="image/*"></div>' +
+      '<div class="form-group"><label class="form-label">Upload Thumbnail File</label><div class="file-dropzone" data-accept="image/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop image here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" id="edit-video-thumb-file" type="file" accept="image/*" style="display:none;"></div></div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px">' +
       '<div class="form-group"><label class="form-label">Year</label><input class="form-input" id="edit-video-year" value="' + escapeHtml(item.year || '') + '"></div>' +
       '<div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" id="edit-video-client" value="' + escapeHtml(item.client || '') + '"></div>' +
       '<div class="form-group"><label class="form-label">Duration</label><input class="form-input" id="edit-video-duration" value="' + escapeHtml(item.duration || '') + '"></div>' +
     '</div>' +
-    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-video-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>';
+    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-video-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>' +
+    '<div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div>';
 }
 
 function renderPhotoEditFields(item) {
@@ -898,19 +1325,26 @@ function renderPhotoEditFields(item) {
     '<div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" id="edit-photo-client" value="' + escapeHtml(item.client || '') + '"></div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">' +
       '<div class="form-group"><label class="form-label">Upload Storage Provider</label><select class="form-input" id="edit-photo-provider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div>' +
-      '<div class="form-group"><label class="form-label">Replace Image File</label><input class="form-input" id="edit-photo-file" type="file" accept="image/*"></div>' +
+      '<div class="form-group"><label class="form-label">Replace Image File</label><div class="file-dropzone" data-accept="image/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop image here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" id="edit-photo-file" type="file" accept="image/*" style="display:none;"></div></div>' +
     '</div>' +
-    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-photo-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>';
+    '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="edit-photo-description" style="height:60px">' + escapeHtml(item.description || '') + '</textarea></div>' +
+    '<div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div>';
 }
 
 async function saveItemEdit(event) {
   event.preventDefault();
+  const form = event.currentTarget;
   const id = document.getElementById('edit-item-id').value;
   const type = document.getElementById('edit-item-type').value;
   const btn = document.getElementById('btn-save-edit');
   const originalText = btn.textContent;
   btn.textContent = 'Saving...';
   btn.disabled = true;
+
+  const progressContainer = form.querySelector('.upload-progress-container');
+  const progressStatus = progressContainer ? progressContainer.querySelector('.progress-status') : null;
+  const progressPercent = progressContainer ? progressContainer.querySelector('.progress-percent') : null;
+  const progressFill = progressContainer ? progressContainer.querySelector('.progress-fill') : null;
 
   try {
     const item = normalizeItem((state.store.items || []).find(entry => entry.id === id));
@@ -931,15 +1365,27 @@ async function saveItemEdit(event) {
       const replacement = document.getElementById('edit-photo-file').files[0];
       const imageProvider = document.getElementById('edit-photo-provider').value || 'cloudinary';
       if (replacement) {
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+        const progressCb = (percent) => {
+          if (progressStatus) progressStatus.textContent = `Uploading image (${percent}%)...`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressFill) progressFill.style.width = `${percent}%`;
+          btn.textContent = `Uploading (${percent}%)...`;
+        };
         if (imageProvider === 'pinata') {
-          const uploaded = await uploadPinataFile(replacement, payload.title);
+          const uploaded = await uploadPinataFile(replacement, payload.title, progressCb);
           payload.src = uploaded.src;
           payload.thumb = uploaded.src;
         } else {
-          const uploaded = await uploadImageFile(replacement, payload.title, payload.category);
+          const uploaded = await uploadImageFile(replacement, payload.title, payload.category, progressCb);
           payload.src = uploaded.src;
           payload.thumb = uploaded.thumb;
         }
+        if (progressContainer) progressContainer.style.display = 'none';
       } else {
         payload.src = item.src;
         payload.thumb = item.thumb;
@@ -956,9 +1402,76 @@ async function saveItemEdit(event) {
 
       const replacementVideo = document.getElementById('edit-video-file').files[0];
       const nextFileCode = String(document.getElementById('edit-video-file-code').value || '').trim();
-      if (payload.videoProvider === 'doodstream') {
+      
+      // Preserve existing Mux fields if not changed and provider is still mux
+      payload.muxPlaybackId = item.muxPlaybackId || '';
+      payload.muxAssetId = item.muxAssetId || '';
+      payload.muxAccountIndex = item.muxAccountIndex || 0;
+      payload.useHls = item.useHls || false;
+
+      if (payload.videoProvider === 'mux') {
         if (replacementVideo) {
-          const uploadedVideo = await uploadDoodstreamVideoFile(replacementVideo, payload.title);
+          if (progressContainer) {
+            progressContainer.style.display = 'block';
+            if (progressPercent) progressPercent.textContent = '0%';
+            if (progressFill) progressFill.style.width = '0%';
+          }
+
+          const progressCb = (percent) => {
+            if (percent === 'processing') {
+              if (progressStatus) progressStatus.textContent = 'Processing on Mux (almost ready)...';
+              if (progressPercent) progressPercent.textContent = '99%';
+              if (progressFill) progressFill.style.width = '99%';
+              btn.textContent = 'Processing...';
+            } else {
+              if (progressStatus) progressStatus.textContent = 'Uploading to Mux...';
+              if (progressPercent) progressPercent.textContent = `${percent}%`;
+              if (progressFill) progressFill.style.width = `${percent}%`;
+              btn.textContent = `Uploading (${percent}%)...`;
+            }
+          };
+          const uploadedVideo = await uploadVideoToMux(replacementVideo, payload.title, progressCb);
+          if (progressContainer) progressContainer.style.display = 'none';
+          payload.src = uploadedVideo.src;
+          payload.sourceUrl = uploadedVideo.sourceUrl;
+          payload.fileCode = uploadedVideo.fileCode;
+          payload.muxPlaybackId = uploadedVideo.muxPlaybackId;
+          payload.muxAssetId = uploadedVideo.muxAssetId;
+          payload.muxAccountIndex = uploadedVideo.muxAccountIndex;
+          payload.duration = uploadedVideo.duration || payload.duration || item.duration || '';
+          payload.useHls = true;
+          payload.thumb = uploadedVideo.thumb || item.thumb || '';
+        } else {
+          const nextFileCodeVal = nextFileCode || item.muxPlaybackId || item.fileCode;
+          if (!nextFileCodeVal) throw new Error('Add a Mux Playback ID or upload a replacement video');
+          payload.fileCode = nextFileCodeVal;
+          payload.muxPlaybackId = nextFileCodeVal;
+          payload.muxAssetId = item.muxAssetId || '';
+          payload.muxAccountIndex = item.muxAccountIndex || 1;
+          payload.src = `https://stream.mux.com/${nextFileCodeVal}.m3u8`;
+          payload.sourceUrl = payload.src;
+          payload.useHls = true;
+          payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || `https://image.mux.com/${nextFileCodeVal}/thumbnail.jpg`;
+        }
+      } else if (payload.videoProvider === 'doodstream') {
+        payload.useHls = false;
+        payload.muxPlaybackId = '';
+        payload.muxAssetId = '';
+        payload.muxAccountIndex = 0;
+        if (replacementVideo) {
+          if (progressContainer) {
+            progressContainer.style.display = 'block';
+            if (progressPercent) progressPercent.textContent = '0%';
+            if (progressFill) progressFill.style.width = '0%';
+          }
+          const progressCb = (percent) => {
+            if (progressStatus) progressStatus.textContent = `Uploading to DoodStream (${percent}%)...`;
+            if (progressPercent) progressPercent.textContent = `${percent}%`;
+            if (progressFill) progressFill.style.width = `${percent}%`;
+            btn.textContent = `Uploading (${percent}%)...`;
+          };
+          const uploadedVideo = await uploadDoodstreamVideoFile(replacementVideo, payload.title, progressCb);
+          if (progressContainer) progressContainer.style.display = 'none';
           payload.src = uploadedVideo.src;
           payload.sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
           payload.fileCode = uploadedVideo.fileCode || '';
@@ -972,8 +1485,24 @@ async function saveItemEdit(event) {
           payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
         }
       } else if (payload.videoProvider === 'pinata') {
+        payload.useHls = false;
+        payload.muxPlaybackId = '';
+        payload.muxAssetId = '';
+        payload.muxAccountIndex = 0;
         if (replacementVideo) {
-          const uploadedVideo = await uploadPinataFile(replacementVideo, payload.title);
+          if (progressContainer) {
+            progressContainer.style.display = 'block';
+            if (progressPercent) progressPercent.textContent = '0%';
+            if (progressFill) progressFill.style.width = '0%';
+          }
+          const progressCb = (percent) => {
+            if (progressStatus) progressStatus.textContent = `Uploading to IPFS (${percent}%)...`;
+            if (progressPercent) progressPercent.textContent = `${percent}%`;
+            if (progressFill) progressFill.style.width = `${percent}%`;
+            btn.textContent = `Uploading (${percent}%)...`;
+          };
+          const uploadedVideo = await uploadPinataFile(replacementVideo, payload.title, progressCb);
+          if (progressContainer) progressContainer.style.display = 'none';
           payload.src = uploadedVideo.src;
           payload.sourceUrl = uploadedVideo.src;
           payload.fileCode = '';
@@ -986,6 +1515,10 @@ async function saveItemEdit(event) {
       } else {
         payload.videoProvider = '';
         payload.fileCode = '';
+        payload.useHls = false;
+        payload.muxPlaybackId = '';
+        payload.muxAssetId = '';
+        payload.muxAccountIndex = 0;
         payload.src = document.getElementById('edit-video-url').value.trim() || item.sourceUrl || item.src;
         payload.sourceUrl = payload.src;
         payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
@@ -994,13 +1527,25 @@ async function saveItemEdit(event) {
       const replacementThumb = document.getElementById('edit-video-thumb-file').files[0];
       const thumbProvider = document.getElementById('edit-video-thumb-provider').value || 'cloudinary';
       if (replacementThumb) {
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+        const thumbProgressCb = (percent) => {
+          if (progressStatus) progressStatus.textContent = `Uploading thumbnail (${percent}%)...`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressFill) progressFill.style.width = `${percent}%`;
+          btn.textContent = `Saving (${percent}%)...`;
+        };
         if (thumbProvider === 'pinata') {
-          const uploaded = await uploadPinataFile(replacementThumb, payload.title + '-thumb');
+          const uploaded = await uploadPinataFile(replacementThumb, payload.title + '-thumb', thumbProgressCb);
           payload.thumb = uploaded.src;
         } else {
-          const uploaded = await uploadImageFile(replacementThumb, payload.title + '-thumb', payload.category + ',video-thumb');
+          const uploaded = await uploadImageFile(replacementThumb, payload.title + '-thumb', payload.category + ',video-thumb', thumbProgressCb);
           payload.thumb = uploaded.src;
         }
+        if (progressContainer) progressContainer.style.display = 'none';
       }
     }
 
@@ -1011,9 +1556,94 @@ async function saveItemEdit(event) {
   } catch (error) {
     showToast(error.message, 'error');
   } finally {
+    if (progressContainer) progressContainer.style.display = 'none';
     btn.textContent = originalText;
     btn.disabled = false;
   }
+}
+
+function initDropzones(container) {
+  const dropzones = container.querySelectorAll('.file-dropzone');
+  dropzones.forEach(dropzone => {
+    const fileInput = dropzone.querySelector('input[type="file"]');
+    const promptEl = dropzone.querySelector('.dropzone-prompt');
+    const fileInfoEl = dropzone.querySelector('.dropzone-file-info');
+    const nameEl = dropzone.querySelector('.file-name');
+    const sizeEl = dropzone.querySelector('.file-size');
+    const removeBtn = dropzone.querySelector('.btn-remove-file');
+
+    if (!fileInput || !promptEl || !fileInfoEl) return;
+
+    // Helper to format file size
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Helper to show/hide states
+    function updateState(files) {
+      if (files && files.length > 0) {
+        promptEl.style.display = 'none';
+        fileInfoEl.style.display = 'flex';
+        if (nameEl) {
+          if (files.length === 1) {
+            nameEl.textContent = files[0].name;
+          } else {
+            nameEl.textContent = files.length + ' files selected';
+          }
+        }
+        if (sizeEl) {
+          let totalSize = 0;
+          for (let i = 0; i < files.length; i++) totalSize += files[i].size;
+          sizeEl.textContent = formatBytes(totalSize);
+        }
+      } else {
+        promptEl.style.display = 'flex';
+        fileInfoEl.style.display = 'none';
+        fileInput.value = '';
+      }
+    }
+
+    // Trigger click on dropzone (except when clicking remove btn)
+    dropzone.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-remove-file')) return;
+      fileInput.click();
+    });
+
+    // Drag events
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Input changes
+    fileInput.addEventListener('change', () => {
+      updateState(fileInput.files);
+    });
+
+    // Remove file
+    removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      updateState(null);
+    });
+  });
 }
 
 // --- CLIENT GALLERY LOGIC ---

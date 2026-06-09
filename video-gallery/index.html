@@ -551,6 +551,14 @@ function _attachModalVideo(cfgKey) {
     try { window.currentYtPlayer.destroy(); } catch(e) {}
     window.currentYtPlayer = null;
   }
+  if (window.currentHlsInstance) {
+    try { window.currentHlsInstance.destroy(); } catch(e) {}
+    window.currentHlsInstance = null;
+  }
+  const oldVideo = document.getElementById('mux-video-player');
+  if (oldVideo && oldVideo.mux) {
+    try { oldVideo.mux.destroy(); } catch(e) {}
+  }
   
   player.innerHTML = '';
   
@@ -798,7 +806,81 @@ function _attachModalVideo(cfgKey) {
     }
   }
   
-  if (cfg && cfg.embedUrl) {
+  if (cfg && cfg.videoProvider === 'mux') {
+    const v = document.createElement('video');
+    v.controls = true;
+    v.autoplay = true;
+    v.muted = false;
+    v.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    v.id = 'mux-video-player';
+    player.appendChild(v);
+
+    const streamUrl = cfg.sourceUrl || cfg.src;
+
+    const initMuxData = () => {
+      if (typeof mux !== 'undefined' && cfg.muxDataEnvKey) {
+        mux.monitor(v, {
+          debug: false,
+          data: {
+            env_key: cfg.muxDataEnvKey,
+            player_name: 'Main Player',
+            player_init_time: mux.utils.now(),
+            video_id: cfg.id,
+            video_title: cfg.title,
+            video_series: cfg.category || 'General',
+            video_stream_type: 'on-demand'
+          }
+        });
+      }
+    };
+
+    const startPlayback = () => {
+      if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(v);
+        window.currentHlsInstance = hls;
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          v.play().catch(e => console.log('Autoplay blocked:', e));
+        });
+      } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+        v.src = streamUrl;
+        v.addEventListener('loadedmetadata', function() {
+          v.play().catch(e => console.log('Autoplay blocked:', e));
+        });
+      }
+      initMuxData();
+    };
+
+    const promises = [];
+    if (typeof Hls === 'undefined') {
+      promises.push(new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }));
+    }
+    if (typeof mux === 'undefined') {
+      promises.push(new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mux-embed@2';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }));
+    }
+
+    if (promises.length > 0) {
+      Promise.all(promises).then(startPlayback).catch(err => {
+        console.error('Failed to load Hls.js or Mux Data SDK:', err);
+        v.src = streamUrl;
+      });
+    } else {
+      startPlayback();
+    }
+  } else if (cfg && cfg.embedUrl) {
     const frame = document.createElement('iframe');
     frame.src = cfg.embedUrl;
     frame.allow = 'autoplay; fullscreen; picture-in-picture';
@@ -899,11 +981,15 @@ function _videoCfgFromItem(item){
   return {
     src:item.src||'',
     sourceUrl:item.sourceUrl||item.src||'',
-    type:item.embedUrl&&item.thumb?'image':'video',
+    type:(item.embedUrl && item.thumb) || (item.videoProvider === 'mux' && item.thumb) ? 'image' : 'video',
     alt:item.title||'',
     thumb:item.thumb||'',
     embedUrl:item.embedUrl||'',
-    videoProvider:item.videoProvider||''
+    videoProvider:item.videoProvider||'',
+    id:item.id||'',
+    title:item.title||'',
+    muxDataEnvKey:item.muxDataEnvKey||'',
+    category:item.category||''
   };
 }
 
@@ -1034,7 +1120,21 @@ function closeModal(){
     try { window.currentYtPlayer.destroy(); } catch(e) {}
     window.currentYtPlayer = null;
   }
-  const pw=document.getElementById('vm-player-wrap'); if(pw){const v=pw.querySelector('video'); if(v)v.pause(); pw.innerHTML='';}
+  if (window.currentHlsInstance) {
+    try { window.currentHlsInstance.destroy(); } catch(e) {}
+    window.currentHlsInstance = null;
+  }
+  const pw=document.getElementById('vm-player-wrap');
+  if(pw){
+    const v=pw.querySelector('video');
+    if(v) {
+      if (v.mux) {
+        try { v.mux.destroy(); } catch(e) {}
+      }
+      v.pause();
+    }
+    pw.innerHTML='';
+  }
 }
 document.getElementById('vmodal').addEventListener('click',e=>{if(e.target===document.getElementById('vmodal'))closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
