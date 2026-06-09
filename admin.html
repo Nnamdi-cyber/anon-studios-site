@@ -1037,7 +1037,7 @@ function processQueue() {
     processQueue();
   });
 
-  xhr.open('POST', '/api/client-gallery/upload');
+  xhr.open('POST', BACKEND_URL + '/api/client-gallery/upload');
   xhr.send(formData);
 
   processQueue();
