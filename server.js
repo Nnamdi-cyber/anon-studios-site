@@ -982,6 +982,27 @@ app.get('/api/portfolio-bot/status', requireAdmin, (req, res) => {
   });
 });
 
+app.get('/api/admin/diagnostics', requireAdmin, (req, res) => {
+  const accounts = [];
+  for (let i = 1; i <= 4; i++) {
+    const tokenId = process.env[`MUX_TOKEN_ID_${i}`];
+    const tokenSecret = process.env[`MUX_TOKEN_SECRET_${i}`];
+    const dataEnvKey = process.env[`MUX_DATA_ENV_KEY_${i}`];
+    accounts.push({
+      index: i,
+      tokenId: tokenId ? `${tokenId.trim().substring(0, 8)}...` : 'MISSING',
+      tokenSecret: tokenSecret ? 'PRESENT' : 'MISSING',
+      dataEnvKey: dataEnvKey ? 'PRESENT' : 'MISSING'
+    });
+  }
+  res.json({
+    ok: true,
+    muxAccounts: accounts,
+    doodstream: process.env.DOODSTREAM_API_KEY ? 'PRESENT' : 'MISSING',
+    pinata: process.env.PINATA_API_KEY ? 'PRESENT' : 'MISSING',
+  });
+});
+
 app.post('/api/portfolio-bot/render-proposal', requireAdmin, (req, res) => {
   try {
     const rendered = buildProposalEmail(req.body || {});
