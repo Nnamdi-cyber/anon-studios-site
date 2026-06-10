@@ -532,7 +532,9 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
   : 'https://anon-studios-site.onrender.com'; // Adjust this to your real Render backend URL
 
 async function api(url, options) {
-  const response = await fetch(BACKEND_URL + url, {
+  const method = (options && options.method) || 'GET';
+  const finalUrl = method === 'GET' ? url + (url.includes('?') ? '&' : '?') + 't=' + Date.now() : url;
+  const response = await fetch(BACKEND_URL + finalUrl, {
     credentials: 'include',
     headers: { Accept: 'application/json', ...(options && options.body ? { 'Content-Type': 'application/json' } : {}) },
     ...options

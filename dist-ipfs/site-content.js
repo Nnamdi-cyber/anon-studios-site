@@ -312,7 +312,7 @@
   async function refreshRemote() {
     if (!canUseApi()) return getStore();
     try {
-      const response = await fetch(API_BASE, { headers: { 'Accept': 'application/json' } });
+      const response = await fetch(API_BASE + '?t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
       if (!response.ok) throw new Error('Failed to fetch content');
       const remoteStore = await response.json();
       const normalized = {
