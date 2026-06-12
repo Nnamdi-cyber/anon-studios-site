@@ -549,11 +549,17 @@
     const videos = items.filter(item => item.type === 'video');
     const photos = items.filter(item => item.type === 'image');
 
-    const documentary = videos.filter(item => item.category === 'documentary' || hasAnyTag(item, ['documentary', 'doc', 'story'])).slice(0, 6);
-    const music = videos.filter(item => item.category === 'music-video' || hasAnyTag(item, ['music-video', 'music', 'performance'])).slice(0, 6);
-    const wedding = videos.filter(item => item.category === 'wedding' || hasAnyTag(item, ['wedding', 'event-video', 'event', 'conference', 'corporate-event'])).slice(0, 5);
-    const advert = videos.filter(item => item.category === 'advert' || hasAnyTag(item, ['brand', 'advert', 'commercial', 'campaign'])).slice(0, 3);
-    const church = videos.filter(item => item.category === 'church' || hasAnyTag(item, ['church', 'ministry', 'worship'])).slice(0, 3);
+    const allDoc = videos.filter(item => item.category === 'documentary' || hasAnyTag(item, ['documentary', 'doc', 'story']));
+    const allMusic = videos.filter(item => item.category === 'music-video' || hasAnyTag(item, ['music-video', 'music', 'performance']));
+    const allWedding = videos.filter(item => item.category === 'wedding' || hasAnyTag(item, ['wedding', 'event-video', 'event', 'conference', 'corporate-event']));
+    const allAdvert = videos.filter(item => item.category === 'advert' || hasAnyTag(item, ['brand', 'advert', 'commercial', 'campaign']));
+    const allChurch = videos.filter(item => item.category === 'church' || hasAnyTag(item, ['church', 'ministry', 'worship']));
+
+    const documentary = allDoc.slice(0, 6);
+    const music = allMusic.slice(0, 6);
+    const wedding = allWedding.slice(0, 5);
+    const advert = allAdvert.slice(0, 3);
+    const church = allChurch.slice(0, 3);
 
     const photoProjects = groupPhotoProjects(photos);
     const portraitProject = pickPhotoProject(photoProjects, 'portrait');
@@ -629,11 +635,11 @@
       overrides,
       settings,
       videoMeta: {
-        documentary: { label: normalizeVideoCategoryLabel('documentary'), items: documentary },
-        'music-video': { label: normalizeVideoCategoryLabel('music-video'), items: music },
-        wedding: { label: normalizeVideoCategoryLabel('wedding'), items: wedding },
-        advert: { label: normalizeVideoCategoryLabel('advert'), items: advert },
-        church: { label: normalizeVideoCategoryLabel('church'), items: church },
+        documentary: { label: normalizeVideoCategoryLabel('documentary'), items: allDoc },
+        'music-video': { label: normalizeVideoCategoryLabel('music-video'), items: allMusic },
+        wedding: { label: normalizeVideoCategoryLabel('wedding'), items: allWedding },
+        advert: { label: normalizeVideoCategoryLabel('advert'), items: allAdvert },
+        church: { label: normalizeVideoCategoryLabel('church'), items: allChurch },
       },
       seriesMeta: {
         portrait: portraitProject ? {
@@ -706,12 +712,12 @@
         photos: photos.length,
         photoProjects: photoProjects.length,
         photoSeries: [portraitProject, editorialProject, commercialProject, streetProject].filter(Boolean).length,
-        videoCategoriesUsed: [documentary, music, wedding, advert, church].filter(list => list.length > 0).length,
-        documentary: documentary.length,
-        music: music.length,
-        wedding: wedding.length,
-        advert: advert.length,
-        church: church.length,
+        videoCategoriesUsed: [allDoc, allMusic, allWedding, allAdvert, allChurch].filter(list => list.length > 0).length,
+        documentary: allDoc.length,
+        music: allMusic.length,
+        wedding: allWedding.length,
+        advert: allAdvert.length,
+        church: allChurch.length,
         portrait: portraits.length,
         editorial: editorial.length,
         commercial: commercial.length,
@@ -920,6 +926,10 @@
       if (label === 'categories') valueEl.textContent = String(counts.videoCategoriesUsed || 5);
       if (label === 'years') valueEl.textContent = '3+';
     });
+
+    if (typeof window.adaptVideoCategoryLayouts === 'function') {
+      window.adaptVideoCategoryLayouts();
+    }
   }
 
   function hydratePhotoPage() {
