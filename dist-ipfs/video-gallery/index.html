@@ -357,7 +357,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   </div>
 </div>
 
-<script src="../site-content.js"></script>
+<script src="../site-content.js?v=20260613a"></script>
 <script>
 if (window.AnonContent) {
   window.addEventListener(window.AnonContent.events.updated, () => {
@@ -978,10 +978,11 @@ const VIDEO_LAYOUTS = [
 ];
 
 function _videoCfgFromItem(item){
+  const isImg = !!item.thumb;
   return {
-    src:item.src||'',
+    src: isImg ? (item.thumb || '') : (item.src || ''),
     sourceUrl:item.sourceUrl||item.src||'',
-    type:(item.embedUrl && item.thumb) || (item.videoProvider === 'mux' && item.thumb) ? 'image' : 'video',
+    type: isImg ? 'image' : 'video',
     alt:item.title||'',
     thumb:item.thumb||'',
     embedUrl:item.embedUrl||'',
