@@ -257,7 +257,7 @@
   }
 
   function normalizeItem(item) {
-    if (!item || !item.src || !item.type) return null;
+    if (!item || !item.type) return null;
     const type = item.type === 'video' ? 'video' : 'image';
     const title = String(item.title || '').trim() || 'Untitled';
     const category = normalizeCategory(type, item.category || (Array.isArray(item.tags) ? item.tags[0] : String(item.tags || '').split(',')[0]));
