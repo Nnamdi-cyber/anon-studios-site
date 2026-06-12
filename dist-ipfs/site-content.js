@@ -795,7 +795,7 @@
   }
 
   function hydratePortfolioPage() {
-    const { counts } = buildOverrides(getStore());
+    const { overrides, counts } = buildOverrides(getStore());
     document.querySelectorAll('.stats > div').forEach(statCard => {
       const valueEl = statCard.querySelector('.stat-n');
       const labelEl = statCard.querySelector('.stat-l');
@@ -803,6 +803,59 @@
       const label = labelEl.textContent.trim().toLowerCase();
       if (label === 'years active') valueEl.textContent = '3+';
       if (label === 'projects done') valueEl.textContent = String(counts.videos);
+    });
+
+    // Update hero fanned cards dynamically
+    const heroSlots = ['hero_card_1', 'hero_card_2', 'hero_card_3'];
+    document.querySelectorAll('.hcards .hcard').forEach((card, index) => {
+      const slot = heroSlots[index];
+      const override = overrides[slot];
+      const item = override && override.item;
+      if (!item) return;
+      const labelEl = card.querySelector('.hcard-label');
+      if (labelEl) {
+        const category = item.category || (item.tags && item.tags[0]) || item.type;
+        const prettified = category.replace(/-/g, ' ');
+        labelEl.textContent = prettified.charAt(0).toUpperCase() + prettified.slice(1);
+      }
+    });
+
+    // Update featured works accordion items (work_01 to work_06)
+    const accordionItems = document.querySelectorAll('#work .wi');
+    ['work_01', 'work_02', 'work_03', 'work_04', 'work_05', 'work_06'].forEach((slot, index) => {
+      const card = accordionItems[index];
+      if (!card) return;
+      const override = overrides[slot];
+      const item = override && override.item;
+      if (!item) return;
+
+      const catEl = card.querySelector('.wi-cat');
+      const nameEl = card.querySelector('.wi-name');
+      const yrEl = card.querySelector('.wi-yr');
+      const descEl = card.querySelector('.wi-desc');
+      const tagsEl = card.querySelector('.wi-tags');
+
+      if (catEl) {
+        const category = item.category || (item.tags && item.tags[0]) || item.type;
+        const prettified = category.replace(/-/g, ' ');
+        catEl.textContent = prettified.charAt(0).toUpperCase() + prettified.slice(1);
+      }
+      if (nameEl) {
+        nameEl.textContent = item.title;
+      }
+      if (yrEl) {
+        yrEl.textContent = item.year || '';
+      }
+      if (descEl) {
+        descEl.textContent = item.description || item.title;
+      }
+      if (tagsEl && Array.isArray(item.tags)) {
+        tagsEl.innerHTML = item.tags.slice(0, 3).map(tag => {
+          const cleanTag = tag.replace(/-/g, ' ');
+          const formattedTag = cleanTag.charAt(0).toUpperCase() + cleanTag.slice(1);
+          return `<span class="wi-tag">${formattedTag}</span>`;
+        }).join('');
+      }
     });
   }
 
