@@ -1005,6 +1005,10 @@
     if (statStrong[0]) statStrong[0].textContent = String(counts.photos);
     if (statStrong[1]) statStrong[1].textContent = String(counts.photoProjects || 0);
     if (statStrong[2]) statStrong[2].textContent = String(counts.photoSeries || 4);
+
+    if (typeof window.adaptSeriesTiles === 'function') {
+      window.adaptSeriesTiles();
+    }
   }
 
   window.AnonContent = {
