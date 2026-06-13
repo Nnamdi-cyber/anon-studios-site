@@ -224,18 +224,22 @@
     };
   }
 
+  let memoryStore = null;
+
   function getStore() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return getDefaultStore();
+      if (!raw) return memoryStore || (memoryStore = getDefaultStore());
       const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.items)) return getDefaultStore();
-      return {
+      if (!parsed || !Array.isArray(parsed.items)) return memoryStore || (memoryStore = getDefaultStore());
+      const store = {
         items: parsed.items.map(normalizeItem).filter(Boolean),
         settings: normalizeSettings(parsed.settings),
       };
+      memoryStore = store;
+      return store;
     } catch (error) {
-      return getDefaultStore();
+      return memoryStore || (memoryStore = getDefaultStore());
     }
   }
 
@@ -244,7 +248,12 @@
       items: (store.items || []).map(normalizeItem).filter(Boolean),
       settings: normalizeSettings(store.settings),
     };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+    memoryStore = clean;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+    } catch (error) {
+      console.warn('LocalStorage save failed, using in-memory fallback:', error);
+    }
     return clean;
   }
 

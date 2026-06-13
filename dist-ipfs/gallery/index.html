@@ -454,7 +454,13 @@ function _createMediaEl(src, type, alt) {
   let el;
   if (type === 'video') {
     el = document.createElement('video');
-    el.src = src; el.muted = true; el.loop = true;
+    let playUrl = src;
+    if (src.includes('stream.mux.com') && src.endsWith('.m3u8')) {
+      const parts = src.split('/');
+      const playbackId = parts[parts.length - 1].split('.')[0];
+      playUrl = 'https://stream.mux.com/' + playbackId + '/capped-1080p.mp4';
+    }
+    el.src = playUrl; el.muted = true; el.loop = true;
     el.playsInline = true; el.preload = 'none';
     el.setAttribute('aria-label', alt);
   } else {
