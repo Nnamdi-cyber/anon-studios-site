@@ -1425,6 +1425,12 @@ function mountMedia(wrap, src, type, alt) {
   // Insert before fallback
   if (fb) wrap.insertBefore(el, fb);
   else wrap.appendChild(el);
+
+  if (type === 'image' && el.complete) {
+    el.classList.add('loaded');
+    wrap.classList.add('loaded-wrap');
+    if (fb) fb.style.display = 'none';
+  }
 }
 
 /* â”€â”€ INTERSECTION OBSERVER â€” lazy load on viewport entry â”€â”€ */
@@ -1472,12 +1478,19 @@ function applyMediaConfig() {
     const wrap = document.querySelector(sel);
     if (!wrap) return;
 
-    // For proper media-wrap divs
     if (cfg.src) {
-      wrap.dataset.mediaSrc  = cfg.src;
-      wrap.dataset.mediaType = cfg.type;
-      wrap.dataset.mediaAlt  = cfg.alt;
-      mediaObs.observe(wrap);
+      if (wrap.dataset.mediaSrc !== cfg.src) {
+        wrap.querySelectorAll('img, video').forEach(el => el.remove());
+        const fb = wrap.querySelector('.media-fallback');
+        if (fb) fb.style.display = 'flex';
+        wrap.classList.remove('loaded-wrap');
+        delete wrap.dataset.loaded;
+
+        wrap.dataset.mediaSrc  = cfg.src;
+        wrap.dataset.mediaType = cfg.type;
+        wrap.dataset.mediaAlt  = cfg.alt;
+        mediaObs.observe(wrap);
+      }
     }
   });
 

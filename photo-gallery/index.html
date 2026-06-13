@@ -472,9 +472,8 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 <script>
 if (window.AnonContent) {
   window.addEventListener(window.AnonContent.events.updated, () => {
-    if (window.__anonContentReloaded) return;
-    window.__anonContentReloaded = true;
-    window.location.reload();
+    if (window.AnonContent.mergeIntoConfig) window.AnonContent.mergeIntoConfig(MEDIA_CONFIG);
+    window.AnonContent.hydratePhotoPage();
   });
 }
 
@@ -639,6 +638,11 @@ function _mountInWrap(wrap, src, type, alt) {
   });
   const fb = wrap.querySelector('.media-fallback');
   wrap.insertBefore(el, fb || null);
+
+  if (type === 'image' && el.complete) {
+    el.classList.add('m-loaded');
+    wrap.classList.add('m-ready');
+  }
 }
 
 /* Thumbnail src — use thumb if set, else poster frame from video, else image src */
@@ -985,6 +989,7 @@ function probeQuoteImageCandidates(items,quoteCard){
 }
 function ensurePanelMedia(wrap,cfg){
   if(!wrap||!cfg||!cfg.src)return;
+  delete wrap.dataset.mLoaded;
   wrap.dataset.mSrc=cfg.src;
   wrap.dataset.mType=cfg.type;
   wrap.dataset.mAlt=cfg.alt||'';
