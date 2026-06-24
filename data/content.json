@@ -706,14 +706,14 @@
   ],
   "settings": {
     "heroSlots": {
-      "hero_card_1": "integration-test-1780902542348",
+      "hero_card_1": "",
       "hero_card_2": "",
       "hero_card_3": "",
       "about_main": "",
       "about_sec": ""
     },
     "featuredWorkIds": [
-      "integration-test-1780902542348",
+      "",
       "",
       "",
       "",

@@ -561,14 +561,11 @@
     const allDoc = videos.filter(item => item.category === 'documentary' || hasAnyTag(item, ['documentary', 'doc', 'story']));
     const allMusic = videos.filter(item => item.category === 'music-video' || hasAnyTag(item, ['music-video', 'music', 'performance']));
     const allWedding = videos.filter(item => item.category === 'wedding' || hasAnyTag(item, ['wedding', 'event-video', 'event', 'conference', 'corporate-event']));
-    const allAdvert = videos.filter(item => item.category === 'advert' || hasAnyTag(item, ['brand', 'advert', 'commercial', 'campaign']));
-    const allChurch = videos.filter(item => item.category === 'church' || hasAnyTag(item, ['church', 'ministry', 'worship']));
-
-    const documentary = allDoc.slice(0, 6);
-    const music = allMusic.slice(0, 6);
-    const wedding = allWedding.slice(0, 5);
-    const advert = allAdvert.slice(0, 3);
+    const allChurch = videos.filter(item => (item.category === 'church' || hasAnyTag(item, ['church', 'ministry', 'worship'])));
+    console.log('Church Highlight pool count:', allChurch.length, allChurch.slice(0,3));
+    const allAdvert = videos.filter(item => (item.category === 'advert' || hasAnyTag(item, ['advert', 'advertising', 'brand'])));
     const church = allChurch.slice(0, 3);
+
 
     const photoProjects = groupPhotoProjects(photos);
     const portraitProject = pickPhotoProject(photoProjects, 'portrait');
@@ -584,10 +581,10 @@
 
     const overrides = {};
 
-    fillSlots(overrides, ['vg_doc_1', 'vg_doc_2', 'vg_doc_3', 'vg_doc_4', 'vg_doc_5', 'vg_doc_6'], documentary);
-    fillSlots(overrides, ['vg_mv_1', 'vg_mv_2', 'vg_mv_3', 'vg_mv_4', 'vg_mv_5', 'vg_mv_6'], music);
-    fillSlots(overrides, ['vg_wed_1', 'vg_wed_2', 'vg_wed_3', 'vg_wed_4', 'vg_wed_5'], wedding);
-    fillSlots(overrides, ['vg_ad_1', 'vg_ad_2', 'vg_ad_3'], advert);
+    fillSlots(overrides, ['vg_doc_1', 'vg_doc_2', 'vg_doc_3', 'vg_doc_4', 'vg_doc_5', 'vg_doc_6'], allDoc);
+    fillSlots(overrides, ['vg_mv_1', 'vg_mv_2', 'vg_mv_3', 'vg_mv_4', 'vg_mv_5', 'vg_mv_6'], allMusic);
+    fillSlots(overrides, ['vg_wed_1', 'vg_wed_2', 'vg_wed_3', 'vg_wed_4', 'vg_wed_5'], allWedding);
+    fillSlots(overrides, ['vg_ad_1', 'vg_ad_2', 'vg_ad_3'], allAdvert);
     fillSlots(overrides, ['vg_ch_1', 'vg_ch_2', 'vg_ch_3'], church);
 
     fillSlots(overrides, ['pg_s1_p1', 'pg_s1_p2', 'pg_s1_p3', 'pg_s1_p4', 'pg_s1_p5'], portraits);
@@ -595,10 +592,10 @@
     fillSlots(overrides, ['pg_s3_p1', 'pg_s3_p2', 'pg_s3_p3', 'pg_s3_p4', 'pg_s3_p5'], commercial);
     fillSlots(overrides, ['pg_s4_p1', 'pg_s4_p2', 'pg_s4_p3', 'pg_s4_p4', 'pg_s4_p5'], street);
 
-    fillSlots(overrides, ['g_vpanel_1'], documentary.slice(0, 1));
-    fillSlots(overrides, ['g_vpanel_2'], music.slice(0, 1));
-    fillSlots(overrides, ['g_vpanel_3'], wedding.slice(0, 1));
-    fillSlots(overrides, ['g_vpanel_4'], advert.slice(0, 1));
+    fillSlots(overrides, ['g_vpanel_1'], allDoc.slice(0, 1));
+    fillSlots(overrides, ['g_vpanel_2'], allMusic.slice(0, 1));
+    fillSlots(overrides, ['g_vpanel_3'], allWedding.slice(0, 1));
+    fillSlots(overrides, ['g_vpanel_4'], allAdvert.slice(0, 1));
     fillSlots(overrides, ['g_vpanel_5'], church.slice(0, 1));
 
     fillSlots(overrides, ['g_pcard_1'], portraits.slice(0, 1));
@@ -647,7 +644,6 @@
         documentary: { label: normalizeVideoCategoryLabel('documentary'), items: allDoc },
         'music-video': { label: normalizeVideoCategoryLabel('music-video'), items: allMusic },
         wedding: { label: normalizeVideoCategoryLabel('wedding'), items: allWedding },
-        advert: { label: normalizeVideoCategoryLabel('advert'), items: allAdvert },
         church: { label: normalizeVideoCategoryLabel('church'), items: allChurch },
       },
       seriesMeta: {
@@ -940,7 +936,28 @@
       window.adaptVideoCategoryLayouts();
     }
   }
-
+function adaptVideoCategoryLayouts() {
+  const { overrides } = buildOverrides(getStore());
+  // Update both grid (vg_) and big video panels (g_vpanel_)
+  Object.keys(overrides)
+    .filter(key => key.startsWith('vg_') || key.startsWith('g_vpanel_'))
+    .forEach(key => {
+      const wrap = document.getElementById('mw-' + key);
+      if (!wrap) return;
+      const item = overrides[key] && overrides[key].item;
+      if (!item) return;
+      const mediaWrap = wrap.querySelector('.media-wrap');
+      if (!mediaWrap) return;
+      const src = item.thumb || (item.embedUrl ? item.embedUrl : '');
+      const type = (item.embedUrl && item.thumb) ? 'image' : item.type;
+      mediaWrap.dataset.mSrc = src;
+      mediaWrap.dataset.mType = type;
+      if (item.href) mediaWrap.dataset.mHref = item.href;
+      if (type === 'image') {
+        mediaWrap.style.backgroundImage = `url(${src})`;
+      }
+    });
+}
   function hydratePhotoPage() {
     const { overrides, counts, seriesMeta } = buildOverrides(getStore());
     const filterCounts = {
