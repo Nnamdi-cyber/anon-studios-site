@@ -363,6 +363,7 @@ if (window.AnonContent) {
   window.addEventListener(window.AnonContent.events.updated, () => {
     if (window.AnonContent.mergeIntoConfig) window.AnonContent.mergeIntoConfig(MEDIA_CONFIG);
     window.AnonContent.hydrateVideoPage();
+    if (typeof adaptVideoCategoryLayouts === 'function') adaptVideoCategoryLayouts();
   });
 }
 
@@ -460,7 +461,7 @@ function _createMediaEl(src, type, alt) {
       const playbackId = parts[parts.length - 1].split('.')[0];
       playUrl = 'https://stream.mux.com/' + playbackId + '/capped-1080p.mp4';
     }
-    el.src = playUrl; el.muted = true; el.loop = true;
+    el.src = playUrl; el.muted = true; el.loop = true; el.autoplay = true;
     el.playsInline = true; el.preload = 'none';
     el.setAttribute('aria-label', alt);
   } else {
