@@ -948,8 +948,9 @@ function adaptVideoCategoryLayouts() {
       if (!item) return;
       const mediaWrap = wrap.querySelector('.media-wrap');
       if (!mediaWrap) return;
-      const src = item.thumb || (item.embedUrl ? item.embedUrl : '');
-      const type = (item.embedUrl && item.thumb) ? 'image' : item.type;
+      const hasVideo = !!(item.src || item.sourceUrl);
+      const src = hasVideo ? (item.src || item.sourceUrl) : (item.thumb || item.embedUrl || '');
+      const type = hasVideo ? 'video' : (item.thumb ? 'image' : item.type);
       mediaWrap.dataset.mSrc = src;
       mediaWrap.dataset.mType = type;
       if (item.href) mediaWrap.dataset.mHref = item.href;

@@ -1389,11 +1389,11 @@ function createMediaEl(src, type, alt) {
       playUrl = 'https://stream.mux.com/' + playbackId + '/capped-1080p.mp4';
     }
     el.src = playUrl;
-    el.autoplay = true;
+    el.autoplay = false;
     el.muted = true;
     el.loop = true;
     el.playsInline = true;
-    el.preload = 'none'; // lazy â€” only load when in viewport
+    el.preload = 'none'; // lazy — only load when in viewport
     el.setAttribute('aria-label', alt);
   } else {
     el = document.createElement('img');
@@ -1435,7 +1435,7 @@ function mountMedia(wrap, src, type, alt) {
   }
 }
 
-/* â”€â”€ INTERSECTION OBSERVER â€” lazy load on viewport entry â”€â”€ */
+/* ── INTERSECTION OBSERVER — lazy load on viewport entry ── */
 const mediaObs = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
@@ -1446,6 +1446,22 @@ const mediaObs = new IntersectionObserver((entries) => {
     if (src && !wrap.dataset.loaded) {
       wrap.dataset.loaded = '1';
       mountMedia(wrap, src, type, alt);
+      if (type === 'video') {
+        const isAccordion = wrap.closest('#work .wi');
+        if (!isAccordion) {
+          const video = wrap.querySelector('video');
+          if (video) {
+            video.play().catch(() => {});
+          } else {
+            // If the element has not finished mounting, trigger on canplay
+            wrap.addEventListener('loadedmetadata', function playOnLoad() {
+              const innerVideo = wrap.querySelector('video');
+              if (innerVideo) innerVideo.play().catch(() => {});
+              wrap.removeEventListener('loadedmetadata', playOnLoad);
+            });
+          }
+        }
+      }
     }
     mediaObs.unobserve(wrap);
   });
@@ -1665,7 +1681,7 @@ if (workSection) {
   workObs.observe(workSection);
 }
 
-/* ══ WORK ITEMS MOBILE TAP ══ */
+/* ══ WORK ITEMS MOBILE TAP & DESKTOP ACCORDION AUDIO/VIDEO INTERACTIONS ══ */
 (function initWorkItemTapState(){
   const items = Array.from(document.querySelectorAll('#work .wi'));
   if (!items.length) return;
@@ -1674,19 +1690,69 @@ if (workSection) {
     return window.matchMedia('(max-width: 960px)').matches;
   }
 
+  // Play/pause accordion video helper
+  function syncAccordionVideoState(item, play) {
+    // Only target the large expanded body video element (.wi-media)
+    const largeWrap = item.querySelector('.wi-media .media-wrap');
+    if (!largeWrap) return;
+    const video = largeWrap.querySelector('video');
+    
+    // Ensure the small thumbnail video (.wi-thumb) is ALWAYS paused and never plays
+    const thumbWrap = item.querySelector('.wi-thumb .media-wrap');
+    if (thumbWrap) {
+      const thumbVideo = thumbWrap.querySelector('video');
+      if (thumbVideo) {
+        thumbVideo.pause();
+        thumbVideo.currentTime = 0;
+      }
+    }
+
+    if (video) {
+      if (play) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    }
+  }
+
   items.forEach((item) => {
     item.setAttribute('tabindex', '0');
+
+    // Desktop hover play triggers
+    item.addEventListener('mouseenter', () => {
+      if (isCompactViewport()) return;
+      syncAccordionVideoState(item, true);
+    });
+
+    item.addEventListener('mouseleave', () => {
+      if (isCompactViewport()) return;
+      syncAccordionVideoState(item, false);
+    });
+
+    // Mobile/Tablet tap play triggers
     item.addEventListener('pointerdown', () => {
       if (!isCompactViewport()) return;
       items.forEach((entry) => entry.classList.remove('touch-hover'));
       item.classList.add('touch-hover');
     });
+
     item.addEventListener('click', (event) => {
       if (!isCompactViewport()) return;
       if (event.target.closest('a, button')) return;
       const willOpen = !item.classList.contains('active');
-      items.forEach((entry) => entry.classList.remove('active'));
-      if (willOpen) item.classList.add('active');
+      
+      // Stop all videos first
+      items.forEach((entry) => {
+        entry.classList.remove('active');
+        syncAccordionVideoState(entry, false);
+      });
+
+      if (willOpen) {
+        item.classList.add('active');
+        syncAccordionVideoState(item, true);
+      }
     });
   });
 
@@ -1700,7 +1766,10 @@ if (workSection) {
   document.addEventListener('click', (event) => {
     if (!isCompactViewport()) return;
     if (event.target.closest('#work .wi')) return;
-    items.forEach((entry) => entry.classList.remove('active'));
+    items.forEach((entry) => {
+      entry.classList.remove('active');
+      syncAccordionVideoState(entry, false);
+    });
   });
 
   window.addEventListener('resize', () => {
@@ -1708,6 +1777,7 @@ if (workSection) {
       items.forEach((entry) => {
         entry.classList.remove('active');
         entry.classList.remove('touch-hover');
+        syncAccordionVideoState(entry, false);
       });
     }
   });

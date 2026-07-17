@@ -988,19 +988,18 @@ const VIDEO_LAYOUTS = [
 ];
 
 function _videoCfgFromItem(item){
-  const isImg = !!item.thumb;
   return {
-    src: isImg ? (item.thumb || '') : (item.src || ''),
-    sourceUrl:item.sourceUrl||item.src||'',
-    type: isImg ? 'image' : 'video',
-    alt:item.title||'',
-    thumb:item.thumb||'',
-    embedUrl:item.embedUrl||'',
-    videoProvider:item.videoProvider||'',
-    id:item.id||'',
-    title:item.title||'',
-    muxDataEnvKey:item.muxDataEnvKey||'',
-    category:item.category||''
+    src: item.src || item.sourceUrl || '',
+    sourceUrl: item.sourceUrl || item.src || '',
+    type: (item.src || item.sourceUrl) ? 'video' : (item.thumb ? 'image' : 'video'),
+    alt: item.title || '',
+    thumb: item.thumb || '',
+    embedUrl: item.embedUrl || '',
+    videoProvider: item.videoProvider || '',
+    id: item.id || '',
+    title: item.title || '',
+    muxDataEnvKey: item.muxDataEnvKey || '',
+    category: item.category || ''
   };
 }
 
