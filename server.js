@@ -144,6 +144,20 @@ function normalizeClientGallery(cg) {
     ipfsUrl: String(p.ipfsUrl || ''),
     size: Number(p.size || 0)
   })) : [];
+  
+  const videos = Array.isArray(cg.videos) ? cg.videos.map(v => ({
+    id: String(v.id || Math.random().toString(36).substring(2, 9)),
+    title: String(v.title || ''),
+    description: String(v.description || ''),
+    speakers: String(v.speakers || ''),
+    duration: String(v.duration || ''),
+    videoProvider: String(v.videoProvider || 'direct'),
+    fileCode: String(v.fileCode || ''),
+    src: String(v.src || ''),
+    downloadUrl: String(v.downloadUrl || ''),
+    thumb: String(v.thumb || '')
+  })) : [];
+
   return {
     id: String(cg.id || Math.random().toString(36).substring(2, 9)),
     name: String(cg.name || '')
@@ -155,7 +169,12 @@ function normalizeClientGallery(cg) {
     date: String(cg.date || '').trim(),
     password: String(cg.password || '').trim(),
     coverPhotoId: String(cg.coverPhotoId || '').trim(),
-    photos: photos
+    galleryType: String(cg.galleryType || 'photos').trim(), // 'photos' | 'videos' | 'mixed'
+    logo1: String(cg.logo1 || '').trim(),
+    logo2: String(cg.logo2 || '').trim(),
+    customColor: String(cg.customColor || '').trim(),
+    photos: photos,
+    videos: videos
   };
 }
 

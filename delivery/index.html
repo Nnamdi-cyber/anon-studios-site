@@ -38,7 +38,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .del-meta{display:flex;flex-wrap:wrap;gap:24px 48px;font-family:var(--mono);font-size:11px;color:var(--w60)}
 .del-meta span em{color:var(--w30);font-style:normal}
 
-/* GRID */
+/* PHOTO GRID */
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-bottom:60px}
 .photo-card{position:relative;aspect-ratio:3/4;border-radius:4px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:rgba(255,255,255,.01);transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
 .photo-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.6)}
@@ -118,10 +118,61 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 .spinner{width:36px;height:36px;border:2px solid rgba(255,255,255,.05);border-top:2px solid var(--gold);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
+/* DUAL LOGO INTRO OVERLAY */
+.intro-screen{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;align-items:center;justify-content:center;transition:opacity 0.8s cubic-bezier(0.85, 0, 0.15, 1);overflow:hidden;}
+.intro-screen.fade-out{opacity:0;pointer-events:none;}
+.intro-container{display:flex;align-items:center;justify-content:center;gap:40px;position:relative;width:100%;height:100%;}
+.intro-logo-wrap{display:flex;align-items:center;justify-content:center;width:160px;height:160px;transition:transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s ease;opacity:0;}
+.intro-logo-wrap img{max-width:100%;max-height:100%;object-fit:contain;}
+.intro-divider{width:1px;height:80px;background:var(--line);opacity:0;transition:opacity 0.8s ease;}
+
+/* CINEMATIC THEATER VIDEO SECTION */
+.video-theater-layout{display:grid;grid-template-columns:1.8fr 1.2fr;gap:40px;margin-bottom:60px;align-items:start;}
+.theater-player-container{background:var(--bg2);border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative;box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.8);transition:all 0.3s ease;}
+
+/* STICKY MINI-PLAYER CODE FOR MOBILE/SCROLL */
+.theater-player-container.sticky-pip {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  z-index: 600;
+  border-color: var(--gold);
+  animation: pipSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes pipSlideIn {
+  from { transform: translateY(40px) scale(0.9); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.theater-iframe-wrap{width:100%;aspect-ratio:16/9;background:#000;position:relative;}
+.theater-iframe-wrap iframe, .theater-iframe-wrap video{position:absolute;inset:0;width:100%;height:100%;border:0;}
+.theater-details{padding:28px;}
+.theater-speakers{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.theater-title{font-size:clamp(20px, 3.5vw, 32px);font-weight:600;color:var(--w);line-height:1.2;margin-bottom:12px;}
+.theater-desc{font-size:14px;color:var(--w60);line-height:1.6;margin-bottom:20px;}
+.theater-actions{display:flex;gap:12px;flex-wrap:wrap;}
+
+/* VIDEO TRACKS ROW */
+.tracks-sidebar-title{font-family:var(--display);font-size:24px;letter-spacing:2px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+.tracks-list{display:grid;gap:12px;max-height:640px;overflow-y:auto;padding-right:8px;}
+.track-card{display:flex;gap:16px;padding:12px;background:var(--bg2);border:1px solid var(--line);border-radius:4px;cursor:pointer;transition:background 0.25s, border-color 0.25s;}
+.track-card:hover{background:rgba(255,255,255,0.02);border-color:var(--gold);}
+.track-card.active{border-color:var(--gold);background:var(--golddim);}
+.track-thumb{width:100px;aspect-ratio:16/9;background:var(--bg);border-radius:2px;overflow:hidden;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;}
+.track-thumb img{width:100%;height:100%;object-fit:cover;}
+.track-thumb-icon{position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(8,8,7,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;}
+.track-card.active .track-thumb-icon{background:var(--gold);color:var(--bg);border-color:var(--gold);}
+.track-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;}
+.track-meta{font-family:var(--mono);font-size:8px;color:var(--w30);letter-spacing:1px;text-transform:uppercase;}
+.track-title{font-size:12px;font-weight:600;color:var(--w);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:4px 0;}
+.track-speakers-name{font-size:10px;color:var(--w60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
 @media(max-width:960px){
   nav{padding:16px 24px}
   .delivery-container{padding:110px 24px 120px}
   .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .video-theater-layout{grid-template-columns:1fr;gap:32px;}
 }
 @media(max-width:600px){
   nav{padding:14px 20px}
@@ -131,6 +182,11 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   .floating-bar{width:92%;bottom:16px;padding:8px 16px}
   .download-btn{padding:10px 16px;font-size:9px;letter-spacing:1px}
   .lb-prev{left:8px}.lb-next{right:8px}
+  .theater-player-container.sticky-pip {
+    width: 200px;
+    bottom: 16px;
+    right: 16px;
+  }
 }
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
@@ -143,6 +199,19 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 
 <div class="page-loader" id="page-loader">
   <div class="spinner"></div>
+</div>
+
+<!-- DUAL LOGO INTRO SCREEN -->
+<div class="intro-screen" id="intro-screen" style="display:none;">
+  <div class="intro-container">
+    <div class="intro-logo-wrap" id="intro-l1">
+      <img id="intro-img-1" src="" alt="Brand Logo 1">
+    </div>
+    <div class="intro-divider" id="intro-divider"></div>
+    <div class="intro-logo-wrap" id="intro-l2">
+      <img id="intro-img-2" src="" alt="Brand Logo 2">
+    </div>
+  </div>
 </div>
 
 <!-- NAV -->
@@ -207,7 +276,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   <header class="del-header">
     <div class="del-tagline" id="del-tagline">Client Archive</div>
     <h1 class="del-title" id="del-title">Client Delivery</h1>
-    <div class="del-meta">
+    <div class="del-meta" id="del-meta-section">
       <span id="meta-client">Client: <em>Loading...</em></span>
       <span id="meta-date">Shoot Date: <em>Loading...</em></span>
       <span id="meta-count">Photos: <em>Loading...</em></span>
@@ -215,8 +284,42 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
     </div>
   </header>
 
-  <div class="gallery-grid" id="gallery-grid">
-    <!-- Rendered dynamically -->
+  <!-- DYNAMIC RENDER SECTIONS -->
+  <div id="photo-delivery-section" style="display:none;">
+    <div class="gallery-grid" id="gallery-grid">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <div id="video-delivery-section" style="display:none;">
+    <div class="video-theater-layout">
+      <!-- ACTIVE THEATER VIDEO CONTAINER -->
+      <div class="theater-column">
+        <div class="theater-player-container" id="theater-player-container">
+          <div class="theater-iframe-wrap" id="theater-iframe-wrap">
+            <!-- Video iframe/element loaded dynamically -->
+          </div>
+          <div class="theater-details">
+            <div class="theater-speakers" id="theater-speakers">SESSION SPEAKER</div>
+            <h2 class="theater-title" id="theater-title">Selected Session Title</h2>
+            <p class="theater-desc" id="theater-desc">Widescreen high quality playback content detailed description.</p>
+            <div class="theater-actions">
+              <a class="btn btn-primary" id="theater-download-btn" href="#" target="_blank">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Download Video File
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- VIDEO SESSIONS LIST -->
+      <div class="tracks-column">
+        <h3 class="tracks-sidebar-title">Sessions & Plays</h3>
+        <div class="tracks-list" id="tracks-list">
+          <!-- Playlist track rows rendered dynamically -->
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -288,6 +391,7 @@ function loadJSZip() {
 
 // State
 let galleryData = null;
+let activeVideoIndex = 0;
 const selectedIds = new Set();
 let lightboxIndex = -1;
 let downloadCanceled = false;
@@ -324,6 +428,10 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+function escapeHtml(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // Parse gallery name slug from path
 const pathParts = window.location.pathname.split('/');
 const galleryName = pathParts.pop() || pathParts.pop(); // handles trailing slashes
@@ -332,7 +440,6 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
   ? 'http://localhost:3000'
   : 'https://anon-studios-site.onrender.com';
 
-// Fetch gallery data
 // Fetch gallery data
 async function init() {
   try {
@@ -345,9 +452,16 @@ async function init() {
       document.getElementById('passcode-client-title').textContent = galleryData.client || 'Client Gallery';
       document.getElementById('passcode-date-desc').textContent = `${galleryData.description || 'Private Archive'} ${galleryData.date ? '— ' + galleryData.date : ''}`;
       
+      let lockCover = '';
       if (galleryData.coverPhoto && galleryData.coverPhoto.cloudinaryUrl) {
+        lockCover = galleryData.coverPhoto.cloudinaryUrl;
+      } else if (galleryData.logo1) {
+        lockCover = galleryData.logo1;
+      }
+      
+      if (lockCover) {
         const pImg = document.getElementById('passcode-cover-img');
-        pImg.src = galleryData.coverPhoto.cloudinaryUrl;
+        pImg.src = lockCover;
         pImg.onload = () => { pImg.style.opacity = '0.6'; };
         document.getElementById('passcode-cover-preview').style.display = 'block';
       }
@@ -358,7 +472,7 @@ async function init() {
       document.getElementById('floating-bar').style.display = 'none';
     } else {
       document.getElementById('passcode-wall').style.display = 'none';
-      renderGallery();
+      triggerIntroSequence();
     }
   } catch (err) {
     document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px"><h2 style="font-family:var(--display);letter-spacing:1px;font-size:32px">Gallery Not Found</h2><p style="font-family:var(--mono);font-size:11px;color:var(--w30)">The link may be incorrect or the delivery period has expired.</p><a href="../" style="font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--gold);border:1px solid var(--line);padding:8px 16px;border-radius:4px">Return Home</a></div>`;
@@ -367,51 +481,78 @@ async function init() {
   }
 }
 
-// Submit passcode
-async function submitPasscode() {
-  const passcode = document.getElementById('passcode-input').value.trim();
-  const errorDiv = document.getElementById('passcode-error');
-  if (!passcode) return;
-
-  errorDiv.style.display = 'none';
-  loader.classList.remove('hidden');
-
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/client-gallery/public/${galleryName}/unlock`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ password: passcode })
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Incorrect PIN. Please try again.');
-      } else {
-        throw new Error('Failed to unlock gallery. Please try again.');
-      }
-    }
-
-    const data = await response.json();
-    galleryData = data.gallery;
-    
-    const wall = document.getElementById('passcode-wall');
-    wall.style.transition = 'opacity 0.6s ease';
-    wall.style.opacity = '0';
+// Split Intro Sequence
+function triggerIntroSequence() {
+  const intro = document.getElementById('intro-screen');
+  const l1 = document.getElementById('intro-l1');
+  const l2 = document.getElementById('intro-l2');
+  const div = document.getElementById('intro-divider');
+  
+  const logo1 = galleryData.logo1 || '';
+  const logo2 = galleryData.logo2 || '';
+  
+  if (logo1 && logo2) {
+    // 2 logos: Split screen intro
+    document.getElementById('intro-img-1').src = logo1;
+    document.getElementById('intro-img-2').src = logo2;
+    intro.style.display = 'flex';
     
     setTimeout(() => {
-      wall.style.display = 'none';
-      document.querySelector('.delivery-container').style.display = 'block';
-      document.getElementById('floating-bar').style.display = 'flex';
-      renderGallery();
-      loader.classList.add('hidden');
-    }, 600);
+      l1.style.opacity = '1';
+      l2.style.opacity = '1';
+      div.style.opacity = '1';
+    }, 200);
+    
+    setTimeout(() => {
+      l1.style.transform = 'translateX(-30px)';
+      l2.style.transform = 'translateX(30px)';
+    }, 1200);
+    
+    setTimeout(() => {
+      intro.classList.add('fade-out');
+      startDisplay();
+    }, 3200);
+  } else if (logo1) {
+    // 1 logo: Single logo fade intro
+    document.getElementById('intro-img-1').src = logo1;
+    l2.style.display = 'none';
+    div.style.display = 'none';
+    intro.style.display = 'flex';
+    
+    setTimeout(() => {
+      l1.style.opacity = '1';
+    }, 200);
+    
+    setTimeout(() => {
+      intro.classList.add('fade-out');
+      startDisplay();
+    }, 2400);
+  } else {
+    // No logos: Skip intro
+    startDisplay();
+  }
+}
 
-  } catch (err) {
-    errorDiv.textContent = err.message;
-    errorDiv.style.display = 'block';
-    loader.classList.add('hidden');
+function startDisplay() {
+  document.querySelector('.delivery-container').style.display = 'block';
+  applyBrandingTheme();
+  renderGallery();
+}
+
+// Color scanner override implementation
+function applyBrandingTheme() {
+  let themeColor = galleryData.customColor || '';
+  
+  if (!themeColor && galleryData.logo1) {
+    // Basic heuristics: TEDx events get signature RED #EB0028
+    if (galleryData.client.toLowerCase().includes('tedx')) {
+      themeColor = '#EB0028';
+    }
+  }
+  
+  if (themeColor) {
+    document.documentElement.style.setProperty('--gold', themeColor);
+    document.documentElement.style.setProperty('--golddim', themeColor + '15');
   }
 }
 
@@ -423,10 +564,11 @@ function scrollToGallery() {
 function renderGallery() {
   document.title = `${galleryData.client} Delivery — Anon Studios`;
   
-  let coverPhoto = galleryData.photos.find(p => p.id === galleryData.coverPhotoId) || galleryData.photos[0];
+  // Try to find cover photo
+  let coverPhoto = galleryData.photos && galleryData.photos.find(p => p.id === galleryData.coverPhotoId) || galleryData.photos?.[0];
   const coverUrl = coverPhoto ? coverPhoto.cloudinaryUrl : '';
   
-  if (coverUrl) {
+  if (coverUrl && galleryData.galleryType !== 'videos') {
     const heroImg = document.getElementById('hero-cover-img');
     heroImg.src = coverUrl;
     heroImg.onload = () => {
@@ -438,7 +580,7 @@ function renderGallery() {
     document.getElementById('hero-desc').textContent = galleryData.description || 'Private Shoot Archive';
     document.getElementById('hero-meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
     document.getElementById('hero-meta-date').innerHTML = `Date: <em>${galleryData.date || 'N/A'}</em>`;
-    document.getElementById('hero-meta-count').innerHTML = `Photos: <em>${galleryData.photos.length} works</em>`;
+    document.getElementById('hero-meta-count').innerHTML = `Photos: <em>${galleryData.photos ? galleryData.photos.length : 0} works</em>`;
     
     document.getElementById('cover-hero').style.display = 'block';
   } else {
@@ -450,13 +592,38 @@ function renderGallery() {
   document.getElementById('meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
   document.getElementById('meta-date').innerHTML = `Shoot Date: <em>${galleryData.date || 'N/A'}</em>`;
   
-  const totalSize = (galleryData.photos || []).reduce((acc, p) => acc + (p.size || 0), 0);
-  document.getElementById('meta-count').innerHTML = `Photos: <em>${galleryData.photos.length} works</em>`;
-  document.getElementById('meta-size').innerHTML = `Total Size: <em>${formatBytes(totalSize)}</em>`;
+  const gType = galleryData.galleryType || 'photos';
   
+  if (gType === 'photos' || gType === 'mixed') {
+    document.getElementById('photo-delivery-section').style.display = 'block';
+    
+    const photoCount = galleryData.photos ? galleryData.photos.length : 0;
+    const totalSize = (galleryData.photos || []).reduce((acc, p) => acc + (p.size || 0), 0);
+    document.getElementById('meta-count').innerHTML = `Photos: <em>${photoCount} works</em>`;
+    document.getElementById('meta-size').innerHTML = `Total Size: <em>${formatBytes(totalSize)}</em>`;
+    
+    renderPhotoGrid();
+  }
+  
+  if (gType === 'videos' || gType === 'mixed') {
+    document.getElementById('video-delivery-section').style.display = 'block';
+    const videoCount = galleryData.videos ? galleryData.videos.length : 0;
+    
+    if (gType === 'videos') {
+      document.getElementById('meta-count').innerHTML = `Videos: <em>${videoCount} Sessions</em>`;
+      document.getElementById('meta-size').innerHTML = `Format: <em>1080p stream + direct download</em>`;
+      document.getElementById('floating-bar').style.display = 'none';
+    }
+    
+    renderVideoTracks();
+  }
+}
+
+// RENDER PHOTO LIST
+function renderPhotoGrid() {
   grid.innerHTML = '';
   
-  if (!galleryData.photos.length) {
+  if (!galleryData.photos || !galleryData.photos.length) {
     grid.innerHTML = `<div style="grid-column: 1/-1; padding: 100px 0; text-align: center; font-family: var(--mono); color: var(--w30); font-size: 11px;">This gallery contains no photos yet.</div>`;
     return;
   }
@@ -482,29 +649,137 @@ function renderGallery() {
       </div>
     `;
     
-    // Lazy loaded transitions
     const img = card.querySelector('img');
     img.onload = () => img.classList.add('loaded');
     if (img.complete) img.classList.add('loaded');
     
-    // Select Toggle on checkbox click
     card.querySelector('.card-select').addEventListener('click', (e) => {
       e.stopPropagation();
       toggleSelect(photo.id);
     });
     
-    // Direct single photo download
     card.querySelector('.card-download').addEventListener('click', (e) => {
       e.stopPropagation();
       downloadSinglePhoto(photo);
     });
     
-    // Lightbox open on card body click
     card.addEventListener('click', () => {
       openLightbox(idx);
     });
     
     grid.appendChild(card);
+  });
+}
+
+// RENDER VIDEO SESSIONS
+function renderVideoTracks() {
+  const tracksList = document.getElementById('tracks-list');
+  if (!tracksList) return;
+  
+  tracksList.innerHTML = '';
+  
+  if (!galleryData.videos || !galleryData.videos.length) {
+    tracksList.innerHTML = `<div style="padding: 40px 0; text-align: center; font-family: var(--mono); color: var(--w30); font-size: 11px;">This event has no video records yet.</div>`;
+    return;
+  }
+  
+  galleryData.videos.forEach((video, idx) => {
+    const card = document.createElement('div');
+    card.className = `track-card ${idx === activeVideoIndex ? 'active' : ''}`;
+    card.dataset.index = idx;
+    
+    const poster = video.thumb || galleryData.coverPhoto?.cloudinaryUrl || (galleryData.photos?.[0]?.cloudinaryUrl) || '';
+    
+    card.innerHTML = `
+      <div class="track-thumb">
+        ${poster ? `<img src="${poster}">` : ''}
+        <div class="track-thumb-icon">${idx === activeVideoIndex ? '▶' : '<span></span>'}</div>
+      </div>
+      <div class="track-info">
+        <div>
+          <div class="track-meta">${video.duration || 'Session'}</div>
+          <div class="track-title">${escapeHtml(video.title)}</div>
+        </div>
+        <div class="track-speakers-name">${escapeHtml(video.speakers || 'Anon Studios Film')}</div>
+      </div>
+    `;
+    
+    card.addEventListener('click', () => {
+      playVideoTrack(idx);
+    });
+    
+    tracksList.appendChild(card);
+  });
+  
+  playVideoTrack(activeVideoIndex);
+  initPipStickyScroll();
+}
+
+function playVideoTrack(index) {
+  activeVideoIndex = index;
+  const video = galleryData.videos[index];
+  if (!video) return;
+  
+  document.querySelectorAll('.track-card').forEach((card, idx) => {
+    if (idx === index) {
+      card.classList.add('active');
+      card.querySelector('.track-thumb-icon').textContent = '▶';
+    } else {
+      card.classList.remove('active');
+      card.querySelector('.track-thumb-icon').innerHTML = '<span></span>';
+    }
+  });
+  
+  document.getElementById('theater-speakers').textContent = video.speakers || 'ANON STUDIOS SESSION';
+  document.getElementById('theater-title').textContent = video.title;
+  document.getElementById('theater-desc').textContent = video.description || 'No session details provided.';
+  
+  const playerWrap = document.getElementById('theater-iframe-wrap');
+  let playerHtml = '';
+  
+  if (video.videoProvider === 'mux') {
+    playerHtml = `<iframe src="https://stream.mux.com/${video.fileCode}.m3u8" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+  } else if (video.videoProvider === 'doodstream') {
+    playerHtml = `<iframe src="https://dood.yt/e/${video.fileCode}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+  } else {
+    const rawCode = video.fileCode || video.src;
+    if (rawCode.includes('youtube.com') || rawCode.includes('youtu.be')) {
+      let ytId = '';
+      if (rawCode.includes('v=')) ytId = rawCode.split('v=')[1].split('&')[0];
+      else ytId = rawCode.split('/').pop();
+      playerHtml = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=0&rel=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+    } else if (rawCode.includes('vimeo.com')) {
+      const vimeoId = rawCode.split('/').pop();
+      playerHtml = `<iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=0" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+    } else {
+      playerHtml = `<video src="${rawCode}" controls poster="${video.thumb || ''}" style="width:100%; height:100%; object-fit:cover;"></video>`;
+    }
+  }
+  
+  playerWrap.innerHTML = playerHtml;
+  
+  const dlBtn = document.getElementById('theater-download-btn');
+  if (video.downloadUrl || video.src) {
+    dlBtn.href = video.downloadUrl || video.src;
+    dlBtn.style.display = 'inline-flex';
+  } else {
+    dlBtn.style.display = 'none';
+  }
+}
+
+function initPipStickyScroll() {
+  const container = document.getElementById('theater-player-container');
+  if (!container) return;
+  
+  window.addEventListener('scroll', () => {
+    const containerTop = container.parentElement.offsetTop;
+    const scrollY = window.scrollY;
+    
+    if (scrollY > (containerTop + 450)) {
+      container.classList.add('sticky-pip');
+    } else {
+      container.classList.remove('sticky-pip');
+    }
   });
 }
 
@@ -612,7 +887,6 @@ document.addEventListener('keydown', (e) => {
 
 // Array Buffer Fetch helper supporting fallback IPFS gateways
 async function fetchWithFallback(photo, onProgress) {
-  // Try dedicated gateway first if present in URL, otherwise fallback to Cloudflare and Public gateways
   const gateways = [
     photo.ipfsUrl,
     `https://cloudflare-ipfs.com/ipfs/${photo.ipfsCid}`,
@@ -665,14 +939,12 @@ downloadBtn.addEventListener('click', async () => {
   progressLabel.textContent = 'Loading packages...';
   
   try {
-    // 1. Load JSZip
     await loadJSZip();
     const zip = new JSZip();
     
     const photosToDownload = galleryData.photos.filter(p => selectedIds.has(p.id));
     const totalPhotos = photosToDownload.length;
     
-    // 2. Fetch photos in blocks/files sequentially
     for (let i = 0; i < totalPhotos; i++) {
       if (downloadCanceled) throw new Error('Canceled');
       const photo = photosToDownload[i];
@@ -689,16 +961,15 @@ downloadBtn.addEventListener('click', async () => {
         progressStats.textContent = `${Math.round(currentTotalPercent)}% completed`;
       });
       
-      // Add extension to filename if missing
       let ext = photo.format || 'jpg';
-      if (!photo.title.toLowerCase().endsWith('.' + ext)) {
-        photo.title = photo.title + '.' + ext;
+      let titleWithExt = photo.title;
+      if (!titleWithExt.toLowerCase().endsWith('.' + ext)) {
+        titleWithExt = titleWithExt + '.' + ext;
       }
       
-      zip.file(photo.title, blob);
+      zip.file(titleWithExt, blob);
     }
     
-    // 3. Generate ZIP
     if (downloadCanceled) throw new Error('Canceled');
     progressLabel.textContent = 'Generating zip archive...';
     progressBarFill.style.width = '98%';
@@ -709,7 +980,6 @@ downloadBtn.addEventListener('click', async () => {
       progressBarFill.style.width = `${98 + (metadata.percent / 100) * 2}%`;
     });
     
-    // 4. Download zip
     const link = document.createElement('a');
     link.href = URL.createObjectURL(zipBlob);
     link.download = `${galleryData.name}-delivery.zip`;
@@ -717,7 +987,6 @@ downloadBtn.addEventListener('click', async () => {
     link.click();
     document.body.removeChild(link);
     
-    // Clear overlay
     setTimeout(() => {
       progressOverlay.classList.remove('active');
     }, 1000);

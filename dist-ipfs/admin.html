@@ -380,7 +380,7 @@ body.login-active #pacScroll {
       <input type="hidden" id="cg-id">
       <input type="hidden" id="cg-cover-photo-id">
       
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
         <div class="form-group">
           <label class="form-label">Client Name</label>
           <input class="form-input" id="cg-client" required placeholder="e.g., Adaeze & Chidi">
@@ -389,6 +389,15 @@ body.login-active #pacScroll {
         <div class="form-group">
           <label class="form-label">URL Name (Slug)</label>
           <input class="form-input" id="cg-name" required placeholder="e.g., adaeze-chidi-wedding">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gallery Type</label>
+          <select class="mc-select" id="cg-gallery-type" onchange="toggleGalleryTypeSection()">
+            <option value="photos">Photos Only</option>
+            <option value="videos">Videos Only</option>
+            <option value="mixed">Mixed (Photos & Videos)</option>
+          </select>
         </div>
       </div>
       
@@ -403,41 +412,68 @@ body.login-active #pacScroll {
           <input class="form-input" id="cg-date" placeholder="e.g., October 12, 2025">
         </div>
       </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
+        <div class="form-group">
+          <label class="form-label">Primary Brand Logo (URL)</label>
+          <input class="form-input" id="cg-logo1" placeholder="e.g., https://example.com/logo.png">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secondary Brand Logo (URL — Optional)</label>
+          <input class="form-input" id="cg-logo2" placeholder="e.g., for TedxUnilag split-screen">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Custom Accent Color (Hex/CSS)</label>
+          <input class="form-input" id="cg-custom-color" placeholder="e.g., #EB0028 or leave blank to auto-scan logo">
+        </div>
+      </div>
       
       <div class="form-group">
         <label class="form-label">Password PIN Lock (Optional — clients must enter this PIN to view/download)</label>
         <input class="form-input" id="cg-password" placeholder="e.g., 1234 or leave blank for open access">
       </div>
       
-      <div class="form-group">
-        <label class="form-label">Upload High-Res Photos (Auto IPFS + Cloudinary Dual Upload)</label>
-        <div id="cg-dropzone" style="border:2px dashed var(--line); border-radius:6px; padding:32px 20px; text-align:center; background:rgba(255,255,255,0.01); cursor:pointer; transition:border-color .3s, background-color .3s;">
-          <svg viewBox="0 0 24 24" style="width:32px; height:32px; fill:none; stroke:var(--w30); stroke-width:2; margin:0 auto 12px; display:block;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-          <div style="font-family:var(--sans); font-size:13px; color:var(--w60); margin-bottom:4px;">Drag & drop images here or <span style="color:var(--gold); text-decoration:underline;">browse files</span></div>
-          <div style="font-family:var(--mono); font-size:9px; color:var(--w30); text-transform:uppercase;">Supports JPEG, PNG, WEBP (Dual Upload to Cloudinary & IPFS)</div>
-          <input type="file" id="cg-upload-files" multiple accept="image/*" style="display:none;">
+      <div id="cg-photo-section">
+        <div class="form-group">
+          <label class="form-label">Upload High-Res Photos (Auto IPFS + Cloudinary Dual Upload)</label>
+          <div id="cg-dropzone" style="border:2px dashed var(--line); border-radius:6px; padding:32px 20px; text-align:center; background:rgba(255,255,255,0.01); cursor:pointer; transition:border-color .3s, background-color .3s;">
+            <svg viewBox="0 0 24 24" style="width:32px; height:32px; fill:none; stroke:var(--w30); stroke-width:2; margin:0 auto 12px; display:block;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <div style="font-family:var(--sans); font-size:13px; color:var(--w60); margin-bottom:4px;">Drag & drop images here or <span style="color:var(--gold); text-decoration:underline;">browse files</span></div>
+            <div style="font-family:var(--mono); font-size:9px; color:var(--w30); text-transform:uppercase;">Supports JPEG, PNG, WEBP (Dual Upload to Cloudinary & IPFS)</div>
+            <input type="file" id="cg-upload-files" multiple accept="image/*" style="display:none;">
+          </div>
+          
+          <div id="cg-upload-queue-container" style="display:none; margin-top:16px; border:1px solid var(--line); border-radius:4px; padding:12px; background:rgba(0,0,0,0.2)">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-family:var(--mono); font-size:9px; text-transform:uppercase; color:var(--w60)">Upload Queue</span>
+              <span id="cg-upload-queue-badge" style="font-family:var(--mono); font-size:9px; color:var(--gold)">0%</span>
+            </div>
+            <div class="progress-bar-wrap" style="height:6px; margin-bottom:12px;">
+              <div class="progress-bar-fill" id="cg-upload-progress-fill" style="width:0%"></div>
+            </div>
+            <div id="cg-upload-queue-list" style="display:grid; gap:8px; max-height:120px; overflow-y:auto; font-family:var(--mono); font-size:9px; color:var(--w60);">
+              <!-- Dynamic upload list items -->
+            </div>
+          </div>
+          
+          <div class="note" id="cg-upload-status" style="margin-top:5px; font-family:var(--mono); font-size:9px; color:var(--w30)">No active uploads.</div>
         </div>
         
-        <div id="cg-upload-queue-container" style="display:none; margin-top:16px; border:1px solid var(--line); border-radius:4px; padding:12px; background:rgba(0,0,0,0.2)">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-family:var(--mono); font-size:9px; text-transform:uppercase; color:var(--w60)">Upload Queue</span>
-            <span id="cg-upload-queue-badge" style="font-family:var(--mono); font-size:9px; color:var(--gold)">0%</span>
-          </div>
-          <div class="progress-bar-wrap" style="height:6px; margin-bottom:12px;">
-            <div class="progress-bar-fill" id="cg-upload-progress-fill" style="width:0%"></div>
-          </div>
-          <div id="cg-upload-queue-list" style="display:grid; gap:8px; max-height:120px; overflow-y:auto; font-family:var(--mono); font-size:9px; color:var(--w60);">
-            <!-- Dynamic upload list items -->
+        <div class="form-group">
+          <label class="form-label">Gallery Images (<span id="cg-photo-count">0</span> photos)</label>
+          <div id="cg-photo-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; max-height:300px; overflow-y:auto; border:1px solid var(--line); padding:12px; border-radius:4px; background:rgba(0,0,0,0.2)">
+            <!-- List of photos with title edit, move, delete and cover buttons -->
           </div>
         </div>
-        
-        <div class="note" id="cg-upload-status" style="margin-top:5px; font-family:var(--mono); font-size:9px; color:var(--w30)">No active uploads.</div>
       </div>
-      
-      <div class="form-group">
-        <label class="form-label">Gallery Images (<span id="cg-photo-count">0</span> photos)</label>
-        <div id="cg-photo-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; max-height:300px; overflow-y:auto; border:1px solid var(--line); padding:12px; border-radius:4px; background:rgba(0,0,0,0.2)">
-          <!-- List of photos with title edit, move, delete and cover buttons -->
+
+      <div id="cg-video-section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <label class="form-label" style="margin-bottom:0;">Event Video Tracks / Sessions</label>
+          <button type="button" class="btn btn-secondary" onclick="addNewVideoTrackRow()" style="font-size:8px; padding:6px 12px; height:auto; margin:0;">+ Add Video Session</button>
+        </div>
+        <div id="cg-video-list" style="display:grid; gap:16px; max-height:380px; overflow-y:auto; border:1px solid var(--line); padding:16px; border-radius:4px; background:rgba(0,0,0,0.2)">
+          <!-- Dynamic video list items form inputs -->
         </div>
       </div>
       
@@ -1889,20 +1925,25 @@ function renderClientGalleries() {
   }
 
   state.clientGalleries.forEach(gallery => {
-    let coverUrl = '';
-    const coverPhoto = gallery.photos.find(p => p.id === gallery.coverPhotoId) || gallery.photos[0];
-    if (coverPhoto) {
-      coverUrl = coverPhoto.cloudinaryUrl;
+    let coverUrl = gallery.logo1 || '';
+    if (!coverUrl) {
+      const coverPhoto = gallery.photos && gallery.photos.find(p => p.id === gallery.coverPhotoId) || gallery.photos?.[0];
+      if (coverPhoto) {
+        coverUrl = coverPhoto.cloudinaryUrl;
+      }
     }
 
     const totalSize = (gallery.photos || []).reduce((acc, p) => acc + (p.size || 0), 0);
+    const photoCount = gallery.photos ? gallery.photos.length : 0;
+    const videoCount = gallery.videos ? gallery.videos.length : 0;
+    const typeLabel = gallery.galleryType === 'videos' ? 'Videos' : (gallery.galleryType === 'mixed' ? 'Mixed' : 'Photos');
 
     const card = document.createElement('div');
     card.className = 'media-card';
     card.style = 'display:flex; align-items:center; gap:24px; padding:18px; border:1px solid var(--line); border-radius:6px; background:var(--bg2); margin-bottom:12px; flex-wrap:wrap;';
     card.innerHTML = `
-      <div style="width: 100px; height: 100px; border-radius: 4px; overflow:hidden; background:rgba(255,255,255,0.02); flex-shrink:0;">
-        ${coverUrl ? `<img src="${coverUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--w30); font-family:var(--mono); font-size:10px;">No Cover</div>`}
+      <div style="width: 100px; height: 100px; border-radius: 4px; overflow:hidden; background:rgba(255,255,255,0.02); flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:10px;">
+        ${coverUrl ? `<img src="${coverUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--w30); font-family:var(--mono); font-size:10px;">No Cover</div>`}
       </div>
       <div style="flex:1; min-width:300px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
@@ -1913,7 +1954,7 @@ function renderClientGalleries() {
           <div style="display:flex; align-items:center; gap:8px;">
             ${gallery.password ? `<span style="font-family:var(--mono); font-size:8px; text-transform:uppercase; color:var(--gold); border:1px solid var(--gold); padding:2px 6px; border-radius:3px;">🔒 Locked</span>` : ''}
             <span style="font-family:var(--mono); font-size:9px; text-transform:uppercase; color:var(--w30); border:1px solid var(--line); padding:4px 8px; border-radius:3px;">
-              ${gallery.photos.length} Photos (${formatBytes(totalSize)})
+              ${typeLabel} (${gallery.galleryType === 'videos' ? `${videoCount} Videos` : (gallery.galleryType === 'mixed' ? `${photoCount} Ph / ${videoCount} Vid` : `${photoCount} Photos`)})
             </span>
           </div>
         </div>
@@ -1940,6 +1981,124 @@ function copyClientLink(name) {
     .catch(() => showToast('Failed to copy link', 'error'));
 }
 
+let currentGalleryPhotos = [];
+let currentGalleryVideos = [];
+let uploadQueue = [];
+let activeUploadCount = 0;
+const MAX_CONCURRENT_UPLOADS = 3;
+
+function toggleGalleryTypeSection() {
+  const type = document.getElementById('cg-gallery-type').value;
+  const photoSec = document.getElementById('cg-photo-section');
+  const videoSec = document.getElementById('cg-video-section');
+  
+  if (type === 'photos') {
+    photoSec.style.display = 'block';
+    videoSec.style.display = 'none';
+  } else if (type === 'videos') {
+    photoSec.style.display = 'none';
+    videoSec.style.display = 'block';
+  } else {
+    photoSec.style.display = 'block';
+    videoSec.style.display = 'block';
+  }
+}
+
+function addNewVideoTrackRow(data = null) {
+  const list = document.getElementById('cg-video-list');
+  if (!list) return;
+
+  const trackId = data && data.id ? data.id : 'vt-' + Math.random().toString(36).substring(2, 9);
+  const row = document.createElement('div');
+  row.className = 'cg-video-row';
+  row.dataset.id = trackId;
+  row.style = 'border:1px solid var(--line); border-radius:4px; padding:12px; background:rgba(0,0,0,0.15); display:grid; gap:10px; position:relative;';
+  
+  row.innerHTML = `
+    <button type="button" onclick="this.closest('.cg-video-row').remove()" style="position:absolute; top:8px; right:8px; background:transparent; border:none; color:var(--red); font-size:12px; cursor:pointer;">✕ Remove</button>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Session Title / Track Name</label>
+        <input class="form-input cg-vt-title" required placeholder="e.g. Session 1: Opening Remarks" value="${escapeHtml(data?.title || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Speakers / Presenters</label>
+        <input class="form-input cg-vt-speakers" placeholder="e.g. Jane Doe, John Smith" value="${escapeHtml(data?.speakers || '')}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:7px;">Session Description</label>
+      <input class="form-input cg-vt-desc" placeholder="Brief outline of this session's video content" value="${escapeHtml(data?.description || '')}">
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Video Provider</label>
+        <select class="mc-select cg-vt-provider">
+          <option value="direct" ${data?.videoProvider === 'direct' ? 'selected' : ''}>Direct Link / YouTube</option>
+          <option value="mux" ${data?.videoProvider === 'mux' ? 'selected' : ''}>Mux Playback</option>
+          <option value="doodstream" ${data?.videoProvider === 'doodstream' ? 'selected' : ''}>DoodStream</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Video Playback ID / File Code / URL</label>
+        <input class="form-input cg-vt-code" placeholder="Stream link or Mux ID" value="${escapeHtml(data?.fileCode || data?.src || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Duration (e.g. 14:22)</label>
+        <input class="form-input cg-vt-duration" placeholder="e.g. 12:45" value="${escapeHtml(data?.duration || '')}">
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">High-Res Download URL</label>
+        <input class="form-input cg-vt-download" placeholder="Cloudinary, GDrive, or Dropbox download URL" value="${escapeHtml(data?.downloadUrl || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:7px;">Custom Preview Thumbnail (URL)</label>
+        <input class="form-input cg-vt-thumb" placeholder="Custom video preview poster image" value="${escapeHtml(data?.thumb || '')}">
+      </div>
+    </div>
+  `;
+  
+  list.appendChild(row);
+}
+
+function initClientGalleryUI() {
+  const dropzone = document.getElementById('cg-dropzone');
+  const fileInput = document.getElementById('cg-upload-files');
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--gold)';
+    dropzone.style.background = 'rgba(45, 212, 160, 0.03)';
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.style.borderColor = 'var(--line)';
+    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--line)';
+    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      addFilesToUploadQueue(files);
+    }
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+      addFilesToUploadQueue(fileInput.files);
+      fileInput.value = '';
+    }
+  });
+}
+
 function openCreateGalleryModal() {
   document.getElementById('client-modal-title').textContent = 'Create Delivery Gallery';
   document.getElementById('cg-id').value = '';
@@ -1949,14 +2108,21 @@ function openCreateGalleryModal() {
   document.getElementById('cg-desc').value = '';
   document.getElementById('cg-date').value = '';
   document.getElementById('cg-password').value = '';
+  document.getElementById('cg-gallery-type').value = 'photos';
+  document.getElementById('cg-logo1').value = '';
+  document.getElementById('cg-logo2').value = '';
+  document.getElementById('cg-custom-color').value = '';
   
   currentGalleryPhotos = [];
+  currentGalleryVideos = [];
   
+  document.getElementById('cg-video-list').innerHTML = '';
   document.getElementById('cg-upload-queue-container').style.display = 'none';
   document.getElementById('cg-upload-queue-list').innerHTML = '';
   document.getElementById('cg-upload-status').textContent = 'No active uploads.';
   uploadQueue = [];
   
+  toggleGalleryTypeSection();
   renderModalPhotoList();
   
   document.getElementById('modal-client-gallery').style.display = 'flex';
@@ -1977,14 +2143,25 @@ function openEditGalleryModal(id) {
   document.getElementById('cg-desc').value = gallery.description || '';
   document.getElementById('cg-date').value = gallery.date || '';
   document.getElementById('cg-password').value = gallery.password || '';
+  document.getElementById('cg-gallery-type').value = gallery.galleryType || 'photos';
+  document.getElementById('cg-logo1').value = gallery.logo1 || '';
+  document.getElementById('cg-logo2').value = gallery.logo2 || '';
+  document.getElementById('cg-custom-color').value = gallery.customColor || '';
 
   currentGalleryPhotos = JSON.parse(JSON.stringify(gallery.photos || []));
+  currentGalleryVideos = JSON.parse(JSON.stringify(gallery.videos || []));
+
+  document.getElementById('cg-video-list').innerHTML = '';
+  if (currentGalleryVideos.length > 0) {
+    currentGalleryVideos.forEach(v => addNewVideoTrackRow(v));
+  }
 
   document.getElementById('cg-upload-queue-container').style.display = 'none';
   document.getElementById('cg-upload-queue-list').innerHTML = '';
   document.getElementById('cg-upload-status').textContent = 'No active uploads.';
   uploadQueue = [];
 
+  toggleGalleryTypeSection();
   renderModalPhotoList();
 
   document.getElementById('modal-client-gallery').style.display = 'flex';
@@ -2085,11 +2262,35 @@ async function saveClientGallery() {
   const description = document.getElementById('cg-desc').value.trim();
   const date = document.getElementById('cg-date').value.trim();
   const password = document.getElementById('cg-password').value.trim();
+  const galleryType = document.getElementById('cg-gallery-type').value;
+  const logo1 = document.getElementById('cg-logo1').value.trim();
+  const logo2 = document.getElementById('cg-logo2').value.trim();
+  const customColor = document.getElementById('cg-custom-color').value.trim();
 
   if (!client || !name) {
     showToast('Client Name and URL Slug are required', 'error');
     return;
   }
+
+  // Parse videos from rows
+  const videos = [];
+  document.querySelectorAll('.cg-video-row').forEach(row => {
+    const titleVal = row.querySelector('.cg-vt-title').value.trim();
+    if (!titleVal) return;
+    
+    videos.push({
+      id: row.dataset.id,
+      title: titleVal,
+      speakers: row.querySelector('.cg-vt-speakers').value.trim(),
+      description: row.querySelector('.cg-vt-desc').value.trim(),
+      videoProvider: row.querySelector('.cg-vt-provider').value,
+      fileCode: row.querySelector('.cg-vt-code').value.trim(),
+      src: row.querySelector('.cg-vt-code').value.trim(),
+      duration: row.querySelector('.cg-vt-duration').value.trim(),
+      downloadUrl: row.querySelector('.cg-vt-download').value.trim(),
+      thumb: row.querySelector('.cg-vt-thumb').value.trim()
+    });
+  });
 
   const payload = {
     client,
@@ -2097,8 +2298,13 @@ async function saveClientGallery() {
     description,
     date,
     password,
+    galleryType,
+    logo1,
+    logo2,
+    customColor,
     coverPhotoId: coverPhotoId || (currentGalleryPhotos[0] ? currentGalleryPhotos[0].id : ''),
-    photos: currentGalleryPhotos
+    photos: currentGalleryPhotos,
+    videos: videos
   };
 
   try {
