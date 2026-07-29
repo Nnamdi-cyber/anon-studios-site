@@ -413,18 +413,26 @@ body.login-active #pacScroll {
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
-        <div class="form-group">
+      <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:16px; align-items:center;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="cg-has-dual-logos" onchange="toggleDualLogoField()" style="accent-color:var(--gold);"> Has Dual Brand Logos (e.g. TEDx events)
+          </label>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Custom Accent Color (Hex/CSS)</label>
+          <input class="form-input" id="cg-custom-color" placeholder="e.g., #EB0028 or leave blank to auto-scan logo" style="padding:6px 10px;">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" id="cg-logo-inputs-row">
+        <div class="form-group" id="cg-logo1-group">
           <label class="form-label">Primary Brand Logo (URL)</label>
           <input class="form-input" id="cg-logo1" placeholder="e.g., https://example.com/logo.png">
         </div>
-        <div class="form-group">
-          <label class="form-label">Secondary Brand Logo (URL — Optional)</label>
-          <input class="form-input" id="cg-logo2" placeholder="e.g., for TedxUnilag split-screen">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Custom Accent Color (Hex/CSS)</label>
-          <input class="form-input" id="cg-custom-color" placeholder="e.g., #EB0028 or leave blank to auto-scan logo">
+        <div class="form-group" id="cg-logo2-group" style="display:none;">
+          <label class="form-label">Secondary Brand Logo (URL)</label>
+          <input class="form-input" id="cg-logo2" placeholder="e.g., secondary partner logo url">
         </div>
       </div>
       
@@ -2099,6 +2107,17 @@ function initClientGalleryUI() {
   });
 }
 
+function toggleDualLogoField() {
+  const isChecked = document.getElementById('cg-has-dual-logos').checked;
+  const logo2Group = document.getElementById('cg-logo2-group');
+  if (isChecked) {
+    logo2Group.style.display = 'block';
+  } else {
+    logo2Group.style.display = 'none';
+    document.getElementById('cg-logo2').value = '';
+  }
+}
+
 function openCreateGalleryModal() {
   document.getElementById('client-modal-title').textContent = 'Create Delivery Gallery';
   document.getElementById('cg-id').value = '';
@@ -2112,6 +2131,7 @@ function openCreateGalleryModal() {
   document.getElementById('cg-logo1').value = '';
   document.getElementById('cg-logo2').value = '';
   document.getElementById('cg-custom-color').value = '';
+  document.getElementById('cg-has-dual-logos').checked = false;
   
   currentGalleryPhotos = [];
   currentGalleryVideos = [];
@@ -2122,6 +2142,7 @@ function openCreateGalleryModal() {
   document.getElementById('cg-upload-status').textContent = 'No active uploads.';
   uploadQueue = [];
   
+  toggleDualLogoField();
   toggleGalleryTypeSection();
   renderModalPhotoList();
   
@@ -2147,6 +2168,10 @@ function openEditGalleryModal(id) {
   document.getElementById('cg-logo1').value = gallery.logo1 || '';
   document.getElementById('cg-logo2').value = gallery.logo2 || '';
   document.getElementById('cg-custom-color').value = gallery.customColor || '';
+
+  const hasDual = !!(gallery.logo1 && gallery.logo2);
+  document.getElementById('cg-has-dual-logos').checked = hasDual;
+  toggleDualLogoField();
 
   currentGalleryPhotos = JSON.parse(JSON.stringify(gallery.photos || []));
   currentGalleryVideos = JSON.parse(JSON.stringify(gallery.videos || []));
