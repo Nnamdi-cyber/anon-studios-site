@@ -34,6 +34,10 @@ const {
   createDirectUpload,
   resolveMuxAsset
 } = require('./services/mux');
+const {
+  isStreamtapeConfigured,
+  uploadLocalFileToStreamtape
+} = require('./services/streamtape');
 require('dotenv').config();
 
 const app = express();
@@ -1031,6 +1035,40 @@ app.post('/api/doodstream/upload', requireAdmin, videoUpload.single('file'), asy
     res.status(500).json({
       error: 'DoodStream upload failed',
       detail: error && error.message ? error.message : 'Unknown DoodStream error',
+    });
+  } finally {
+    if (tempPath) {
+      fs.promises.unlink(tempPath).catch(() => {});
+    }
+  }
+});
+
+app.post('/api/streamtape/upload', requireAdmin, videoUpload.single('file'), async (req, res) => {
+  if (!isStreamtapeConfigured()) {
+    return res.status(500).json({ error: 'Streamtape credentials are not configured on the server' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'No video file received' });
+  }
+
+  const tempPath = req.file.path;
+  try {
+    const uploaded = await uploadLocalFileToStreamtape(tempPath, {
+      title: String(req.body && req.body.title ? req.body.title : '').trim(),
+      originalName: req.file.originalname,
+    });
+    res.json({
+      ok: true,
+      provider: 'streamtape',
+      fileCode: uploaded.fileCode,
+      src: uploaded.sourceUrl,
+      sourceUrl: uploaded.sourceUrl,
+      title: uploaded.title,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Streamtape upload failed',
+      detail: error && error.message ? error.message : 'Unknown Streamtape error',
     });
   } finally {
     if (tempPath) {

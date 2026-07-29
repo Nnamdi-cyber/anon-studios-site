@@ -654,6 +654,38 @@ function uploadDoodstreamVideoFile(file, title, progressCallback) {
   });
 }
 
+function uploadStreamtapeVideoFile(file, title, progressCallback) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const body = new FormData();
+    body.append('file', file);
+    body.append('title', title);
+
+    xhr.open('POST', BACKEND_URL + '/api/streamtape/upload');
+    xhr.withCredentials = true;
+
+    if (progressCallback && xhr.upload) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          progressCallback(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (_) {}
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error || data.detail || 'Streamtape upload failed'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload to Streamtape'));
+    xhr.send(body);
+  });
+}
+
 function uploadPinataFile(file, title, progressCallback) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -774,6 +806,16 @@ function syncVideoFormFields(form, isEdit = false) {
     fieldCode.style.display = 'block';
     codeLabel.textContent = 'DoodStream File Code';
     codeInput.placeholder = 'Optional if uploading a file, or paste DoodStream code';
+    fieldFile.style.display = 'block';
+    fieldThumbUrl.style.display = 'block';
+    fieldThumbUrl.querySelector('.form-label').textContent = 'Thumbnail URL';
+    fieldThumbProvider.style.display = 'block';
+    fieldThumbFile.style.display = 'block';
+  } else if (val === 'streamtape') {
+    fieldUrl.style.display = 'none';
+    fieldCode.style.display = 'block';
+    codeLabel.textContent = 'Streamtape File Code / URL';
+    codeInput.placeholder = 'Optional if uploading a file, or paste Streamtape code / link';
     fieldFile.style.display = 'block';
     fieldThumbUrl.style.display = 'block';
     fieldThumbUrl.querySelector('.form-label').textContent = 'Thumbnail URL';
@@ -998,7 +1040,7 @@ function renderVideos() {
   const target = document.getElementById('grid-videos');
   const items = itemsByType('video').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   target.className = '';
-  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="mux">Mux Video</option><option value="doodstream">DoodStream</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">File Code / Mux Playback ID</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on DoodStream or Mux"></div><div class="form-group"><label class="form-label">Upload Video (Mux/DoodStream/Pinata)</label><div class="file-dropzone" data-accept="video/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop video here or <span class="highlight">browse</span></div><div class="dropzone-subtext">Max size ~2GB</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoFile" type="file" accept="video/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Thumbnail Storage Provider</label><select class="form-input" name="videoThumbProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><div class="file-dropzone" data-accept="image/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop image here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoThumbFile" type="file" accept="image/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use Mux Video for adaptive streaming optimization (recommended). Use Pinata (IPFS) to host video on the decentralized network. Use DoodStream or direct modes for alternative options.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
+  target.innerHTML = '<div class="media-card" style="margin-bottom:18px"><div class="mc-label">Add Video</div><div class="mc-name">Save New Video Item</div><form id="videoForm" style="display:grid;gap:10px"><div class="form-group"><label class="form-label">Title</label><input class="form-input" name="videoTitle" required></div><div class="form-group"><label class="form-label">Video Category</label><select class="form-input" name="videoCategory">' + selectMarkup(VIDEO_CATEGORIES, 'documentary', 'Select category') + '</select></div><div class="form-group"><label class="form-label">Source Type</label><select class="form-input" name="videoProvider"><option value="direct">Direct / YouTube / Vimeo</option><option value="streamtape">Streamtape</option><option value="mux">Mux Video</option><option value="doodstream">DoodStream</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Video URL</label><input class="form-input" name="videoUrl" placeholder="YouTube, Vimeo, or direct video URL"></div><div class="form-group"><label class="form-label">File Code / Mux Playback ID</label><input class="form-input" name="videoFileCode" placeholder="Optional if the file already exists on Streamtape, DoodStream or Mux"></div><div class="form-group"><label class="form-label">Upload Video (Mux/Streamtape/DoodStream/Pinata)</label><div class="file-dropzone" data-accept="video/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop video here or <span class="highlight">browse</span></div><div class="dropzone-subtext">Max size ~2GB</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoFile" type="file" accept="video/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Thumbnail URL</label><input class="form-input" name="videoThumb" placeholder="Optional if you want a custom frame"></div><div class="form-group"><label class="form-label">Thumbnail Storage Provider</label><select class="form-input" name="videoThumbProvider"><option value="cloudinary">Cloudinary</option><option value="pinata">Pinata (IPFS)</option></select></div><div class="form-group"><label class="form-label">Upload Thumbnail</label><div class="file-dropzone" data-accept="image/*"><div class="dropzone-prompt"><svg viewBox="0 0 24 24" class="dropzone-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="dropzone-text">Drag & drop image here or <span class="highlight">browse</span></div><div class="dropzone-subtext">JPEG, PNG, WEBP</div></div><div class="dropzone-file-info" style="display:none;"><svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div class="file-details"><div class="file-name"></div><div class="file-size"></div></div><button type="button" class="btn-remove-file" title="Remove file">&times;</button></div><input class="form-input" name="videoThumbFile" type="file" accept="image/*" style="display:none;"></div></div><div class="form-group"><label class="form-label">Year</label><input class="form-input" name="videoYear"></div><div class="form-group"><label class="form-label">Client / Location</label><input class="form-input" name="videoClient"></div><div class="form-group"><label class="form-label">Duration</label><input class="form-input" name="videoDuration"></div><div class="form-group"><label class="form-label">Description</label><textarea class="form-input" name="videoDescription"></textarea></div><div class="upload-progress-container" style="display:none; margin-bottom:12px; background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:12px; border-radius:4px;"><div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); text-transform:uppercase; color:var(--gold); margin-bottom:6px;"><span class="progress-status">Uploading...</span><span class="progress-percent">0%</span></div><div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;"><div class="progress-fill" style="background:var(--gold); width:0%; height:100%; transition:width 0.2s;"></div></div></div><button class="btn btn-primary" type="submit">Save Video</button></form><div class="note" style="margin-top:12px">Use Mux Video for adaptive streaming optimization (recommended). Use Pinata (IPFS) to host video on the decentralized network. Use Streamtape or DoodStream for alternative options.</div></div><div class="media-grid">' + (items.length ? items.map(buildVideoCard).join('') : '<div class="empty-state">No video items yet.</div>') + '</div>';
   const vForm = document.getElementById('videoForm');
   vForm.addEventListener('submit', submitVideo);
   vForm.querySelector('[name="videoProvider"]').addEventListener('change', () => syncVideoFormFields(vForm, false));
@@ -1249,6 +1291,37 @@ async function submitVideo(event) {
         if (!fileCode) throw new Error('Add a DoodStream file or paste a DoodStream file code');
         src = '/api/doodstream/stream/' + encodeURIComponent(fileCode);
         sourceUrl = 'https://doodstream.com/e/' + fileCode;
+      }
+    } else if (videoProvider === 'streamtape') {
+      if (videoFile) {
+        if (progressContainer) {
+          progressContainer.style.display = 'block';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressFill) progressFill.style.width = '0%';
+        }
+        const progressCb = (percent) => {
+          if (progressStatus) progressStatus.textContent = `Uploading to Streamtape (${percent}%)...`;
+          if (progressPercent) progressPercent.textContent = `${percent}%`;
+          if (progressFill) progressFill.style.width = `${percent}%`;
+          submitBtn.textContent = `Uploading (${percent}%)...`;
+        };
+        const uploadedVideo = await uploadStreamtapeVideoFile(videoFile, title, progressCb);
+        if (progressContainer) progressContainer.style.display = 'none';
+        src = uploadedVideo.src;
+        sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
+        fileCode = uploadedVideo.fileCode || '';
+      } else {
+        fileCode = fileCodeInput;
+        if (!fileCode) throw new Error('Add a Streamtape file or paste a Streamtape file code');
+        
+        let code = fileCode;
+        if (code.includes('streamtape.com/v/')) {
+          code = code.split('/v/')[1].split('/')[0];
+        } else if (code.includes('streamtape.com/e/')) {
+          code = code.split('/e/')[1].split('/')[0];
+        }
+        src = 'https://streamtape.com/e/' + code;
+        sourceUrl = 'https://streamtape.com/v/' + code;
       }
     } else if (videoProvider === 'pinata') {
       if (videoFile) {
@@ -1561,6 +1634,44 @@ async function saveItemEdit(event) {
           payload.fileCode = nextFileCode;
           payload.src = '/api/doodstream/stream/' + encodeURIComponent(nextFileCode);
           payload.sourceUrl = 'https://doodstream.com/e/' + nextFileCode;
+          payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
+        }
+      } else if (payload.videoProvider === 'streamtape') {
+        payload.useHls = false;
+        payload.muxPlaybackId = '';
+        payload.muxAssetId = '';
+        payload.muxAccountIndex = 0;
+        if (replacementVideo) {
+          if (progressContainer) {
+            progressContainer.style.display = 'block';
+            if (progressPercent) progressPercent.textContent = '0%';
+            if (progressFill) progressFill.style.width = '0%';
+          }
+          const progressCb = (percent) => {
+            if (progressStatus) progressStatus.textContent = `Uploading to Streamtape (${percent}%)...`;
+            if (progressPercent) progressPercent.textContent = `${percent}%`;
+            if (progressFill) progressFill.style.width = `${percent}%`;
+            btn.textContent = `Uploading (${percent}%)...`;
+          };
+          const uploadedVideo = await uploadStreamtapeVideoFile(replacementVideo, payload.title, progressCb);
+          if (progressContainer) progressContainer.style.display = 'none';
+          payload.src = uploadedVideo.src;
+          payload.sourceUrl = uploadedVideo.sourceUrl || uploadedVideo.src;
+          payload.fileCode = uploadedVideo.fileCode || '';
+          payload.duration = payload.duration || item.duration || '';
+          payload.thumb = item.thumb || '';
+        } else {
+          if (!nextFileCode) throw new Error('Add a Streamtape file code/URL or upload a replacement video');
+          payload.fileCode = nextFileCode;
+          
+          let code = nextFileCode;
+          if (code.includes('streamtape.com/v/')) {
+            code = code.split('/v/')[1].split('/')[0];
+          } else if (code.includes('streamtape.com/e/')) {
+            code = code.split('/e/')[1].split('/')[0];
+          }
+          payload.src = 'https://streamtape.com/e/' + code;
+          payload.sourceUrl = 'https://streamtape.com/v/' + code;
           payload.thumb = document.getElementById('edit-video-thumb').value.trim() || item.thumb || '';
         }
       } else if (payload.videoProvider === 'pinata') {
