@@ -739,6 +739,15 @@ function playVideoTrack(index) {
   
   if (video.videoProvider === 'mux') {
     playerHtml = `<iframe src="https://stream.mux.com/${video.fileCode}.m3u8" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+  } else if (video.videoProvider === 'streamtape') {
+    // If it's a full URL, parse out the file code, else use as code
+    let code = video.fileCode || video.src;
+    if (code.includes('streamtape.com/v/')) {
+      code = code.split('/v/')[1].split('/')[0];
+    } else if (code.includes('streamtape.com/e/')) {
+      code = code.split('/e/')[1].split('/')[0];
+    }
+    playerHtml = `<iframe src="https://streamtape.com/e/${code}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
   } else if (video.videoProvider === 'doodstream') {
     playerHtml = `<iframe src="https://dood.yt/e/${video.fileCode}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
   } else {

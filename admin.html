@@ -2043,8 +2043,9 @@ function addNewVideoTrackRow(data = null) {
         <label class="form-label" style="font-size:7px;">Video Provider</label>
         <select class="mc-select cg-vt-provider">
           <option value="direct" ${data?.videoProvider === 'direct' ? 'selected' : ''}>Direct Link / YouTube</option>
+          <option value="streamtape" ${data?.videoProvider === 'streamtape' ? 'selected' : ''}>Streamtape Player</option>
           <option value="mux" ${data?.videoProvider === 'mux' ? 'selected' : ''}>Mux Playback</option>
-          <option value="doodstream" ${data?.videoProvider === 'doodstream' ? 'selected' : ''}>DoodStream</option>
+          <option value="doodstream" ${data?.videoProvider === 'doodstream' ? 'selected' : ''}>DoodStream (Fallback)</option>
         </select>
       </div>
       <div class="form-group">
