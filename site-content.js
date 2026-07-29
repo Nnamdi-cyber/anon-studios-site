@@ -645,6 +645,7 @@
         'music-video': { label: normalizeVideoCategoryLabel('music-video'), items: allMusic },
         wedding: { label: normalizeVideoCategoryLabel('wedding'), items: allWedding },
         church: { label: normalizeVideoCategoryLabel('church'), items: allChurch },
+        advert: { label: normalizeVideoCategoryLabel('advert'), items: allAdvert },
       },
       seriesMeta: {
         portrait: portraitProject ? {
