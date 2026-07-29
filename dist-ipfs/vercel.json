@@ -2,7 +2,12 @@
   "cleanUrls": true,
   "outputDirectory": "dist-ipfs",
   "rewrites": [
-    { "source": "/delivery/:name", "destination": "/delivery/index.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/gallery", "destination": "/gallery/index.html" },
+    { "source": "/photo-gallery", "destination": "/photo-gallery/index.html" },
+    { "source": "/video-gallery", "destination": "/video-gallery/index.html" },
+    { "source": "/api/(.*)", "destination": "https://anon-studios-site.onrender.com/api/$1" },
+    { "source": "/((?!assets|gallery|photo-gallery|video-gallery|admin|data|scratch|dist-ipfs|favicon.ico|index.html|home-animations.js|home-interactions.js|site-content.js)[^/]+)", "destination": "/delivery/index.html" }
   ],
   "headers": [
     {
@@ -60,7 +65,7 @@
       ]
     },
     {
-      "source": "/delivery/:name",
+      "source": "/((?!assets|gallery|photo-gallery|video-gallery|admin|data|scratch|dist-ipfs|favicon.ico|index.html|home-animations.js|home-interactions.js|site-content.js)[^/]+)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -1949,7 +1949,7 @@ function renderClientGalleries() {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
           <div>
             <h3 style="font-family:var(--sans); font-size:16px; font-weight:600; color:var(--w); margin:0;">${escapeHtml(gallery.client)}</h3>
-            <p style="font-family:var(--mono); font-size:10px; color:var(--gold); margin-top:2px;">/delivery/${escapeHtml(gallery.name)}</p>
+            <p style="font-family:var(--mono); font-size:10px; color:var(--gold); margin-top:2px;">/${escapeHtml(gallery.name)}</p>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             ${gallery.password ? `<span style="font-family:var(--mono); font-size:8px; text-transform:uppercase; color:var(--gold); border:1px solid var(--gold); padding:2px 6px; border-radius:3px;">🔒 Locked</span>` : ''}
@@ -1963,7 +1963,7 @@ function renderClientGalleries() {
           <div style="font-family:var(--mono); font-size:9px; color:var(--w30);">Shoot Date: ${escapeHtml(gallery.date || 'N/A')}</div>
           <div class="mc-input-row" style="margin-top:0;">
             <button class="btn btn-primary" onclick="copyClientLink('${escapeHtml(gallery.name)}')">Copy Link</button>
-            <a class="btn btn-ghost" href="/delivery/${escapeHtml(gallery.name)}" target="_blank">View Live</a>
+            <a class="btn btn-ghost" href="/${escapeHtml(gallery.name)}" target="_blank">View Live</a>
             <button class="btn btn-ghost" onclick="openEditGalleryModal('${gallery.id}')">Edit</button>
             <button class="btn btn-danger" onclick="deleteClientGallery('${gallery.id}')">Delete</button>
           </div>
@@ -1975,7 +1975,7 @@ function renderClientGalleries() {
 }
 
 function copyClientLink(name) {
-  const link = window.location.origin + '/delivery/' + name;
+  const link = window.location.origin + '/' + name;
   navigator.clipboard.writeText(link)
     .then(() => showToast('Link copied to clipboard'))
     .catch(() => showToast('Failed to copy link', 'error'));
