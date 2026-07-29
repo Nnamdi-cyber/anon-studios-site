@@ -775,8 +775,11 @@ function doLogin() {
     .then(() => {
       document.getElementById('loginErr').style.display = 'none';
       document.getElementById('loginPass').value = '';
+      document.getElementById('loginScreen').style.display = 'none';
       document.body.classList.remove('login-active');
-      initAdmin();
+      initClientGalleryUI();
+      refreshStore();
+      loadDiagnostics();
       showToast('Welcome back');
     })
     .catch(() => {
