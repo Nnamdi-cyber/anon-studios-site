@@ -39,21 +39,12 @@ async function uploadLocalFileToStreamtape(filePath, options = {}) {
   }
 
   const uploadUrl = await getUploadServerUrl();
-  const fileStream = fs.createReadStream(filePath);
   
   // Use Form data block
   const formData = new FormData();
-  
-  // Convert stream to blob/file wrapper for Fetch multipart upload
-  const stat = fs.statSync(filePath);
-  const fileBlob = {
-    [Symbol.toStringTag]: 'File',
-    name: options.originalName || path.basename(filePath),
-    stream: () => fileStream,
-    size: stat.size
-  };
-  
-  formData.append('file', fileBlob);
+  const fileBuffer = fs.readFileSync(filePath);
+  const fileBlob = new Blob([fileBuffer], { type: 'video/mp4' });
+  formData.append('file', fileBlob, options.originalName || path.basename(filePath));
   
   const response = await fetch(uploadUrl, {
     method: 'POST',
@@ -64,13 +55,20 @@ async function uploadLocalFileToStreamtape(filePath, options = {}) {
     throw new Error(`Streamtape upload request failed with status ${response.status}`);
   }
 
-  const payload = await response.json();
+  const responseText = await response.text();
+  let payload;
+  try {
+    payload = JSON.parse(responseText);
+  } catch (err) {
+    throw new Error(`Failed to parse Streamtape upload response. Response body: ${responseText}`);
+  }
+
   if (payload.status !== 200 || !payload.result) {
     throw new Error(payload.msg || 'Streamtape upload returned an invalid response');
   }
 
   const result = payload.result;
-  const fileCode = String(result.idcode || '').trim();
+  const fileCode = String(result.idcode || result.id || '').trim();
 
   return {
     ok: true,
