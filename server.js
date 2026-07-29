@@ -100,7 +100,7 @@ function ensureDataFile() {
     }
   }
 
-  if (!store.items) store.items = [];
+  if (!store.clientGalleries) store.clientGalleries = [];
 
   let modified = false;
   for (const defaultVid of defaultVideos) {
@@ -111,9 +111,54 @@ function ensureDataFile() {
     }
   }
 
+  // Seed TEDxUnilag Event Delivery Client Gallery if missing
+  const hasTedx = store.clientGalleries.some(cg => cg.name === 'tedxunilag');
+  if (!hasTedx) {
+    store.clientGalleries.push({
+      id: 'cg-tedxunilag',
+      client: 'TEDxUnilag',
+      name: 'tedxunilag',
+      description: 'TEDxUnilag 2025: Ideas Worth Spreading',
+      date: 'May 18, 2025',
+      password: '',
+      galleryType: 'videos',
+      logo1: 'https://images.squarespace-cdn.com/content/v1/5c5c646ef81c14b68e99de61/1572425026938-89ZICX7W5388J8E84G7M/TEDxLogo.png',
+      logo2: 'https://tedxunilag.vercel.app/assets/images/logo.png', // Fallback secondary brand asset from their website
+      customColor: '#EB0028', // Signature TED Red
+      photos: [],
+      videos: [
+        {
+          id: 'vt-tedx1',
+          title: 'Session 1: Building The Future of Autonomous Innovation',
+          speakers: 'Dr. Sarah Alao',
+          description: 'An inspiring talk on the intersections of artificial intelligence, robotic systems, and native software engineering strategies in Sub-Saharan Africa.',
+          videoProvider: 'direct',
+          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          src: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          duration: '14:22',
+          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          thumb: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop'
+        },
+        {
+          id: 'vt-tedx2',
+          title: 'Session 2: The Art of Digital Storytelling & Cinematic Visuals',
+          speakers: 'Anon Studios Creative Team',
+          description: 'A deep dive into high-contrast theater design, filming dynamics, and premium user experience engineering for modern digital media brands.',
+          videoProvider: 'direct',
+          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          src: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          duration: '11:45',
+          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          thumb: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop'
+        }
+      ]
+    });
+    modified = true;
+  }
+
   if (modified || !fs.existsSync(contentFile)) {
     fs.writeFileSync(contentFile, JSON.stringify(store, null, 2), 'utf8');
-    console.log(`Seeded missing default videos on server startup.`);
+    console.log(`Seeded missing default structures and TEDxUnilag client gallery.`);
   }
 }
 
