@@ -38,7 +38,15 @@ const {
   isStreamtapeConfigured,
   uploadLocalFileToStreamtape
 } = require('./services/streamtape');
+const { Pool } = require('pg');
 require('dotenv').config();
+
+const dbPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -88,82 +96,6 @@ function defaultStore() {
       updatedAt: Date.now(),
     },
   };
-}
-
-function ensureDataFile() {
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  
-  let store;
-  if (!fs.existsSync(contentFile)) {
-    store = defaultStore();
-  } else {
-    try {
-      store = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
-    } catch (e) {
-      store = defaultStore();
-    }
-  }
-
-  if (!store.clientGalleries) store.clientGalleries = [];
-
-  let modified = false;
-  for (const defaultVid of defaultVideos) {
-    const exists = store.items.some(item => item.id === defaultVid.id || (item.type === 'video' && item.title === defaultVid.title));
-    if (!exists) {
-      store.items.push(defaultVid);
-      modified = true;
-    }
-  }
-
-  // Seed TEDxUnilag Event Delivery Client Gallery if missing
-  const hasTedx = store.clientGalleries.some(cg => cg.name === 'tedxunilag');
-  if (!hasTedx) {
-    store.clientGalleries.push({
-      id: 'cg-tedxunilag',
-      client: 'TEDxUnilag',
-      name: 'tedxunilag',
-      description: 'TEDxUnilag 2025: Ideas Worth Spreading',
-      date: 'May 18, 2025',
-      password: '',
-      galleryType: 'videos',
-      logo1: 'https://images.squarespace-cdn.com/content/v1/5c5c646ef81c14b68e99de61/1572425026938-89ZICX7W5388J8E84G7M/TEDxLogo.png',
-      logo2: 'https://tedxunilag.vercel.app/assets/images/logo.png', // Fallback secondary brand asset from their website
-      customColor: '#EB0028', // Signature TED Red
-      photos: [],
-      videos: [
-        {
-          id: 'vt-tedx1',
-          title: 'Session 1: Building The Future of Autonomous Innovation',
-          speakers: 'Dr. Sarah Alao',
-          description: 'An inspiring talk on the intersections of artificial intelligence, robotic systems, and native software engineering strategies in Sub-Saharan Africa.',
-          videoProvider: 'direct',
-          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
-          src: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
-          duration: '14:22',
-          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
-          thumb: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop'
-        },
-        {
-          id: 'vt-tedx2',
-          title: 'Session 2: The Art of Digital Storytelling & Cinematic Visuals',
-          speakers: 'Anon Studios Creative Team',
-          description: 'A deep dive into high-contrast theater design, filming dynamics, and premium user experience engineering for modern digital media brands.',
-          videoProvider: 'direct',
-          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
-          src: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
-          duration: '11:45',
-          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
-          thumb: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop'
-        }
-      ]
-    });
-    modified = true;
-  }
-
-  if (modified || !fs.existsSync(contentFile)) {
-    fs.writeFileSync(contentFile, JSON.stringify(store, null, 2), 'utf8');
-    console.log(`Seeded missing default structures and TEDxUnilag client gallery.`);
-  }
 }
 
 function normalizeSettings(settings) {
@@ -227,26 +159,123 @@ function normalizeClientGallery(cg) {
   };
 }
 
-function readStore() {
-  ensureDataFile();
+function ensureDataFile() {
+  // Database migrations are initialized. Let's make sure default store exists.
+}
+
+let memoryStore = null;
+
+async function syncStoreFromDb() {
   try {
-    const parsed = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
-    return {
-      items: Array.isArray(parsed.items) ? parsed.items : [],
-      settings: normalizeSettings(parsed.settings),
-      clientGalleries: Array.isArray(parsed.clientGalleries) ? parsed.clientGalleries.map(normalizeClientGallery).filter(Boolean) : [],
-      auth: {
-        passwordHash: String(parsed.auth && parsed.auth.passwordHash ? parsed.auth.passwordHash : hashValue(defaultPassword)),
-        updatedAt: Number(parsed.auth && parsed.auth.updatedAt ? parsed.auth.updatedAt : Date.now()),
-      },
-    };
-  } catch (error) {
-    return defaultStore();
+    const result = await dbPool.query("SELECT data FROM site_store WHERE id = 'main_store'");
+    if (result.rows.length > 0) {
+      memoryStore = result.rows[0].data;
+      return memoryStore;
+    }
+  } catch (err) {
+    console.error('Error reading store from Supabase:', err);
   }
+
+  // Load from local file as fallback if not found in db
+  let store = defaultStore();
+  if (fs.existsSync(contentFile)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
+      store = {
+        items: Array.isArray(parsed.items) ? parsed.items : [],
+        settings: normalizeSettings(parsed.settings),
+        clientGalleries: Array.isArray(parsed.clientGalleries) ? parsed.clientGalleries.map(normalizeClientGallery).filter(Boolean) : [],
+        auth: {
+          passwordHash: String(parsed.auth && parsed.auth.passwordHash ? parsed.auth.passwordHash : hashValue(defaultPassword)),
+          updatedAt: Number(parsed.auth && parsed.auth.updatedAt ? parsed.auth.updatedAt : Date.now()),
+        },
+      };
+    } catch (e) {}
+  }
+
+  // Seed defaults
+  let modified = false;
+  for (const defaultVid of defaultVideos) {
+    const exists = store.items.some(item => item.id === defaultVid.id || (item.type === 'video' && item.title === defaultVid.title));
+    if (!exists) {
+      store.items.push(defaultVid);
+      modified = true;
+    }
+  }
+
+  const hasTedx = store.clientGalleries.some(cg => cg.name === 'tedxunilag');
+  if (!hasTedx) {
+    store.clientGalleries.push({
+      id: 'cg-tedxunilag',
+      client: 'TEDxUnilag',
+      name: 'tedxunilag',
+      description: 'TEDxUnilag 2025: Ideas Worth Spreading',
+      date: 'May 18, 2025',
+      password: '',
+      galleryType: 'videos',
+      logo1: 'https://images.squarespace-cdn.com/content/v1/5c5c646ef81c14b68e99de61/1572425026938-89ZICX7W5388J8E84G7M/TEDxLogo.png',
+      logo2: 'https://tedxunilag.vercel.app/assets/images/logo.png',
+      customColor: '#EB0028',
+      photos: [],
+      videos: [
+        {
+          id: 'vt-tedx1',
+          title: 'Session 1: Building The Future of Autonomous Innovation',
+          speakers: 'Dr. Sarah Alao',
+          description: 'An inspiring talk on the intersections of artificial intelligence, robotic systems, and native software engineering strategies in Sub-Saharan Africa.',
+          videoProvider: 'direct',
+          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          src: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          duration: '14:22',
+          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-subway-station-with-neon-lights-42284-large.mp4',
+          thumb: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop'
+        },
+        {
+          id: 'vt-tedx2',
+          title: 'Session 2: The Art of Digital Storytelling & Cinematic Visuals',
+          speakers: 'Anon Studios Creative Team',
+          description: 'A deep dive into high-contrast theater design, filming dynamics, and premium user experience engineering for modern digital media brands.',
+          videoProvider: 'direct',
+          fileCode: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          src: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          duration: '11:45',
+          downloadUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cinema-projector-showing-a-film-41484-large.mp4',
+          thumb: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop'
+        }
+      ]
+    });
+    modified = true;
+  }
+
+  memoryStore = store;
+  await writeStore(store);
+  return store;
+}
+
+function readStore() {
+  if (!memoryStore) {
+    // If memoryStore hasn't finished initial load, do synchronous file reading as a final boot fallback
+    try {
+      if (fs.existsSync(contentFile)) {
+        const parsed = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
+        memoryStore = {
+          items: Array.isArray(parsed.items) ? parsed.items : [],
+          settings: normalizeSettings(parsed.settings),
+          clientGalleries: Array.isArray(parsed.clientGalleries) ? parsed.clientGalleries.map(normalizeClientGallery).filter(Boolean) : [],
+          auth: {
+            passwordHash: String(parsed.auth && parsed.auth.passwordHash ? parsed.auth.passwordHash : hashValue(defaultPassword)),
+            updatedAt: Number(parsed.auth && parsed.auth.updatedAt ? parsed.auth.updatedAt : Date.now()),
+          },
+        };
+        return memoryStore;
+      }
+    } catch (e) {}
+    memoryStore = defaultStore();
+  }
+  return memoryStore;
 }
 
 function writeStore(store) {
-  ensureDataFile();
   const clean = {
     items: Array.isArray(store.items) ? store.items : [],
     settings: normalizeSettings(store.settings),
@@ -256,7 +285,16 @@ function writeStore(store) {
       updatedAt: Number(store.auth && store.auth.updatedAt ? store.auth.updatedAt : Date.now()),
     },
   };
-  fs.writeFileSync(contentFile, JSON.stringify(clean, null, 2));
+  
+  memoryStore = clean;
+
+  dbPool.query(
+    "INSERT INTO site_store (id, data, updated_at) VALUES ('main_store', $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()",
+    [JSON.stringify(clean)]
+  ).catch(err => {
+    console.error('Error writing store to Supabase:', err);
+  });
+
   return clean;
 }
 
@@ -1305,5 +1343,10 @@ app.get('/api/mux/resolve-asset', requireAdmin, async (req, res) => {
 
 app.listen(port, () => {
   ensureDataFile();
+  syncStoreFromDb().then(() => {
+    console.log('Successfully connected and synced database store with Supabase.');
+  }).catch(err => {
+    console.error('Failed initial Supabase database store sync:', err);
+  });
   console.log(`Anon Studios server running on http://localhost:${port}`);
 });
