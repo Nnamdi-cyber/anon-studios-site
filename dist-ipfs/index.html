@@ -822,6 +822,10 @@ nav.scrolled{
 
   /* ABOUT */
   #about{padding:60px 20px}
+  .about-grid{grid-template-columns:1fr; gap:40px}
+  .about-visuals{height:300px}
+  .av-main{width:100%; height:100%}
+  .av-sec{display:none !important}
   .section-title{font-size:clamp(32px,9vw,52px);letter-spacing:1px}
   .about-text .body{font-size:14px}
   .stats{grid-template-columns:repeat(3,1fr);gap:10px}
@@ -863,6 +867,10 @@ nav.scrolled{
   .srv-title{font-size:clamp(18px,6vw,26px);letter-spacing:1px}
   .srv-short{font-size:13px}
   .srv-features li{font-size:7.5px;gap:8px}
+
+  /* SHOWREEL */
+  #showreel{padding:60px 20px !important}
+  .showreel-grid{grid-template-columns:1fr !important; gap:30px !important}
 
   /* CONTACT FOOTER */
   .cf-social-bar{grid-template-columns:1fr 1fr}
@@ -1298,6 +1306,23 @@ nav.scrolled{
   </div>
 </section>
 
+<!-- SHOWREEL SECTION -->
+<section id="showreel" style="background:var(--bg2); padding:100px 52px; border-bottom:1px solid var(--line); overflow:hidden;">
+  <div style="max-width:1400px; margin:0 auto; display:grid; grid-template-columns:1fr 1.5fr; gap:60px; align-items:center;" class="showreel-grid">
+    <div>
+      <div class="eyebrow">Showreel</div>
+      <h2 class="section-title" style="font-size:clamp(40px,5vw,72px); margin-bottom:20px; line-height:0.95;">The Reel<br>2025</h2>
+      <p style="font-size:15px; color:var(--w60); line-height:1.75; margin-bottom:28px; max-width:440px;">A curated compilation of our best cinematic works, documentary films, and commercials captured in Lagos and worldwide.</p>
+    </div>
+    <div style="position:relative; width:100%; aspect-ratio:16/9; background:#000; border:1px solid var(--line); overflow:hidden;">
+      <div class="media-wrap" data-media-src="" data-media-type="video" data-media-alt="Anon Studios Showreel" style="position:absolute; inset:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CONTACT + FOOTER â€” exact match to reference Image 4 -->
 <div id="contact-footer">
 
@@ -1374,6 +1399,7 @@ const MEDIA = {
   work_04: { src: '', type: 'image', alt: 'Faces of Lagos' },
   work_05: { src: '', type: 'video', alt: 'Tide & Trade' },
   work_06: { src: '', type: 'video', alt: 'Neon Reverie' },
+  showreel: { src: 'https://stream.mux.com/kiKJ00Ryi4imj4ANfeDm49OOA01DRlzOP9g01stTcaAUqQ.m3u8', type: 'video', alt: 'Anon Studios Showreel' },
 };
 if (window.AnonContent) window.AnonContent.mergeIntoConfig(MEDIA);
 /* â”€â”€ MEDIA HANDLER â”€â”€ */
@@ -1498,6 +1524,7 @@ function applyMediaConfig() {
     ['#work .wi:nth-child(5) .wi-media .media-wrap', 'work_05'],
     ['#work .wi:nth-child(6) .wi-thumb .media-wrap', 'work_06'],
     ['#work .wi:nth-child(6) .wi-media .media-wrap', 'work_06'],
+    ['#showreel .media-wrap',                        'showreel'],
   ];
 
   map.forEach(([sel, key]) => {
