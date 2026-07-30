@@ -1387,13 +1387,17 @@ function createMediaEl(src, type, alt) {
       const parts = src.split('/');
       const playbackId = parts[parts.length - 1].split('.')[0];
       playUrl = 'https://stream.mux.com/' + playbackId + '/capped-1080p.mp4';
+      el.poster = `https://image.mux.com/${playbackId}/thumbnail.jpg?width=640&time=1`;
+    } else if (src.includes('image.mux.com')) {
+      // If it has a custom Mux image source mapping
+      el.poster = src;
     }
     el.src = playUrl;
     el.autoplay = false;
     el.muted = true;
     el.loop = true;
     el.playsInline = true;
-    el.preload = 'none'; // lazy — only load when in viewport
+    el.preload = 'metadata'; // preload metadata so posters and frames render
     el.setAttribute('aria-label', alt);
   } else {
     el = document.createElement('img');
@@ -1435,37 +1439,43 @@ function mountMedia(wrap, src, type, alt) {
   }
 }
 
-/* ── INTERSECTION OBSERVER — lazy load on viewport entry ── */
+/* ── INTERSECTION OBSERVER — play when in view, pause when out of view ── */
 const mediaObs = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
     const wrap = entry.target;
-    const src  = wrap.dataset.mediaSrc;
-    const type = wrap.dataset.mediaType || 'image';
-    const alt  = wrap.dataset.mediaAlt  || '';
-    if (src && !wrap.dataset.loaded) {
-      wrap.dataset.loaded = '1';
-      mountMedia(wrap, src, type, alt);
-      if (type === 'video') {
-        const isAccordion = wrap.closest('#work .wi');
-        if (!isAccordion) {
-          const video = wrap.querySelector('video');
-          if (video) {
-            video.play().catch(() => {});
-          } else {
-            // If the element has not finished mounting, trigger on canplay
-            wrap.addEventListener('loadedmetadata', function playOnLoad() {
-              const innerVideo = wrap.querySelector('video');
-              if (innerVideo) innerVideo.play().catch(() => {});
-              wrap.removeEventListener('loadedmetadata', playOnLoad);
-            });
-          }
+    const isAccordion = wrap.closest('#work .wi');
+    const video = wrap.querySelector('video');
+
+    if (entry.isIntersecting) {
+      const src  = wrap.dataset.mediaSrc;
+      const type = wrap.dataset.mediaType || 'image';
+      const alt  = wrap.dataset.mediaAlt  || '';
+      
+      if (src && !wrap.dataset.loaded) {
+        wrap.dataset.loaded = '1';
+        mountMedia(wrap, src, type, alt);
+      }
+
+      if (type === 'video' && !isAccordion) {
+        const v = video || wrap.querySelector('video');
+        if (v) {
+          v.play().catch(() => {});
+        } else {
+          wrap.addEventListener('loadedmetadata', function playOnLoad() {
+            const innerVideo = wrap.querySelector('video');
+            if (innerVideo) innerVideo.play().catch(() => {});
+            wrap.removeEventListener('loadedmetadata', playOnLoad);
+          });
         }
       }
+    } else {
+      // Pause non-accordion landing page videos when scrolled out of view
+      if (video && !isAccordion) {
+        video.pause();
+      }
     }
-    mediaObs.unobserve(wrap);
   });
-}, { rootMargin: '200px 0px', threshold: 0 }); // 200px pre-load buffer
+}, { rootMargin: '0px', threshold: 0.1 });
 
 /* â”€â”€ APPLY CONFIG TO ELEMENTS â”€â”€ */
 function applyMediaConfig() {
