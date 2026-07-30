@@ -201,6 +201,7 @@
           hero_card_3: '',
           about_main: '',
           about_sec: '',
+          showreel: '',
         },
         featuredWorkIds: ['', '', '', '', '', ''],
       },
@@ -219,6 +220,7 @@
         hero_card_3: String(heroSlots.hero_card_3 || ''),
         about_main: String(heroSlots.about_main || ''),
         about_sec: String(heroSlots.about_sec || ''),
+        showreel: String(heroSlots.showreel || ''),
       },
       featuredWorkIds: featuredWorkIds.map(value => String(value || '')),
     };
@@ -622,6 +624,9 @@
     const aboutSec = findItemById(items, settings.heroSlots.about_sec) || portfolioVideo;
     if (aboutMain) overrides.about_main = buildMediaOverride(aboutMain);
     if (aboutSec) overrides.about_sec = buildMediaOverride(aboutSec);
+
+    const showreelVal = findItemById(items, settings.heroSlots.showreel) || portfolioVideo;
+    if (showreelVal) overrides.showreel = buildMediaOverride(showreelVal);
 
     const featuredWorks = [
       chooseFeatured(items, 'image', ['editorial']),

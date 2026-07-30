@@ -287,6 +287,7 @@ body.login-active #pacScroll {
       <div class="nav-section">Portfolio</div>
       <div class="nav-item" onclick="showSection('hero',this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>Hero Cards</div>
       <div class="nav-item" onclick="showSection('about',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M3 21c0-4.418 4.03-8 9-8s9 3.582 9 8"/></svg>About Section</div>
+      <div class="nav-item" onclick="showSection('showreel',this)"><svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>Showreel</div>
       <div class="nav-item" onclick="showSection('work',this)"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Featured Work</div>
       <div class="nav-section">Gallery</div>
       <div class="nav-item" onclick="showSection('photos',this)"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo Gallery</div>
@@ -315,6 +316,7 @@ body.login-active #pacScroll {
     </div>
     <div class="section" id="sec-hero"><div class="page-header"><div class="page-title">Hero Cards</div><div class="page-desc">Pick exact uploaded items for the three homepage hero cards. This is separate from gallery auto-placement.</div></div><div class="toolbar"><div class="note">Choose from already uploaded items.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save Hero Selection</button></div><div class="media-grid" id="grid-hero"></div></div>
     <div class="section" id="sec-about"><div class="page-header"><div class="page-title">About Section</div><div class="page-desc">Set the main image and secondary visual independently from the gallery.</div></div><div class="toolbar"><div class="note">Use uploaded items only.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save About Selection</button></div><div class="media-grid" id="grid-about"></div></div>
+    <div class="section" id="sec-showreel"><div class="page-header"><div class="page-title">Showreel Video</div><div class="page-desc">Select the video to use as your homepage Showreel.</div></div><div class="toolbar"><div class="note">Choose from your video gallery items.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save Showreel Selection</button></div><div class="media-grid" id="grid-showreel"></div></div>
     <div class="section" id="sec-work"><div class="page-header"><div class="page-title">Featured Work</div><div class="page-desc">Choose featured work cards from anything already uploaded in either gallery.</div></div><div class="toolbar"><div class="note">Mix photos and videos freely.</div><button class="btn btn-primary" onclick="saveHomeSelections()">Save Featured Work</button></div><div class="media-grid" id="grid-work"></div></div>
     <div class="section" id="sec-photos"><div class="page-header"><div class="page-title">Photo Gallery</div><div class="page-desc">Upload photos through the backend and edit them anytime. New uploads appear here immediately so they can always be updated later.</div></div><div id="grid-photos"></div></div>
     <div class="section" id="sec-videos"><div class="page-header"><div class="page-title">Video Gallery</div><div class="page-desc">Save YouTube, Vimeo, or direct video links. Titles stay editable and every saved video remains available here for later changes.</div></div><div id="grid-videos"></div></div>
@@ -520,7 +522,8 @@ const HERO_SLOTS = [
   { key: 'hero_card_2', label: 'Hero Card 2', filter: item => true },
   { key: 'hero_card_3', label: 'Hero Card 3', filter: item => true },
   { key: 'about_main', label: 'About Main Visual', filter: item => item.type === 'image' },
-  { key: 'about_sec', label: 'About Secondary Visual', filter: item => true }
+  { key: 'about_sec', label: 'About Secondary Visual', filter: item => true },
+  { key: 'showreel', label: 'Homepage Showreel Video', filter: item => item.type === 'video' }
 ];
 const state = { store: { items: [], settings: { heroSlots: {}, featuredWorkIds: [] } } };
 
@@ -531,7 +534,8 @@ function normalizeSettings(settings) {
       hero_card_2: settings?.heroSlots?.hero_card_2 || '',
       hero_card_3: settings?.heroSlots?.hero_card_3 || '',
       about_main: settings?.heroSlots?.about_main || '',
-      about_sec: settings?.heroSlots?.about_sec || ''
+      about_sec: settings?.heroSlots?.about_sec || '',
+      showreel: settings?.heroSlots?.showreel || ''
     },
     featuredWorkIds: Array.from({ length: 6 }, (_, i) => (settings?.featuredWorkIds?.[i] || ''))
   };
@@ -1053,7 +1057,8 @@ function renderAll() {
   const settings = normalizeSettings(state.store.settings);
   renderDashboard();
   renderSelectionGrid('grid-hero', HERO_SLOTS.slice(0, 3), settings.heroSlots);
-  renderSelectionGrid('grid-about', HERO_SLOTS.slice(3), settings.heroSlots);
+  renderSelectionGrid('grid-about', HERO_SLOTS.slice(3, 5), settings.heroSlots);
+  renderSelectionGrid('grid-showreel', HERO_SLOTS.slice(5, 6), settings.heroSlots);
   renderFeaturedWork();
   renderPhotos();
   renderVideos();

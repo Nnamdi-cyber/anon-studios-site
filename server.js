@@ -81,6 +81,7 @@ function defaultSettings() {
       hero_card_3: '',
       about_main: '',
       about_sec: '',
+      showreel: '',
     },
     featuredWorkIds: ['', '', '', '', '', ''],
   };
@@ -110,6 +111,7 @@ function normalizeSettings(settings) {
       hero_card_3: String(heroSlots.hero_card_3 || ''),
       about_main: String(heroSlots.about_main || ''),
       about_sec: String(heroSlots.about_sec || ''),
+      showreel: String(heroSlots.showreel || ''),
     },
     featuredWorkIds: featuredWorkIds.map(value => String(value || '')),
   };
