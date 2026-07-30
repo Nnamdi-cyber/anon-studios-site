@@ -1151,9 +1151,11 @@ document.getElementById('vmodal').addEventListener('click',e=>{if(e.target===doc
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 if (window.AnonContent) {
   window.AnonContent.hydrateVideoPage();
+  if (typeof adaptVideoCategoryLayouts === 'function') adaptVideoCategoryLayouts();
   if (typeof window.AnonContent.refreshRemote === 'function') {
     window.AnonContent.refreshRemote().then(() => {
       window.AnonContent.hydrateVideoPage();
+      if (typeof adaptVideoCategoryLayouts === 'function') adaptVideoCategoryLayouts();
     });
   }
 }
