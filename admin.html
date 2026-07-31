@@ -2188,41 +2188,7 @@ function addNewVideoTrackRow(data = null) {
   list.appendChild(row);
 }
 
-function initClientGalleryUI() {
-  const dropzone = document.getElementById('cg-dropzone');
-  const fileInput = document.getElementById('cg-upload-files');
-  if (!dropzone || !fileInput) return;
 
-  dropzone.addEventListener('click', () => fileInput.click());
-
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--gold)';
-    dropzone.style.background = 'rgba(45, 212, 160, 0.03)';
-  });
-
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.style.borderColor = 'var(--line)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--line)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-    const files = e.dataTransfer.files;
-    if (files.length) {
-      addFilesToUploadQueue(files);
-    }
-  });
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length) {
-      addFilesToUploadQueue(fileInput.files);
-      fileInput.value = '';
-    }
-  });
-}
 
 function toggleDualLogoField() {
   const isChecked = document.getElementById('cg-has-dual-logos').checked;
