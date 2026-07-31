@@ -7,7 +7,7 @@
     { "source": "/photo-gallery", "destination": "/photo-gallery/index.html" },
     { "source": "/video-gallery", "destination": "/video-gallery/index.html" },
     { "source": "/api/(.*)", "destination": "https://anon-studios-site.onrender.com/api/$1" },
-    { "source": "/:name((?!assets|gallery|photo-gallery|video-gallery|admin|data|scratch|dist-ipfs|favicon.ico|index.html|home-animations.js|home-interactions.js|site-content.js)[^/]+)", "destination": "/delivery/index.html" }
+    { "source": "/:name", "destination": "/delivery/index.html" }
   ],
   "headers": [
     {
