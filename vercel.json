@@ -12,8 +12,9 @@
     { "src": "/home-interactions.js", "dest": "/home-interactions.js" },
     { "src": "/site-content.js", "dest": "/site-content.js" },
     { "src": "/favicon.ico", "dest": "/favicon.ico" },
-    { "src": "/index.html", "dest": "/index.html" },
-    { "src": "/((?!admin|gallery|photo-gallery|video-gallery|api|assets|home-animations.js|home-interactions.js|site-content.js|favicon.ico|index.html).*)", "dest": "/delivery/index.html" }
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/index.html$", "dest": "/index.html" },
+    { "src": "/((?!admin|gallery|photo-gallery|video-gallery|api|assets|home-animations.js|home-interactions.js|site-content.js|favicon.ico|index.html|index).*)", "dest": "/delivery/index.html" }
   ],
   "headers": [
     {
