@@ -216,8 +216,9 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
 
 <!-- NAV -->
 <nav id="nav">
-  <div class="nav-left">
-    <a href="../" class="logo">ANON<em>.</em></a>
+  <div class="nav-left" style="display:flex; align-items:center; gap:16px;">
+    <a href="../" class="logo" id="nav-logo-text">ANON<em>.</em></a>
+    <img id="nav-logo-img" src="" alt="Client Logo" style="display:none; height:32px; object-fit:contain; max-width:180px;">
   </div>
   <a href="../gallery/" class="nav-back">← All Galleries</a>
 </nav>
@@ -578,8 +579,16 @@ function renderGallery() {
     
     document.getElementById('hero-title').textContent = galleryData.client || 'Client Gallery';
     document.getElementById('hero-desc').textContent = galleryData.description || 'Private Shoot Archive';
-    document.getElementById('hero-meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
-    document.getElementById('hero-meta-date').innerHTML = `Date: <em>${galleryData.date || 'N/A'}</em>`;
+    
+    if (logo1) {
+      const heroClient = document.getElementById('hero-meta-client');
+      const heroDate = document.getElementById('hero-meta-date');
+      if (heroClient) heroClient.style.display = 'none';
+      if (heroDate) heroDate.style.display = 'none';
+    } else {
+      document.getElementById('hero-meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
+      document.getElementById('hero-meta-date').innerHTML = `Date: <em>${galleryData.date || 'N/A'}</em>`;
+    }
     document.getElementById('hero-meta-count').innerHTML = `Photos: <em>${galleryData.photos ? galleryData.photos.length : 0} works</em>`;
     
     document.getElementById('cover-hero').style.display = 'block';
@@ -589,8 +598,26 @@ function renderGallery() {
   
   document.getElementById('del-title').textContent = galleryData.description || `${galleryData.client} Delivery`;
   document.getElementById('del-tagline').textContent = `Client Delivery / ${galleryData.client}`;
-  document.getElementById('meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
-  document.getElementById('meta-date').innerHTML = `Shoot Date: <em>${galleryData.date || 'N/A'}</em>`;
+  
+  const logo1 = galleryData.logo1 || '';
+  if (logo1) {
+    const navLogoText = document.getElementById('nav-logo-text');
+    const navLogoImg = document.getElementById('nav-logo-img');
+    if (navLogoText && navLogoImg) {
+      navLogoText.style.display = 'none';
+      navLogoImg.src = logo1;
+      navLogoImg.style.display = 'block';
+    }
+    
+    // Hide Client and Shoot Date metadata fields per user request
+    const metaClient = document.getElementById('meta-client');
+    const metaDate = document.getElementById('meta-date');
+    if (metaClient) metaClient.style.display = 'none';
+    if (metaDate) metaDate.style.display = 'none';
+  } else {
+    document.getElementById('meta-client').innerHTML = `Client: <em>${galleryData.client}</em>`;
+    document.getElementById('meta-date').innerHTML = `Shoot Date: <em>${galleryData.date || 'N/A'}</em>`;
+  }
   
   const gType = galleryData.galleryType || 'photos';
   
@@ -738,7 +765,11 @@ function playVideoTrack(index) {
   let playerHtml = '';
   
   if (video.videoProvider === 'mux') {
-    playerHtml = `<iframe src="https://stream.mux.com/${video.fileCode}.m3u8" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+    playerHtml = `<iframe src="https://stroke.mux.com/${video.fileCode}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%; height:100%;"></iframe>`;
+    // Fallback if stroke format is different
+    if (!video.fileCode.includes('mux.com')) {
+      playerHtml = `<iframe src="https://archive.mux.com/${video.fileCode}/embed" frameborder="0" allowfullscreen allow="autoplay; encrypted-media" style="width:100%; height:100%;"></iframe>`;
+    }
   } else if (video.videoProvider === 'streamtape') {
     // If it's a full URL, parse out the file code, else use as code
     let code = video.fileCode || video.src;
