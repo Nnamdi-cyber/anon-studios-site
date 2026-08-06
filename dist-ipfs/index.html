@@ -869,8 +869,10 @@ nav.scrolled{
   .srv-features li{font-size:7.5px;gap:8px}
 
   /* SHOWREEL */
-  #showreel{padding:60px 20px !important}
-  .showreel-grid{grid-template-columns:1fr !important; gap:30px !important}
+  #showreel{padding:0 !important}
+  .showreel-container{aspect-ratio:16/9 !important; min-height:320px !important;}
+  .showreel-overlay-content{padding:24px 20px !important;}
+  .showreel-overlay-content .section-title { font-size: 38px !important; letter-spacing: -1px !important; }
 
   /* CONTACT FOOTER */
   .cf-social-bar{grid-template-columns:1fr 1fr}
@@ -1307,17 +1309,23 @@ nav.scrolled{
 </section>
 
 <!-- SHOWREEL SECTION -->
-<section id="showreel" style="background:var(--bg2); padding:100px 52px; border-bottom:1px solid var(--line); overflow:hidden;">
-  <div style="max-width:1400px; margin:0 auto; display:grid; grid-template-columns:1fr 1.5fr; gap:60px; align-items:center;" class="showreel-grid">
-    <div>
-      <div class="eyebrow">Showreel</div>
-      <h2 class="section-title" style="font-size:clamp(40px,5vw,72px); margin-bottom:20px; line-height:0.95;">The Reel<br>2025</h2>
-      <p style="font-size:15px; color:var(--w60); line-height:1.75; margin-bottom:28px; max-width:440px;">A curated compilation of our best cinematic works, documentary films, and commercials captured in Lagos and worldwide.</p>
+<section id="showreel" style="background:var(--bg2); padding:0; border-bottom:1px solid var(--line); overflow:hidden; position:relative;">
+  <div style="position:relative; width:100%; aspect-ratio:16/9; background:#000; overflow:hidden;" class="showreel-container">
+    <!-- Full-screen Background Video Player -->
+    <div class="media-wrap" data-media-src="" data-media-type="video" data-media-alt="Anon Studios Showreel" style="position:absolute; inset:0; pointer-events:auto; z-index:1;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
     </div>
-    <div style="position:relative; width:100%; aspect-ratio:16/9; background:#000; border:1px solid var(--line); overflow:hidden;">
-      <div class="media-wrap" data-media-src="" data-media-type="video" data-media-alt="Anon Studios Showreel" style="position:absolute; inset:0;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <div class="media-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+    
+    <!-- Dark Glass Overlay to ensure text readability -->
+    <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(8,8,7,0.7), rgba(8,8,7,0.1) 50%, rgba(8,8,7,0.6)); pointer-events:none; z-index:2;"></div>
+    
+    <!-- Text Overlaid directly on top of the video -->
+    <div style="position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:60px 80px; pointer-events:none; z-index:3;" class="showreel-overlay-content">
+      <div class="eyebrow" style="color:var(--gold); letter-spacing:5px; text-shadow:0 2px 4px rgba(0,0,0,0.5);">SHOWREEL</div>
+      <div>
+        <h2 class="section-title" style="font-size:clamp(48px, 8vw, 120px); margin:0; line-height:0.85; text-shadow:0 4px 12px rgba(0,0,0,0.6); color:var(--w); letter-spacing:-2px;">THE REEL<br>2026</h2>
+        <p style="font-size:clamp(13px, 1.8vw, 16px); color:var(--w60); line-height:1.6; margin-top:20px; max-width:480px; text-shadow:0 2px 6px rgba(0,0,0,0.6); font-family:var(--sans); font-weight:300;">A curated compilation of our best cinematic works, documentary films, and commercials captured in Lagos and worldwide.</p>
       </div>
     </div>
   </div>
