@@ -277,7 +277,7 @@ function readStore() {
   return memoryStore;
 }
 
-function writeStore(store) {
+async function writeStore(store) {
   const clean = {
     items: Array.isArray(store.items) ? store.items : [],
     settings: normalizeSettings(store.settings),
@@ -287,15 +287,18 @@ function writeStore(store) {
       updatedAt: Number(store.auth && store.auth.updatedAt ? store.auth.updatedAt : Date.now()),
     },
   };
-  
+
   memoryStore = clean;
 
-  dbPool.query(
-    "INSERT INTO site_store (id, data, updated_at) VALUES ('main_store', $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()",
-    [JSON.stringify(clean)]
-  ).catch(err => {
+  try {
+    await dbPool.query(
+      "INSERT INTO site_store (id, data, updated_at) VALUES ('main_store', $1, NOW()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()",
+      [JSON.stringify(clean)]
+    );
+  } catch (err) {
     console.error('Error writing store to Supabase:', err);
-  });
+    throw err;
+  }
 
   return clean;
 }
@@ -691,11 +694,13 @@ function requireAdmin(req, res, next) {
 
 function setSessionCookie(res, passwordHash) {
   const token = buildSessionToken(passwordHash);
-  res.setHeader('Set-Cookie', `${sessionCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=None; Secure`);
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.setHeader('Set-Cookie', `${sessionCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${isProduction ? 'None' : 'Lax'}; ${isProduction ? 'Secure' : ''}`);
 }
 
 function clearSessionCookie(res) {
-  res.setHeader('Set-Cookie', `${sessionCookieName}=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0`);
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.setHeader('Set-Cookie', `${sessionCookieName}=; Path=/; HttpOnly; SameSite=${isProduction ? 'None' : 'Lax'}; ${isProduction ? 'Secure' : ''}; Max-Age=0`);
 }
 
 app.use(cors({
@@ -769,7 +774,7 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/admin/password', requireAdmin, (req, res) => {
+app.post('/api/admin/password', requireAdmin, async (req, res) => {
   const store = readStore();
   const currentPassword = String(req.body && req.body.currentPassword ? req.body.currentPassword : '');
   const nextPassword = String(req.body && req.body.nextPassword ? req.body.nextPassword : '');
@@ -781,9 +786,13 @@ app.post('/api/admin/password', requireAdmin, (req, res) => {
   }
   store.auth.passwordHash = hashValue(nextPassword);
   store.auth.updatedAt = Date.now();
-  writeStore(store);
-  setSessionCookie(res, store.auth.passwordHash);
-  res.json({ ok: true });
+  try {
+    await writeStore(store);
+    setSessionCookie(res, store.auth.passwordHash);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update password' });
+  }
 });
 
 app.post('/api/content', requireAdmin, async (req, res) => {
@@ -792,14 +801,22 @@ app.post('/api/content', requireAdmin, async (req, res) => {
   if (!item) return res.status(400).json({ error: 'Invalid content payload' });
   store.items = store.items.filter(entry => entry.id !== item.id);
   store.items.unshift(item);
-  res.json(publicStore(writeStore(store)));
+  try {
+    res.json(publicStore(await writeStore(store)));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to persist content' });
+  }
 });
 
 app.put('/api/content', requireAdmin, async (req, res) => {
   const store = readStore();
   const incoming = Array.isArray(req.body && req.body.items) ? req.body.items : [];
   store.items = (await Promise.all(incoming.map(item => enrichVideoItem(normalizeItem(item))))).filter(Boolean);
-  res.json(publicStore(writeStore(store)));
+  try {
+    res.json(publicStore(await writeStore(store)));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to persist content' });
+  }
 });
 
 app.put('/api/content/:id', requireAdmin, async (req, res) => {
@@ -809,13 +826,21 @@ app.put('/api/content/:id', requireAdmin, async (req, res) => {
   const item = await enrichVideoItem(normalizeItem({ ...existing, ...req.body, id: existing.id, createdAt: existing.createdAt }));
   if (!item) return res.status(400).json({ error: 'Invalid content payload' });
   store.items = store.items.map(entry => entry.id === existing.id ? item : entry);
-  res.json(publicStore(writeStore(store)));
+  try {
+    res.json(publicStore(await writeStore(store)));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to persist content' });
+  }
 });
 
-app.delete('/api/content/:id', requireAdmin, (req, res) => {
+app.delete('/api/content/:id', requireAdmin, async (req, res) => {
   const store = readStore();
   store.items = store.items.filter(item => item.id !== req.params.id);
-  res.json(publicStore(writeStore(store)));
+  try {
+    res.json(publicStore(await writeStore(store)));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to persist content' });
+  }
 });
 
 // =========================================================================
@@ -920,7 +945,7 @@ app.post('/api/client-gallery/public/:name/unlock', (req, res) => {
 });
 
 // POST create client gallery
-app.post('/api/client-gallery', requireAdmin, (req, res) => {
+app.post('/api/client-gallery', requireAdmin, async (req, res) => {
   const store = readStore();
   const normalized = normalizeClientGallery(req.body);
   if (!normalized || !normalized.name) {
@@ -934,12 +959,16 @@ app.post('/api/client-gallery', requireAdmin, (req, res) => {
 
   if (!store.clientGalleries) store.clientGalleries = [];
   store.clientGalleries.unshift(normalized);
-  writeStore(store);
-  res.json({ ok: true, gallery: normalized });
+  try {
+    await writeStore(store);
+    res.json({ ok: true, gallery: normalized });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to persist gallery' });
+  }
 });
 
 // PUT update client gallery
-app.put('/api/client-gallery/:id', requireAdmin, (req, res) => {
+app.put('/api/client-gallery/:id', requireAdmin, async (req, res) => {
   const store = readStore();
   const id = req.params.id;
   const index = (store.clientGalleries || []).findIndex(g => g.id === id);
@@ -956,26 +985,38 @@ app.put('/api/client-gallery/:id', requireAdmin, (req, res) => {
   }
 
   store.clientGalleries[index] = normalized;
-  writeStore(store);
-  res.json({ ok: true, gallery: normalized });
+  try {
+    await writeStore(store);
+    res.json({ ok: true, gallery: normalized });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to persist gallery' });
+  }
 });
 
 // DELETE client gallery
-app.delete('/api/client-gallery/:id', requireAdmin, (req, res) => {
+app.delete('/api/client-gallery/:id', requireAdmin, async (req, res) => {
   const store = readStore();
   const id = req.params.id;
   const exists = (store.clientGalleries || []).some(g => g.id === id);
   if (!exists) return res.status(404).json({ error: 'Client gallery not found' });
 
   store.clientGalleries = store.clientGalleries.filter(g => g.id !== id);
-  writeStore(store);
-  res.json({ ok: true });
+  try {
+    await writeStore(store);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to persist gallery' });
+  }
 });
 
-app.put('/api/settings', requireAdmin, (req, res) => {
+app.put('/api/settings', requireAdmin, async (req, res) => {
   const store = readStore();
   store.settings = normalizeSettings(req.body || {});
-  res.json(publicStore(writeStore(store)));
+  try {
+    res.json(publicStore(await writeStore(store)));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to persist settings' });
+  }
 });
 
 app.post('/api/upload-image', requireAdmin, upload.single('file'), async (req, res) => {
@@ -1343,12 +1384,17 @@ app.get('/api/mux/resolve-asset', requireAdmin, async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+async function startServer() {
   ensureDataFile();
-  syncStoreFromDb().then(() => {
+  try {
+    await syncStoreFromDb();
     console.log('Successfully connected and synced database store with Supabase.');
-  }).catch(err => {
+  } catch (err) {
     console.error('Failed initial Supabase database store sync:', err);
+  }
+  app.listen(port, () => {
+    console.log(`Anon Studios server running on http://localhost:${port}`);
   });
-  console.log(`Anon Studios server running on http://localhost:${port}`);
-});
+}
+
+startServer();
