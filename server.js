@@ -215,7 +215,7 @@ async function syncStoreFromDb() {
       date: 'May 18, 2025',
       password: '',
       galleryType: 'videos',
-      logo1: 'https://images.squarespace-cdn.com/content/v1/5c5c646ef81c14b68e99de61/1572425026938-89ZICX7W5388J8E84G7M/TEDxLogo.png',
+      logo1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/TEDx_logo.svg/640px-TEDx_logo.svg.png',
       logo2: 'https://tedxunilag.vercel.app/assets/images/logo.png',
       customColor: '#EB0028',
       photos: [],
