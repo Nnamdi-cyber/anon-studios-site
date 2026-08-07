@@ -1843,6 +1843,7 @@ function initDropzones(container) {
 
 // --- CLIENT GALLERY LOGIC ---
 let currentGalleryPhotos = [];
+let currentGalleryVideos = [];
 let uploadQueue = [];
 let activeUploadCount = 0;
 const MAX_CONCURRENT_UPLOADS = 3;
@@ -2105,11 +2106,6 @@ function copyClientLink(name) {
     .catch(() => showToast('Failed to copy link', 'error'));
 }
 
-let currentGalleryPhotos = [];
-let currentGalleryVideos = [];
-let uploadQueue = [];
-let activeUploadCount = 0;
-const MAX_CONCURRENT_UPLOADS = 3;
 
 function toggleGalleryTypeSection() {
   const type = document.getElementById('cg-gallery-type').value;
