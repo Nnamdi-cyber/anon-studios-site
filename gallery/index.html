@@ -356,7 +356,7 @@ nav{position:fixed;inset:0 0 auto;z-index:500;display:flex;align-items:center;ju
   </div>
 </div>
 
-<script src="../site-content.js?v=20260613a"></script>
+<script src="../site-content.js?v=20260807b"></script>
 <script>
 if (window.AnonContent) {
   window.addEventListener(window.AnonContent.events.updated, () => {
@@ -633,11 +633,22 @@ function _lbShowMain(key, idx, total) {
 }
 
 /* Pacman cursor is loaded from assets/js/pacman-cursor.js */
-/* Apply media config */
-[...Array(5)].forEach((_,i)=>{const k=['g_vpanel_1','g_vpanel_2','g_vpanel_3','g_vpanel_4','g_vpanel_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
-[...Array(5)].forEach((_,i)=>{const k=['g_pcard_1','g_pcard_2','g_pcard_3','g_pcard_4','g_pcard_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
+function observeMediaConfigs() {
+  [...Array(5)].forEach((_,i)=>{const k=['g_vpanel_1','g_vpanel_2','g_vpanel_3','g_vpanel_4','g_vpanel_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
+  [...Array(5)].forEach((_,i)=>{const k=['g_pcard_1','g_pcard_2','g_pcard_3','g_pcard_4','g_pcard_5'][i];const w=document.getElementById('mw-'+k);if(w&&MEDIA_CONFIG[k]&&MEDIA_CONFIG[k].src){w.dataset.mSrc=MEDIA_CONFIG[k].src;w.dataset.mType=MEDIA_CONFIG[k].type;w.dataset.mAlt=MEDIA_CONFIG[k].alt||'';_mObs.observe(w);}});
+}
+observeMediaConfigs();
 window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
-if (window.AnonContent) window.AnonContent.hydrateGalleryPage();
+if (window.AnonContent) {
+  window.AnonContent.hydrateGalleryPage();
+  if (typeof window.AnonContent.refreshRemote === 'function') {
+    window.AnonContent.refreshRemote().then(() => {
+      if (window.AnonContent.mergeIntoConfig) window.AnonContent.mergeIntoConfig(MEDIA_CONFIG);
+      window.AnonContent.hydrateGalleryPage();
+      observeMediaConfigs();
+    });
+  }
+}
 
 // Framer-Style CenterLiftCarousel Engine
 (function() {
