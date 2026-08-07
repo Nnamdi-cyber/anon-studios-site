@@ -239,6 +239,96 @@ body.login-active #pacScroll {
 .btn-remove-file:hover {
   color: var(--red);
 }
+
+.cg-vt-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.cg-vt-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.cg-vt-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-wrap {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    z-index: 1001;
+    transition: left 0.3s ease;
+  }
+  .sidebar.open {
+    left: 0;
+  }
+  .main {
+    padding: 72px 20px 40px; /* Leave top space for the menu button */
+  }
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    z-index: 1000;
+    cursor: pointer;
+  }
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+  .vgrid, .vgrid-3, .vgrid-2, .vgrid-2r, .vgrid-feat {
+    grid-template-columns: 1fr !important;
+  }
+  .cg-vt-grid-2, .cg-vt-grid-3, .cg-vt-upload-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .cg-video-row {
+    gap: 8px !important;
+  }
+  .modal-box {
+    padding: 24px 16px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .page-title {
+    font-size: 28px;
+  }
+}
+@media (max-width: 480px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+  .modal-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  .modal-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>
 </head>
 <body class="login-active">
@@ -2139,7 +2229,7 @@ function addNewVideoTrackRow(data = null) {
   
   row.innerHTML = `
     <button type="button" onclick="this.closest('.cg-video-row').remove()" style="position:absolute; top:8px; right:8px; background:transparent; border:none; color:var(--red); font-size:12px; cursor:pointer;">✕ Remove</button>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+    <div class="cg-vt-grid-2" style="margin-top:14px;">
       <div class="form-group">
         <label class="form-label" style="font-size:7px;">Session Title / Track Name</label>
         <input class="form-input cg-vt-title" required placeholder="e.g. Session 1: Opening Remarks" value="${escapeHtml(data?.title || '')}">
@@ -2153,7 +2243,7 @@ function addNewVideoTrackRow(data = null) {
       <label class="form-label" style="font-size:7px;">Session Description</label>
       <input class="form-input cg-vt-desc" placeholder="Brief outline of this session's video content" value="${escapeHtml(data?.description || '')}">
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+    <div class="cg-vt-grid-3">
       <div class="form-group">
         <label class="form-label" style="font-size:7px;">Video Provider</label>
         <select class="mc-select cg-vt-provider">
@@ -2172,7 +2262,7 @@ function addNewVideoTrackRow(data = null) {
         <input class="form-input cg-vt-duration" placeholder="e.g. 12:45" value="${escapeHtml(data?.duration || '')}">
       </div>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div class="cg-vt-grid-2">
       <div class="form-group">
         <label class="form-label" style="font-size:7px;">High-Res Download URL</label>
         <input class="form-input cg-vt-download" placeholder="Cloudinary, GDrive, or Dropbox download URL" value="${escapeHtml(data?.downloadUrl || '')}">
@@ -2184,7 +2274,7 @@ function addNewVideoTrackRow(data = null) {
     </div>
     
     <div class="cg-vt-upload-section" style="border: 1px dashed var(--line); border-radius: 4px; padding: 10px; background: rgba(0,0,0,0.1); margin-top: 10px;">
-      <div style="display: grid; grid-template-columns: 1fr 150px; gap: 10px; align-items: center;">
+      <div class="cg-vt-upload-grid" style="align-items: center;">
         <div class="cg-vt-dropzone" style="border: 2px dashed #444; border-radius: 4px; padding: 12px; text-align: center; cursor: pointer; position: relative;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.05)';" ondragleave="this.style.borderColor='#444'; this.style.background='transparent';" ondrop="event.preventDefault(); this.style.borderColor='#444'; this.style.background='transparent'; handleRowVideoDrop(event, this.closest('.cg-video-row'));">
           <span style="font-size: 10px; color: var(--text-muted);">Drag & drop video here or click to select</span>
           <input type="file" accept="video/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleRowVideoSelect(this, this.closest('.cg-video-row'))">
