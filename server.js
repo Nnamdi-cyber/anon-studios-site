@@ -7,6 +7,9 @@ const compression = require('compression');
 const cors = require('cors');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 const {
   buildProposalEmail,
   buildStoryFirstEmail,
@@ -138,7 +141,10 @@ function normalizeClientGallery(cg) {
     fileCode: String(v.fileCode || ''),
     src: String(v.src || ''),
     downloadUrl: String(v.downloadUrl || ''),
-    thumb: String(v.thumb || '')
+    thumb: String(v.thumb || ''),
+    muxPlaybackId: String(v.muxPlaybackId || ''),
+    muxAssetId: String(v.muxAssetId || ''),
+    muxAccountIndex: v.muxAccountIndex ? Number(v.muxAccountIndex) : 0
   })) : [];
 
   return {
@@ -587,6 +593,67 @@ async function optimizeRemoteThumb(url, title, category) {
   } catch (error) {
     return source;
   }
+}
+
+async function autoGenerateVideoThumb(filePath, title) {
+  let tempFramePath = null;
+  try {
+    // 1. Get duration using ffprobe
+    let durationSec = null;
+    try {
+      const probeCmd = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`;
+      const { stdout } = await execPromise(probeCmd);
+      durationSec = parseFloat(stdout.trim());
+    } catch (probeErr) {
+      console.warn('[FFprobe] failed to extract duration:', probeErr.message);
+    }
+
+    // 2. Calculate offset (20% into duration, default to 5 seconds if not found)
+    let offset = 5;
+    if (durationSec && durationSec > 0) {
+      offset = durationSec * 0.20;
+    }
+
+    // 3. Run ffmpeg to extract high-quality frame
+    tempFramePath = path.join(os.tmpdir(), `frame-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.jpg`);
+    const ffmpegCmd = `ffmpeg -y -ss ${offset} -i "${filePath}" -vframes 1 -q:v 2 "${tempFramePath}"`;
+    await execPromise(ffmpegCmd);
+
+    // 4. Read the file buffer
+    if (fs.existsSync(tempFramePath)) {
+      const buffer = await fs.promises.readFile(tempFramePath);
+      
+      // 5. Upload buffer to Cloudinary in the folder 'anon-studios/client-thumbs'
+      const publicId = slugify(`${title || 'video-thumb'}-${Date.now()}`);
+      const uploadResult = await uploadBufferToCloudinary(buffer, {
+        folder: 'anon-studios/client-thumbs',
+        public_id: publicId,
+        resource_type: 'image',
+        overwrite: true,
+      });
+
+      // Format duration back to MM:SS if we retrieved durationSec
+      let durationStr = '';
+      if (durationSec && durationSec > 0) {
+        const mins = Math.floor(durationSec / 60);
+        const secs = Math.floor(durationSec % 60);
+        durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      return {
+        thumbUrl: uploadResult.secure_url || uploadResult.url || '',
+        duration: durationStr,
+        durationSeconds: durationSec
+      };
+    }
+  } catch (err) {
+    console.error('[FFmpeg/Cloudinary] auto-generation error:', err);
+  } finally {
+    if (tempFramePath) {
+      fs.promises.unlink(tempFramePath).catch(() => {});
+    }
+  }
+  return { thumbUrl: '', duration: '', durationSeconds: null };
 }
 
 function extractYouTubeId(url) {
@@ -1094,8 +1161,13 @@ app.post('/api/doodstream/upload', requireAdmin, videoUpload.single('file'), asy
 
   const tempPath = req.file.path;
   try {
+    const titleVal = String(req.body && req.body.title ? req.body.title : '').trim() || req.file.originalname;
+    
+    // Auto-generate thumbnail and duration
+    const thumbData = await autoGenerateVideoThumb(tempPath, titleVal);
+
     const uploaded = await uploadLocalFileToDoodstream(tempPath, {
-      title: String(req.body && req.body.title ? req.body.title : '').trim(),
+      title: titleVal,
       originalName: req.file.originalname,
     });
     const streamPath = `/api/doodstream/stream/${encodeURIComponent(uploaded.fileCode)}`;
@@ -1105,11 +1177,11 @@ app.post('/api/doodstream/upload', requireAdmin, videoUpload.single('file'), asy
       fileCode: uploaded.fileCode,
       src: streamPath,
       sourceUrl: uploaded.sourceUrl || streamPath,
-      thumb: uploaded.thumb,
+      thumb: thumbData.thumbUrl || uploaded.thumb,
       splash: uploaded.splash,
-      duration: uploaded.duration,
+      duration: thumbData.duration || uploaded.duration,
       canPlay: uploaded.canPlay,
-      title: uploaded.title || String(req.body && req.body.title ? req.body.title : '').trim(),
+      title: uploaded.title || titleVal,
       useHls: false,
     });
   } catch (error) {
@@ -1134,8 +1206,13 @@ app.post('/api/streamtape/upload', requireAdmin, videoUpload.single('file'), asy
 
   const tempPath = req.file.path;
   try {
+    const titleVal = String(req.body && req.body.title ? req.body.title : '').trim() || req.file.originalname;
+
+    // Auto-generate thumbnail and duration
+    const thumbData = await autoGenerateVideoThumb(tempPath, titleVal);
+
     const uploaded = await uploadLocalFileToStreamtape(tempPath, {
-      title: String(req.body && req.body.title ? req.body.title : '').trim(),
+      title: titleVal,
       originalName: req.file.originalname,
     });
     res.json({
@@ -1145,6 +1222,8 @@ app.post('/api/streamtape/upload', requireAdmin, videoUpload.single('file'), asy
       src: uploaded.sourceUrl,
       sourceUrl: uploaded.sourceUrl,
       title: uploaded.title,
+      thumb: thumbData.thumbUrl || '',
+      duration: thumbData.duration || '',
     });
   } catch (error) {
     res.status(500).json({

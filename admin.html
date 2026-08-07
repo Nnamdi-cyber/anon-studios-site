@@ -2132,6 +2132,9 @@ function addNewVideoTrackRow(data = null) {
   const row = document.createElement('div');
   row.className = 'cg-video-row';
   row.dataset.id = trackId;
+  row.dataset.muxPlaybackId = data?.muxPlaybackId || '';
+  row.dataset.muxAssetId = data?.muxAssetId || '';
+  row.dataset.muxAccountIndex = data?.muxAccountIndex || '';
   row.style = 'border:1px solid var(--line); border-radius:4px; padding:12px; background:rgba(0,0,0,0.15); display:grid; gap:10px; position:relative;';
   
   row.innerHTML = `
@@ -2179,9 +2182,116 @@ function addNewVideoTrackRow(data = null) {
         <input class="form-input cg-vt-thumb" placeholder="Custom video preview poster image" value="${escapeHtml(data?.thumb || '')}">
       </div>
     </div>
+    
+    <div class="cg-vt-upload-section" style="border: 1px dashed var(--line); border-radius: 4px; padding: 10px; background: rgba(0,0,0,0.1); margin-top: 10px;">
+      <div style="display: grid; grid-template-columns: 1fr 150px; gap: 10px; align-items: center;">
+        <div class="cg-vt-dropzone" style="border: 2px dashed #444; border-radius: 4px; padding: 12px; text-align: center; cursor: pointer; position: relative;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.05)';" ondragleave="this.style.borderColor='#444'; this.style.background='transparent';" ondrop="event.preventDefault(); this.style.borderColor='#444'; this.style.background='transparent'; handleRowVideoDrop(event, this.closest('.cg-video-row'));">
+          <span style="font-size: 10px; color: var(--text-muted);">Drag & drop video here or click to select</span>
+          <input type="file" accept="video/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleRowVideoSelect(this, this.closest('.cg-video-row'))">
+        </div>
+        <div>
+          <label class="form-label" style="font-size:7px; margin-bottom: 4px; display: block;">Upload Method</label>
+          <select class="mc-select cg-vt-upload-method" style="width: 100%;">
+            <option value="mux">Mux</option>
+            <option value="streamtape">Streamtape</option>
+          </select>
+        </div>
+      </div>
+      <div class="cg-vt-progress-bar-container" style="display: none; margin-top: 8px;">
+        <div style="background: rgba(255,255,255,0.1); border-radius: 3px; height: 6px; overflow: hidden; width: 100%;">
+          <div class="cg-vt-progress-fill" style="background: var(--accent, #ff3366); height: 100%; width: 0%; transition: width 0.1s ease;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span class="cg-vt-progress-label" style="font-size: 9px; color: var(--text-muted);">0%</span>
+          <span class="cg-vt-status-label" style="font-size: 9px; color: var(--text-muted); font-style: italic;"></span>
+        </div>
+      </div>
+    </div>
   `;
   
   list.appendChild(row);
+}
+
+async function handleRowVideoDrop(event, row) {
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    await performRowVideoUpload(file, row);
+  }
+}
+
+async function handleRowVideoSelect(input, row) {
+  const file = input.files[0];
+  if (file) {
+    await performRowVideoUpload(file, row);
+  }
+}
+
+async function performRowVideoUpload(file, row) {
+  const methodSelect = row.querySelector('.cg-vt-upload-method');
+  const method = methodSelect.value;
+  const progressContainer = row.querySelector('.cg-vt-progress-bar-container');
+  const progressFill = row.querySelector('.cg-vt-progress-fill');
+  const progressLabel = row.querySelector('.cg-vt-progress-label');
+  const statusLabel = row.querySelector('.cg-vt-status-label');
+
+  const titleInput = row.querySelector('.cg-vt-title');
+  const title = titleInput.value.trim() || file.name.replace(/\.[^/.]+$/, "");
+
+  progressContainer.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressLabel.textContent = '0%';
+  statusLabel.textContent = 'Uploading...';
+
+  try {
+    let result;
+    if (method === 'mux') {
+      result = await uploadVideoToMux(file, title, (progress) => {
+        if (progress === 'processing') {
+          progressFill.style.width = '100%';
+          progressLabel.textContent = '100%';
+          statusLabel.textContent = 'Processing on Mux...';
+        } else {
+          progressFill.style.width = progress + '%';
+          progressLabel.textContent = progress + '%';
+        }
+      });
+
+      row.querySelector('.cg-vt-provider').value = 'mux';
+      row.querySelector('.cg-vt-code').value = result.fileCode || '';
+      row.querySelector('.cg-vt-duration').value = result.duration || '';
+      row.querySelector('.cg-vt-thumb').value = result.thumb || '';
+      row.dataset.muxPlaybackId = result.muxPlaybackId || '';
+      row.dataset.muxAssetId = result.muxAssetId || '';
+      row.dataset.muxAccountIndex = result.muxAccountIndex || '';
+      if (!titleInput.value.trim()) {
+        titleInput.value = title;
+      }
+      statusLabel.textContent = 'Done!';
+    } else {
+      result = await uploadStreamtapeVideoFile(file, title, (progress) => {
+        progressFill.style.width = progress + '%';
+        progressLabel.textContent = progress + '%';
+      });
+
+      row.querySelector('.cg-vt-provider').value = 'streamtape';
+      row.querySelector('.cg-vt-code').value = result.fileCode || result.src || '';
+      if (result.duration) {
+        row.querySelector('.cg-vt-duration').value = result.duration;
+      }
+      if (result.thumb) {
+        row.querySelector('.cg-vt-thumb').value = result.thumb;
+      }
+      if (!titleInput.value.trim() && result.title) {
+        titleInput.value = result.title;
+      }
+      statusLabel.textContent = 'Done!';
+    }
+    showToast('Video uploaded successfully!', 'success');
+  } catch (error) {
+    console.error('Video upload error:', error);
+    statusLabel.textContent = 'Failed';
+    showToast('Video upload failed: ' + error.message, 'error');
+  }
 }
 
 
@@ -2380,7 +2490,9 @@ async function saveClientGallery() {
   const videos = [];
   document.querySelectorAll('.cg-video-row').forEach(row => {
     const titleVal = row.querySelector('.cg-vt-title').value.trim();
-    if (!titleVal) return;
+    const fileCodeVal = row.querySelector('.cg-vt-code').value.trim();
+    
+    if (!titleVal && !fileCodeVal) return;
     
     videos.push({
       id: row.dataset.id,
@@ -2388,11 +2500,14 @@ async function saveClientGallery() {
       speakers: row.querySelector('.cg-vt-speakers').value.trim(),
       description: row.querySelector('.cg-vt-desc').value.trim(),
       videoProvider: row.querySelector('.cg-vt-provider').value,
-      fileCode: row.querySelector('.cg-vt-code').value.trim(),
-      src: row.querySelector('.cg-vt-code').value.trim(),
+      fileCode: fileCodeVal,
+      src: fileCodeVal,
       duration: row.querySelector('.cg-vt-duration').value.trim(),
       downloadUrl: row.querySelector('.cg-vt-download').value.trim(),
-      thumb: row.querySelector('.cg-vt-thumb').value.trim()
+      thumb: row.querySelector('.cg-vt-thumb').value.trim(),
+      muxPlaybackId: row.dataset.muxPlaybackId || '',
+      muxAssetId: row.dataset.muxAssetId || '',
+      muxAccountIndex: row.dataset.muxAccountIndex ? Number(row.dataset.muxAccountIndex) : 0
     });
   });
 
