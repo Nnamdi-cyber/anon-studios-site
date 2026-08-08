@@ -175,10 +175,10 @@ async function uploadLocalFileToDoodstream(filePath, options = {}) {
   const config = getDoodstreamConfig();
   const uploadServerUrl = await getUploadServerUrl();
   const originalName = String(options.originalName || 'upload.mp4').trim() || 'upload.mp4';
-  const fileBuffer = await fs.promises.readFile(resolvedPath);
+  const fileBlob = await fs.openAsBlob(resolvedPath, { type: 'video/mp4' });
   const form = new FormData();
   form.append('api_key', config.apiKey);
-  form.append('file', new Blob([fileBuffer]), originalName);
+  form.append('file', fileBlob, originalName);
 
   const response = await fetch(`${uploadServerUrl}?${encodeURIComponent(config.apiKey)}`, {
     method: 'POST',

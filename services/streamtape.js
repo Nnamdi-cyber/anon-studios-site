@@ -42,8 +42,7 @@ async function uploadLocalFileToStreamtape(filePath, options = {}) {
   
   // Use Form data block
   const formData = new FormData();
-  const fileBuffer = fs.readFileSync(filePath);
-  const fileBlob = new Blob([fileBuffer], { type: 'video/mp4' });
+  const fileBlob = await fs.openAsBlob(filePath, { type: 'video/mp4' });
   formData.append('file', fileBlob, options.originalName || path.basename(filePath));
   
   const response = await fetch(uploadUrl, {
