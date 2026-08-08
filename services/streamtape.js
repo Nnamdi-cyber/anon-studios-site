@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 function getStreamtapeConfig() {
   return {
@@ -32,6 +34,66 @@ async function getUploadServerUrl() {
   return payload.result.url;
 }
 
+// Helper to stream file to Streamtape via native HTTP/HTTPS multipart POST
+function uploadFileStream(uploadUrl, filePath, fileName) {
+  return new Promise((resolve, reject) => {
+    const boundary = '----Boundary' + Math.random().toString(36).substring(2, 9);
+    const parsedUrl = new URL(uploadUrl);
+    const fileStream = fs.createReadStream(filePath);
+    
+    const header = `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n` +
+      `Content-Type: video/mp4\r\n\r\n`;
+      
+    const footer = `\r\n--${boundary}--\r\n`;
+    const stat = fs.statSync(filePath);
+    const contentLength = Buffer.byteLength(header) + stat.size + Buffer.byteLength(footer);
+    
+    const isHttps = parsedUrl.protocol === 'https:';
+    const httpLib = isHttps ? https : http;
+    
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || (isHttps ? 443 : 80),
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': contentLength
+      }
+    };
+    
+    const req = httpLib.request(options, (res) => {
+      let resBody = '';
+      res.on('data', (chunk) => resBody += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(resBody);
+        } else {
+          reject(new Error(`Server returned status code ${res.statusCode}: ${resBody}`));
+        }
+      });
+    });
+    
+    req.on('error', reject);
+    req.write(header);
+    
+    fileStream.on('data', (chunk) => {
+      req.write(chunk);
+    });
+    
+    fileStream.on('end', () => {
+      req.write(footer);
+      req.end();
+    });
+    
+    fileStream.on('error', (err) => {
+      req.destroy();
+      reject(err);
+    });
+  });
+}
+
 // Upload local file to Streamtape
 async function uploadLocalFileToStreamtape(filePath, options = {}) {
   if (!fs.existsSync(filePath)) {
@@ -39,22 +101,9 @@ async function uploadLocalFileToStreamtape(filePath, options = {}) {
   }
 
   const uploadUrl = await getUploadServerUrl();
+  const fileName = options.originalName || path.basename(filePath);
   
-  // Use Form data block
-  const formData = new FormData();
-  const fileBlob = await fs.openAsBlob(filePath, { type: 'video/mp4' });
-  formData.append('file', fileBlob, options.originalName || path.basename(filePath));
-  
-  const response = await fetch(uploadUrl, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!response.ok) {
-    throw new Error(`Streamtape upload request failed with status ${response.status}`);
-  }
-
-  const responseText = await response.text();
+  const responseText = await uploadFileStream(uploadUrl, filePath, fileName);
   let payload;
   try {
     payload = JSON.parse(responseText);
