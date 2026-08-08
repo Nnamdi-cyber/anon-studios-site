@@ -754,7 +754,13 @@ function buildSessionToken(passwordHash) {
 function requireAdmin(req, res, next) {
   const store = readStore();
   const cookies = parseCookies(req);
-  const token = cookies[sessionCookieName];
+  let token = cookies[sessionCookieName];
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts[0] === 'Bearer') {
+      token = parts[1];
+    }
+  }
   if (token && token === buildSessionToken(store.auth.passwordHash)) return next();
   return res.status(401).json({ error: 'Unauthorized' });
 }
@@ -822,7 +828,14 @@ app.get('/api/content', (req, res) => {
 app.get('/api/admin/session', (req, res) => {
   const store = readStore();
   const cookies = parseCookies(req);
-  const authenticated = cookies[sessionCookieName] === buildSessionToken(store.auth.passwordHash);
+  let token = cookies[sessionCookieName];
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts[0] === 'Bearer') {
+      token = parts[1];
+    }
+  }
+  const authenticated = token === buildSessionToken(store.auth.passwordHash);
   res.json({ authenticated });
 });
 
@@ -832,8 +845,9 @@ app.post('/api/admin/login', (req, res) => {
   if (hashValue(password) !== store.auth.passwordHash) {
     return res.status(401).json({ error: 'Invalid password' });
   }
+  const token = buildSessionToken(store.auth.passwordHash);
   setSessionCookie(res, store.auth.passwordHash);
-  res.json({ ok: true });
+  res.json({ ok: true, token });
 });
 
 app.post('/api/admin/logout', (req, res) => {
