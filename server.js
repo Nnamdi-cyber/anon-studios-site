@@ -1244,7 +1244,7 @@ app.get('/api/portfolio-bot/status', requireAdmin, (req, res) => {
   });
 });
 
-app.get('/api/admin/diagnostics', requireAdmin, (req, res) => {
+app.get('/api/admin/diagnostics', requireAdmin, async (req, res) => {
   const accounts = [];
   for (let i = 1; i <= 4; i++) {
     const tokenId = process.env[`MUX_TOKEN_ID_${i}`];
@@ -1257,11 +1257,29 @@ app.get('/api/admin/diagnostics', requireAdmin, (req, res) => {
       dataEnvKey: dataEnvKey ? 'PRESENT' : 'MISSING'
     });
   }
+
+  let ffmpegVer = 'MISSING';
+  let ffprobeVer = 'MISSING';
+  try {
+    const { stdout } = await execPromise('ffmpeg -version');
+    ffmpegVer = stdout.split('\n')[0] || 'PRESENT';
+  } catch (e) {
+    ffmpegVer = 'ERROR: ' + e.message;
+  }
+  try {
+    const { stdout } = await execPromise('ffprobe -version');
+    ffprobeVer = stdout.split('\n')[0] || 'PRESENT';
+  } catch (e) {
+    ffprobeVer = 'ERROR: ' + e.message;
+  }
+
   res.json({
     ok: true,
     muxAccounts: accounts,
     doodstream: process.env.DOODSTREAM_API_KEY ? 'PRESENT' : 'MISSING',
     pinata: process.env.PINATA_API_KEY ? 'PRESENT' : 'MISSING',
+    ffmpeg: ffmpegVer,
+    ffprobe: ffprobeVer
   });
 });
 
